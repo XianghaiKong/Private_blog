@@ -20,17 +20,19 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"3hree5ive.top","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-dark","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="5090深度学习环境配置  CUDA: 12.8 pytorch: 2.8.0 python: 3.10.20  由于 5090 全新的架构问题，CUDA 最低也要 12.8 版本，pytorch 可选对应的适配版本（如 2.7.1 也可）。 由于 openmmlab 已经两年没有再维护更新 mmsegmentation， 即使是最新的 1.x 版本也难以支持目前的最新环境，且仅支持Pytorc">
+    <meta name="description" content="5090深度学习环境配置  CUDA: 12.8 pytorch: 2.8.0 python: 3.10.20  由于清华等国内镜像源没有GPU版本的Pytorch，所以建议保留一个只有上述内容的虚拟环境，然后每次新开项目的时候克隆 1conda create -n xxx --clone xxx 然而由于 5090 使用全新架构， CUDA 最低也要 12.8 版本， pytorch 可选对应">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Onedl-MMSegmentation在5090上的环境配置及跑通自己的数据集">
 <meta property="og:url" content="https://3hree5ive.top/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/index.html">
 <meta property="og:site_name" content="3hree5ive">
-<meta property="og:description" content="5090深度学习环境配置  CUDA: 12.8 pytorch: 2.8.0 python: 3.10.20  由于 5090 全新的架构问题，CUDA 最低也要 12.8 版本，pytorch 可选对应的适配版本（如 2.7.1 也可）。 由于 openmmlab 已经两年没有再维护更新 mmsegmentation， 即使是最新的 1.x 版本也难以支持目前的最新环境，且仅支持Pytorc">
+<meta property="og:description" content="5090深度学习环境配置  CUDA: 12.8 pytorch: 2.8.0 python: 3.10.20  由于清华等国内镜像源没有GPU版本的Pytorch，所以建议保留一个只有上述内容的虚拟环境，然后每次新开项目的时候克隆 1conda create -n xxx --clone xxx 然而由于 5090 使用全新架构， CUDA 最低也要 12.8 版本， pytorch 可选对应">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://3hree5ive.top/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/1.png">
 <meta property="og:image" content="https://3hree5ive.top/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/2.png">
+<meta property="og:image" content="https://3hree5ive.top/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/3.png">
+<meta property="og:image" content="https://3hree5ive.top/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/4.png">
 <meta property="article:published_time" content="2026-04-04T07:11:02.000Z">
-<meta property="article:modified_time" content="2026-04-07T08:50:29.602Z">
+<meta property="article:modified_time" content="2026-04-08T12:35:02.304Z">
 <meta property="article:author" content="KK">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://3hree5ive.top/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/1.png">
@@ -138,7 +140,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#5090%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="nav-number">1.</span> <span class="nav-text"> 5090深度学习环境配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4%E7%9A%84%E9%85%8D%E7%BD%AE%E8%BF%87%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text"> 完整的配置过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%A6%E4%B8%80%E7%A7%8D%E5%AE%89%E8%A3%85%E6%96%B9%E5%BC%8F"><span class="nav-number">3.</span> <span class="nav-text"> 另一种安装方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A8%E9%9D%A2%E6%B5%8B%E8%AF%95%E5%AE%89%E8%A3%85%E6%98%AF%E5%90%A6%E6%88%90%E5%8A%9F"><span class="nav-number">4.</span> <span class="nav-text"> 全面测试安装是否成功</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#5090%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="nav-number">1.</span> <span class="nav-text"> 5090深度学习环境配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%8C%E6%95%B4%E7%9A%84%E9%85%8D%E7%BD%AE%E8%BF%87%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text"> 完整的配置过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A8%E9%9D%A2%E6%B5%8B%E8%AF%95%E5%AE%89%E8%A3%85%E6%98%AF%E5%90%A6%E6%88%90%E5%8A%9F"><span class="nav-number">3.</span> <span class="nav-text"> 全面测试安装是否成功</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -215,7 +217,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-04-07 16:50:29" itemprop="dateModified" datetime="2026-04-07T16:50:29+08:00">2026-04-07</time>
+      <time title="修改时间：2026-04-08 20:35:02" itemprop="dateModified" datetime="2026-04-08T20:35:02+08:00">2026-04-08</time>
     </span>
 
   
@@ -233,7 +235,9 @@
 <li>pytorch: 2.8.0</li>
 <li>python: 3.10.20</li>
 </ul>
-<p>由于 5090 全新的架构问题，CUDA 最低也要 12.8 版本，pytorch 可选对应的适配版本（如 2.7.1 也可）。</p>
+<p>由于清华等国内镜像源没有GPU版本的Pytorch，所以建议保留一个只有上述内容的虚拟环境，然后每次新开项目的时候克隆</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda create -n xxx --<span class="built_in">clone</span> xxx</span><br></pre></td></tr></table></figure>
+<p>然而由于 5090 使用全新架构， CUDA 最低也要 12.8 版本， pytorch 可选对应的适配版本。</p>
 <p>由于 openmmlab 已经两年没有再维护更新 mmsegmentation，<br />
 即使是最新的 1.x 版本也难以支持目前的最新环境，且仅支持Pytorch1.x版本，手动去改配置、从源码编译 mmcv 也可以成功，详细见 <a target="_blank" rel="noopener" href="https://github.com/open-mmlab/mmcv/issues/3283">mmcv issue #3283</a> 中的讨论即可。</p>
 <p>但是我发现了一个团队正在重整当年 openmmlab 不再维护的代码：<br />
@@ -251,32 +255,53 @@
 则说明你的 pytorch、cuda 以及 python 版本没有严格对应的预构建包。<br />
 这种情况下即使此时输出了安装成功，实际上也还是没有编译 mmcv。<br />
 后续测试案例的时候会报错：</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">No module named &#x27;mmcv._ext&#x27;</span><br></pre></td></tr></table></figure>
-<p>此时又需要从源代码构建 mmcv 的办法。</p>
-<h2 id="另一种安装方式"><a class="markdownIt-Anchor" href="#另一种安装方式"></a> 另一种安装方式</h2>
-<p>或者直接使用 pip 安装，注意各个版本要严格对应好（主要是 cuda128 + pytorch2.8.x）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">No module named <span class="string">&#x27;mmcv._ext&#x27;</span></span><br></pre></td></tr></table></figure>
+<p>此时又需要从源代码构建 onedl-mmcv 的办法</p>
+<p>或者直接使用 pip 安装，注意各个版本要严格对应好（主要是 cuda128 + pytorch2.8）：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install onedl-mmcv==2.3.2 -f https://mmwheels.onedl.ai/cu128-torch280/index.html</span><br></pre></td></tr></table></figure>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> -b main https://github.com/vbti-development/onedl-mmsegmentation.git</span><br><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line">pip install -v -e .</span><br></pre></td></tr></table></figure>
-<p>坏消息是 这种安装方式依旧报错</p>
-<p>No module named ‘mmcv._ext’</p>
+<p>但是这种安装方式依旧报错</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">No module named <span class="string">&#x27;mmcv._ext&#x27;</span></span><br></pre></td></tr></table></figure>
 <p>在onedl-mmsegmentation的repo提交了issue得到了<a target="_blank" rel="noopener" href="https://github.com/VBTI-development/onedl-mmsegmentation/issues/21#issuecomment-4186971904">回复</a><br />
 具体来说开发者要求Python版本为3.10或3.12 cuda和torch版本跟我目前的说的一致 并提供了如下指令</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install onedl-mmcv==2.3.2 -f https://mmwheels.onedl.ai/cu128-torch280/index.html --only-binary=onedl-mmcv -v</span><br></pre></td></tr></table></figure>
 <p>接下来打算clone一个Python3.10+CUDA12.8+Pytorch2.8.0的新环境<br />
-然后再重新clone一个oneDL-mmsegmentation项目来试一下</p>
-<p>最终解决方案：从源代码编译</p>
+然后再重新clone一个oneDL-mmsegmentation项目来试一下上述指令能否成功<br />
+报错如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Could not find a version that satisfies the requirement onedl-mmcv==2.3.2(from versions: none)</span><br><span class="line">No matching distribution found <span class="keyword">for</span> onedl-mmcv==2.3.2</span><br></pre></td></tr></table></figure>
+<p>这说明压根没找到匹配的预编译包，但是我的版本是明确对应的python3.10+cuda12.8+torch2.8.0<br />
+这在他们<a target="_blank" rel="noopener" href="https://onedl-mmcv.readthedocs.io/en/latest/get_started/installation.html">mmcv的官方安装文档</a>里也写了<br />
+并且能直接找到放预编译包的地址</p>
+<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/3.png" class=""></p>
+<p><em>图 3：</em></p>
+<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/4.png" class=""></p>
+<p><em>图 4：</em></p>
+<p>最终直接使用预编译包的直接地址去安装mmcv成功，即在图4中右键相应的wheel文件复制链接地址然后</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install https://mmwheels-bucket.onedl.ai/cu128-torch280/onedl-mmcv/onedl_mmcv-2.3.3-cp310-cp310-manylinux_2_34_x86_64.whl</span><br></pre></td></tr></table></figure>
+<p>解决方案2：从源代码编译mmcv，这里最好直接把mmcv克隆到整个mmsegmentation项目下</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/open-mmlab/mmcv.git</span><br><span class="line"><span class="built_in">cd</span> mmcv</span><br><span class="line">git checkout v2.1.0  <span class="comment"># or your needed version</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Set CUDA environment</span></span><br><span class="line"><span class="built_in">export</span> FORCE_CUDA=1</span><br><span class="line"><span class="built_in">export</span> MMCV_WITH_OPS=1</span><br><span class="line"></span><br><span class="line"><span class="comment"># Compile and install</span></span><br><span class="line">pip install -r requirements.txt</span><br><span class="line">python setup.py build_ext --inplace</span><br><span class="line">pip install -e .</span><br></pre></td></tr></table></figure>
-<p>快速验证：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python -c <span class="string">&quot;import mmcv._ext; print(&#x27;_ext module loaded successfully&#x27;)&quot;</span></span><br></pre></td></tr></table></figure>
+<p>安装mmcv成功后不要忘记从源代码安装mmsegmentation！</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> -b main https://github.com/vbti-development/onedl-mmsegmentation.git</span><br><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line">pip install -v -e .</span><br></pre></td></tr></table></figure>
 <h2 id="全面测试安装是否成功"><a class="markdownIt-Anchor" href="#全面测试安装是否成功"></a> 全面测试安装是否成功</h2>
 <p>接下来测试是否安装成功可以跑通：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> ..  <span class="comment"># 返回mmsenmentation主目录</span></span><br><span class="line">mim download mmsegmentation --config pspnet_r50-d8_4xb2-40k_cityscapes-512x1024 --dest .</span><br><span class="line"></span><br><span class="line">python demo/image_demo.py demo/demo.png configs/pspnet/pspnet_r50-d8_4xb2-40k_cityscapes-512x1024.py pspnet_r50-d8_512x1024_40k_cityscapes_20200605_003338-2966598c.pth --device cuda:0 --out-file result.jpg</span><br></pre></td></tr></table></figure>
-<p>如果出现了 <code>result.jpg</code> 说明全部成功！</p>
-<p></p>
-<p><em>图 3：推理结果demo</em><br />
-要特别注意个包的版本问题setools</p>
+<p>如果出现了 <code>result.jpg</code> 说明全部成功！<br />
+注意此时配置好环境后，就不能更改整个项目文件夹的名字，因为是从源码编译的，即onedl-mmsegmentation</p>
+<p>接下来先在自带支持的数据集ADE20K上，跑通Segformer的训练与测试<br />
+先从官方文档给的链接下载ADE20K数据集，放到整个项目下的data/ade下，其余不用更改，内部的路径是对的</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 开始训练，并通过 --cfg-options 覆盖默认设置的 batch size 和 worker 数量</span></span><br><span class="line"><span class="comment"># 配置文件名的含义：用mit-b0的backbone，8张gpu，每张gpu的batch size为2，160k次迭代次数，515x512的图片尺寸</span></span><br><span class="line"><span class="comment"># 训练batch=16（5090其实可以开更大），验证batch=1，数据预处理同时进行8个</span></span><br><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8</span><br><span class="line"><span class="comment"># 或者如下更少次数的命令，更多的用法后续再去探索</span></span><br><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k_fast \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 \</span><br><span class="line">                  val_dataloader.batch_size=1 \</span><br><span class="line">                  train_dataloader.num_workers=8 \</span><br><span class="line">                  train_cfg.max_iters=40000 \</span><br><span class="line">                  train_cfg.val_interval=2000</span><br></pre></td></tr></table></figure>
+<p>实时查看显卡和CPU状态</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 每秒刷新一次</span></span><br><span class="line">watch -n 1 nvidia-smi</span><br><span class="line">htop</span><br></pre></td></tr></table></figure>
+<p>或者用nvitop工具查看显卡状态，按h可查看帮助文档</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 装到base里，以后方便用</span></span><br><span class="line">conda activate base</span><br><span class="line">pip install nvitop</span><br><span class="line">nvitop</span><br></pre></td></tr></table></figure>
+<p>关于测试，注意替换实际权重文件名</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 评估精度，并保存预测的彩色分割图到指定文件夹</span></span><br><span class="line">python tools/test.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    work_dirs/segformer_mit-b0_ade20k/best_mIoU_iter_xxx.pth \</span><br><span class="line">    --out work_dirs/segformer_mit-b0_ade20k/results \</span><br><span class="line">    --show-dir work_dirs/segformer_mit-b0_ade20k/vis_results</span><br></pre></td></tr></table></figure>
 <p>接下来说明如何跑通自己的分割数据集！<br />
-接下来以开源烟雾分割数据集<a target="_blank" rel="noopener" href="https://github.com/LujianYao/FoSp">SmokeSeg</a></p>
+接下来以开源烟雾分割数据集<a target="_blank" rel="noopener" href="https://github.com/LujianYao/FoSp">SmokeSeg</a>+框架自带支持的模型Segformer_mit-b5为例子说明<br />
+此数据集已被制作成标准的VOC格式放在项目下data/SmokeSeg中</p>
+<p>第一步：<br />
+第二步：<br />
+第三步：<br />
+第四步：</p>
 
     </div>
 
