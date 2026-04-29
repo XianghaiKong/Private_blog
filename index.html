@@ -150,11 +150,11 @@
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-count">16</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>
@@ -812,7 +812,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/" class="post-title-link" itemprop="url">Hexo+GitHub Pages搭建个人博客2026版</a>
+          <a href="/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/" class="post-title-link" itemprop="url">2026版：Hexo + GitHub Pages 个人博客搭建全记录</a>
         </h2>
 
         <div class="post-meta-container">
@@ -825,6 +825,22 @@
 
       <time title="创建时间：2026-03-29 13:41:47" itemprop="dateCreated datePublished" datetime="2026-03-29T13:41:47+08:00">2026-03-29</time>
     </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-04-29 16:22:23" itemprop="dateModified" datetime="2026-04-29T16:22:23+08:00">2026-04-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BB%BA%E7%AB%99%E6%95%99%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">建站教程</span></a>
+        </span>
+    </span>
 
   
 </div>
@@ -836,7 +852,37 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          
+          <h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
+<p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
+🔗 <strong>参考教程</strong>：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
+<blockquote>
+<p>⚠️ <strong>避坑指南</strong>：<br />
+虽然这篇文章的整体逻辑非常清晰，但由于距离现在已经过去了好几年，比如 Node.js 版本要求、Hexo 新版本的包管理变动、或者是 GitHub 现如今默认主分支变为 <code>main</code> 而非 <code>master</code>，都容易导致按照原教程执行时报错。</p>
+<p><em>由于时间流逝，具体踩了哪些坑虽然有些记不清了，但如果您在未来参考时遇到报错，强烈建议直接把终端报错信息交给 AI（比如我），往往能一针见血地指出是因为版本不兼容导致的问题，几分钟就能解决！</em></p>
+</blockquote>
+<hr />
+<h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
+<p>博客搭建在 GitHub Pages 上后，默认的域名通常是 <code>用户名.github.io</code>。为了让博客看起来更正式、更有辨识度，我决定为它绑定一个专属域名。</p>
+<p>🔗 <strong>参考教程</strong>：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
+<p><strong>核心操作</strong>：</p>
+<ol>
+<li><strong>购买域名</strong>：我直接在阿里云购买了一个以 <code>.top</code> 结尾的域名（性价比极高）。</li>
+<li><strong>DNS 解析配置</strong>：在阿里云的控制台中，添加 <code>CNAME</code> 记录，将其解析指向我自己的 GitHub Pages 地址。</li>
+<li><strong>GitHub 配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚买的域名，并开启 <code>Enforce HTTPS</code>。稍等片刻待 DNS 刷新后，就能通过您的专属独立域名访问博客了！</li>
+</ol>
+<hr />
+<h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
+<p>原生的 Hexo 界面比较极简，为了提升阅读体验和博客的颜值，主题美化是最后也是最折腾人的一个环节。</p>
+<p>🔗 <strong>参考教程</strong>：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
+<p><strong>主要的美化方向包括但不限于</strong>：</p>
+<ul>
+<li>安装并替换第三方的主题（如经典的 NexT 主题等）。</li>
+<li>配置侧边栏头像、个人信息及社交账号链接。</li>
+<li>修改博客的背景、字体配色，调整文章正文内容的排版样式。</li>
+<li>配置了专属的网站浏览器标签页小图标（Favicon）。</li>
+</ul>
+<p>经过这一系列的折腾与打磨，一个排版优雅、拥有专属独立域名的 2026 版个人博客就正式落成啦！</p>
+
       
     </div>
 
