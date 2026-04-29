@@ -20,26 +20,31 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"3hree5ive.top","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-dark","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="无限进步">
+    <meta name="description" content="事情起因 事情的起因发生在某天晚上运行深度学习代码时。按理说，这份代码所需的显存并不高，以 RTX 5090 的算力，理论上可以同时跑三个这样的实验。然而，就在代码启动的一瞬间，桌面直接“掉了”——显示器提示无信号输入。 经过后期的排查发现，其实是在那一瞬间，独显停止了渲染桌面，系统自动切换到了核显。但由于当时显示器的 DP 线是插在 5090 显卡上的，主板的 DP 口并没有接线，导致主板上的">
 <meta property="og:type" content="article">
-<meta property="og:title" content="5090+华硕主板显卡掉线">
+<meta property="og:title" content="RTX 5090 深度学习环境显卡瞬间掉线：排查与解决方案">
 <meta property="og:url" content="https://3hree5ive.top/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/index.html">
 <meta property="og:site_name" content="3hree5ive">
-<meta property="og:description" content="无限进步">
+<meta property="og:description" content="事情起因 事情的起因发生在某天晚上运行深度学习代码时。按理说，这份代码所需的显存并不高，以 RTX 5090 的算力，理论上可以同时跑三个这样的实验。然而，就在代码启动的一瞬间，桌面直接“掉了”——显示器提示无信号输入。 经过后期的排查发现，其实是在那一瞬间，独显停止了渲染桌面，系统自动切换到了核显。但由于当时显示器的 DP 线是插在 5090 显卡上的，主板的 DP 口并没有接线，导致主板上的">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-04-29T06:47:49.000Z">
-<meta property="article:modified_time" content="2026-04-29T06:47:49.679Z">
+<meta property="article:modified_time" content="2026-04-29T07:07:26.807Z">
 <meta property="article:author" content="KK">
+<meta property="article:tag" content="RTX 5090">
+<meta property="article:tag" content="Ubuntu">
+<meta property="article:tag" content="深度学习">
+<meta property="article:tag" content="硬件排查">
+<meta property="article:tag" content="踩坑记录">
 <meta name="twitter:card" content="summary">
 
 
 <link rel="canonical" href="https://3hree5ive.top/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://3hree5ive.top/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/","path":"2026/04/29/5090-华硕主板显卡掉线/","title":"5090+华硕主板显卡掉线"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://3hree5ive.top/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/","path":"2026/04/29/5090-华硕主板显卡掉线/","title":"RTX 5090 深度学习环境显卡瞬间掉线：排查与解决方案"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>5090+华硕主板显卡掉线 | 3hree5ive</title>
+<title>RTX 5090 深度学习环境显卡瞬间掉线：排查与解决方案 | 3hree5ive</title>
   
 
 
@@ -122,7 +127,7 @@
   
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -135,6 +140,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8B%E6%83%85%E8%B5%B7%E5%9B%A0"><span class="nav-number">1.</span> <span class="nav-text"> 事情起因</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%81%A2%E5%A4%8D%E6%98%BE%E7%A4%BA%E5%99%A8%E7%9A%84%E6%AD%A3%E5%B8%B8%E8%BE%93%E5%87%BA"><span class="nav-number">2.</span> <span class="nav-text"> 恢复显示器的正常输出</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B9%E6%9C%AC%E5%8E%9F%E5%9B%A0%E4%B8%8E%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">3.</span> <span class="nav-text"> 根本原因与解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%88%E4%B8%80%E9%99%90%E5%88%B6%E6%98%BE%E5%8D%A1%E6%9C%80%E5%A4%A7%E5%8A%9F%E8%80%97%E6%8E%A8%E8%8D%90"><span class="nav-number">3.1.</span> <span class="nav-text"> 方案一：限制显卡最大功耗（推荐）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%A1%88%E4%BA%8C%E4%BB%A3%E7%A0%81%E5%B1%82%E9%9D%A2%E7%9A%84-gpu-%E9%A2%84%E7%83%AD-warm-up"><span class="nav-number">3.2.</span> <span class="nav-text"> 方案二：代码层面的 GPU 预热 (Warm-up)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%81%97%E7%95%99%E7%9A%84%E7%96%91%E9%97%AE%E4%B8%8E%E6%8E%A2%E8%AE%A8"><span class="nav-number">4.</span> <span class="nav-text"> 遗留的疑问与探讨</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -147,16 +153,16 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-count">5</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-count">2</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">12</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>
@@ -196,12 +202,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="5090+华硕主板显卡掉线 | 3hree5ive">
+      <meta itemprop="name" content="RTX 5090 深度学习环境显卡瞬间掉线：排查与解决方案 | 3hree5ive">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          5090+华硕主板显卡掉线
+          RTX 5090 深度学习环境显卡瞬间掉线：排查与解决方案
         </h1>
 
         <div class="post-meta-container">
@@ -211,8 +217,9 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
+      
 
-      <time title="创建时间：2026-04-29 14:47:49" itemprop="dateCreated datePublished" datetime="2026-04-29T14:47:49+08:00">2026-04-29</time>
+      <time title="创建时间：2026-04-29 14:47:49 / 修改时间：15:07:26" itemprop="dateCreated datePublished" datetime="2026-04-29T14:47:49+08:00">2026-04-29</time>
     </span>
 
   
@@ -224,7 +231,43 @@
     
     
     
-    <div class="post-body" itemprop="articleBody">
+    <div class="post-body" itemprop="articleBody"><h2 id="事情起因"><a class="markdownIt-Anchor" href="#事情起因"></a> 事情起因</h2>
+<p>事情的起因发生在某天晚上运行深度学习代码时。按理说，这份代码所需的显存并不高，以 RTX 5090 的算力，理论上可以同时跑三个这样的实验。然而，就在代码启动的一瞬间，桌面直接“掉了”——显示器提示无信号输入。</p>
+<p>经过后期的排查发现，其实是在那一瞬间，<strong>独显停止了渲染桌面，系统自动切换到了核显</strong>。但由于当时显示器的 DP 线是插在 5090 显卡上的，主板的 DP 口并没有接线，导致主板上的核显虽然接管了输出，但无法将画面传输给显示器，所以显示器表现为一直黑屏。</p>
+<hr />
+<h2 id="恢复显示器的正常输出"><a class="markdownIt-Anchor" href="#恢复显示器的正常输出"></a> 恢复显示器的正常输出</h2>
+<p>找到原因后，排查和恢复画面的第一步是让显示器重新亮起来：</p>
+<ol>
+<li><strong>进入 BIOS 禁用核显</strong>：将显示器线接到主板的 HDMI/DP 口，成功点亮并进入了 BIOS 界面。</li>
+<li><strong>关闭核显设置</strong>：在 BIOS 中将核显强制关闭。（华硕主板关闭核显的具体操作可参考 <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/30736793224">这篇知乎教程</a>）。</li>
+<li><strong>重新接回独显</strong>：设置完成后，将显示器线重新接回 5090 显卡，显示器恢复正常显示。</li>
+</ol>
+<blockquote>
+<p>⚠️ <strong>潜在隐患（注意事项）</strong>：<br />
+这样操作后有一个小隐患：如果未来 5090 显卡真的发生硬件故障，再想进入 BIOS 页面就会比较麻烦。由于核显已被禁用，需要<strong>扣掉主板上的纽扣电池静置五分钟（或短接 CLRTC 引脚）</strong>，恢复主板出厂设置后，才能再次使用核显渲染出 BIOS 界面。</p>
+</blockquote>
+<hr />
+<h2 id="根本原因与解决方案"><a class="markdownIt-Anchor" href="#根本原因与解决方案"></a> 根本原因与解决方案</h2>
+<p>在解决了“黑屏”问题后，回到最初的起因：为什么跑代码瞬间会导致独显掉线？</p>
+<p>初步推测，可能是由于代码开始跑的那一瞬间，<strong>显卡启动功率过大（RTX 5090 的瞬时功耗极高，满载可达 600W 以上）</strong>，导致电源的 OCP（过流保护）被触发，或是主板 PCIe 供电出现瞬时保护。</p>
+<p>为了防止类似情况再次发生，可以采用以下几种方案：</p>
+<h3 id="方案一限制显卡最大功耗推荐"><a class="markdownIt-Anchor" href="#方案一限制显卡最大功耗推荐"></a> 方案一：限制显卡最大功耗（推荐）</h3>
+<p>在跑代码之前，可以通过 <code>nvidia-smi</code> 强制限制 5090 的最大功耗。例如，将其限制在 450W：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 设置 GPU 功耗上限为 450W</span></span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 450</span><br></pre></td></tr></table></figure>
+<p>设置完成后，再次输入 <code>nvidia-smi</code> 即可看到最大功率已经被限制。</p>
+<p><strong>缺点</strong>：每次重启电脑后该设置会失效。不过由于这台 5090 工作站安装的是 Ubuntu 系统，平时一直放在工位且基本不怎么关机，所以这个方案目前非常实用。<em>(注：如果需要开机自动生效，可以将其加入 <code>rc.local</code> 或设置为 systemd 开机服务。)</em></p>
+<h3 id="方案二代码层面的-gpu-预热-warm-up"><a class="markdownIt-Anchor" href="#方案二代码层面的-gpu-预热-warm-up"></a> 方案二：代码层面的 GPU 预热 (Warm-up)</h3>
+<p>为了避免瞬间将 GPU 负载拉满，可以在代码中加入一些预热操作。例如在开始正式的大规模矩阵运算前，先用较小的 batch size 跑几个 step，让 GPU 的功耗平滑上升，避免产生巨大的瞬态电流。</p>
+<hr />
+<h2 id="遗留的疑问与探讨"><a class="markdownIt-Anchor" href="#遗留的疑问与探讨"></a> 遗留的疑问与探讨</h2>
+<p>最后，还有一个至今让我不太明白的问题：<br />
+工作站使用的是 <strong>1300W 金牌电源</strong>，按理说应对单张 5090 显卡是绰绰有余的，应该不至于无法为大功耗显卡供电。</p>
+<blockquote>
+<p><strong>💡 可能的解释（瞬态功耗 Power Excursion）：</strong><br />
+现代高端显卡在瞬间负载突变时，会产生极高的<strong>瞬态功耗</strong>，有时能达到 TDP 的 2 到 3 倍（持续几十微秒到几毫秒）。如果电源不是符合 ATX 3.0/3.1 标准的原生 PCIe 5.0 电源，其应对瞬态功耗的能力可能不足，从而瞬间触发电源的过载保护机制。</p>
+</blockquote>
+<p>当然，这也仅仅是推测。具体的真正原因，只有留到后续有机会时再去深入探索和验证了。</p>
+
     </div>
 
     
@@ -232,13 +275,20 @@
     
 
     <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" rel="tag"># 深度学习</a>
+              <a href="/tags/RTX-5090/" rel="tag"># RTX 5090</a>
+              <a href="/tags/%E8%B8%A9%E5%9D%91%E8%AE%B0%E5%BD%95/" rel="tag"># 踩坑记录</a>
+              <a href="/tags/Ubuntu/" rel="tag"># Ubuntu</a>
+              <a href="/tags/%E7%A1%AC%E4%BB%B6%E6%8E%92%E6%9F%A5/" rel="tag"># 硬件排查</a>
+          </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/" rel="prev" title="git使用学习">
-                  <i class="fa fa-angle-left"></i> git使用学习
+                <a href="/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/" rel="prev" title="Git 极简实用指南：只学工作中最需要的">
+                  <i class="fa fa-angle-left"></i> Git 极简实用指南：只学工作中最需要的
                 </a>
             </div>
             <div class="post-nav-item">
