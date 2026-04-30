@@ -20,15 +20,15 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"3hree5ive.top","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-dark","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="前言 学习 Git 最怕的就是一开始就陷入各种复杂的底层原理和冗长的命令参数中。对于绝大多数日常开发而言，我们只需要掌握它作为“代码版本管理工具”的核心用法即可。 这篇博客主打**“不求搞懂全部原理，只求快速上手工作”**，整理了个人在本地代码管理及 GitHub 交互中最常用的一套极简指令集。   一、 起步：配置与初始化 在使用 Git 之前，你需要告诉 Git “你是谁”，这样后续的代码提">
+    <meta name="description" content="前言 Git 是开发中绕不开的版本控制工具，但其包含的命令和底层概念非常多。在实际的日常代码管理中，很多时候我们只需要用到它的一小部分核心功能。 为了提高工作效率，我在这里整理了一份自己平时最常用到的 Git 操作清单，主要涵盖了本地代码的暂存、提交、历史回退以及与远程仓库的交互。这份记录以实用为主，方便在忘记具体指令时随时查阅。   一、 初始化与基础配置 在开始管理代码前，第一步需要配置用户">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Git 极简实用指南：只学工作中最需要的">
+<meta property="og:title" content="Git 核心操作记录：面向日常开发的实践总结">
 <meta property="og:url" content="https://3hree5ive.top/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/index.html">
 <meta property="og:site_name" content="3hree5ive">
-<meta property="og:description" content="前言 学习 Git 最怕的就是一开始就陷入各种复杂的底层原理和冗长的命令参数中。对于绝大多数日常开发而言，我们只需要掌握它作为“代码版本管理工具”的核心用法即可。 这篇博客主打**“不求搞懂全部原理，只求快速上手工作”**，整理了个人在本地代码管理及 GitHub 交互中最常用的一套极简指令集。   一、 起步：配置与初始化 在使用 Git 之前，你需要告诉 Git “你是谁”，这样后续的代码提">
+<meta property="og:description" content="前言 Git 是开发中绕不开的版本控制工具，但其包含的命令和底层概念非常多。在实际的日常代码管理中，很多时候我们只需要用到它的一小部分核心功能。 为了提高工作效率，我在这里整理了一份自己平时最常用到的 Git 操作清单，主要涵盖了本地代码的暂存、提交、历史回退以及与远程仓库的交互。这份记录以实用为主，方便在忘记具体指令时随时查阅。   一、 初始化与基础配置 在开始管理代码前，第一步需要配置用户">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-04-14T02:54:44.000Z">
-<meta property="article:modified_time" content="2026-04-29T08:05:33.667Z">
+<meta property="article:modified_time" content="2026-04-30T03:08:51.923Z">
 <meta property="article:author" content="KK">
 <meta property="article:tag" content="Git">
 <meta property="article:tag" content="效率工具">
@@ -40,10 +40,10 @@
 <link rel="canonical" href="https://3hree5ive.top/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://3hree5ive.top/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/","path":"2026/04/14/git使用学习/","title":"Git 极简实用指南：只学工作中最需要的"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://3hree5ive.top/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/","path":"2026/04/14/git使用学习/","title":"Git 核心操作记录：面向日常开发的实践总结"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>Git 极简实用指南：只学工作中最需要的 | 3hree5ive</title>
+<title>Git 核心操作记录：面向日常开发的实践总结 | 3hree5ive</title>
   
 
 
@@ -139,7 +139,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text"> 前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80-%E8%B5%B7%E6%AD%A5%E9%85%8D%E7%BD%AE%E4%B8%8E%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">2.</span> <span class="nav-text"> 一、 起步：配置与初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E9%85%8D%E7%BD%AE%E4%B8%AA%E4%BA%BA%E5%A7%93%E5%90%8D%E5%92%8C%E9%82%AE%E7%AE%B1"><span class="nav-number">2.1.</span> <span class="nav-text"> 1. 配置个人姓名和邮箱</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E8%8E%B7%E5%8F%96%E4%B8%80%E4%B8%AA%E4%BB%A3%E7%A0%81%E5%BA%93"><span class="nav-number">2.2.</span> <span class="nav-text"> 2. 获取一个代码库</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C-%E6%97%A5%E5%B8%B8%E5%BC%80%E5%8F%91%E5%A6%82%E4%BD%95%E6%8F%90%E4%BA%A4%E6%9B%B4%E6%94%B9"><span class="nav-number">3.</span> <span class="nav-text"> 二、 日常开发：如何提交更改</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%B7%BB%E5%8A%A0%E5%88%B0%E6%9A%82%E5%AD%98%E5%8C%BA"><span class="nav-number">3.1.</span> <span class="nav-text"> 1. 添加到暂存区</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%8F%90%E4%BA%A4%E5%88%B0%E6%9C%AC%E5%9C%B0%E4%BB%93%E5%BA%93"><span class="nav-number">3.2.</span> <span class="nav-text"> 2. 提交到本地仓库</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89-%E6%97%B6%E5%85%89%E6%9C%BA%E5%A6%82%E4%BD%95%E5%9B%9E%E5%88%B0%E6%9F%90%E4%B8%AA%E7%89%88%E6%9C%AC"><span class="nav-number">4.</span> <span class="nav-text"> 三、 时光机：如何回到某个版本</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%9F%A5%E7%9C%8B%E5%8E%86%E5%8F%B2%E7%89%88%E6%9C%AC"><span class="nav-number">4.1.</span> <span class="nav-text"> 1. 查看历史版本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E4%BB%A3%E7%A0%81%E5%9B%9E%E9%80%80"><span class="nav-number">4.2.</span> <span class="nav-text"> 2. 代码回退</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B-%E5%B9%B3%E8%A1%8C%E5%AE%87%E5%AE%99%E5%88%86%E6%94%AF%E4%B8%8E%E5%90%88%E5%B9%B6"><span class="nav-number">5.</span> <span class="nav-text"> 四、 平行宇宙：分支与合并</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%88%9B%E5%BB%BA%E5%B9%B6%E5%88%87%E6%8D%A2%E5%88%B0%E6%96%B0%E5%88%86%E6%94%AF"><span class="nav-number">5.1.</span> <span class="nav-text"> 1. 创建并切换到新分支</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%9C%A8%E5%88%86%E6%94%AF%E4%B8%8A%E5%BC%80%E5%8F%91%E4%B8%8E%E6%8F%90%E4%BA%A4"><span class="nav-number">5.2.</span> <span class="nav-text"> 2. 在分支上开发与提交</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%90%88%E5%B9%B6%E5%88%86%E6%94%AF"><span class="nav-number">5.3.</span> <span class="nav-text"> 3. 合并分支</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94-%E4%BA%91%E7%AB%AF%E5%90%8C%E6%AD%A5%E6%8E%A8%E9%80%81%E5%88%B0-github"><span class="nav-number">6.</span> <span class="nav-text"> 五、 云端同步：推送到 GitHub</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%85%B3%E8%81%94%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93%E4%BB%85%E9%92%88%E5%AF%B9-git-init-%E5%88%9D%E5%A7%8B%E5%8C%96%E7%9A%84%E9%A1%B9%E7%9B%AE"><span class="nav-number">6.1.</span> <span class="nav-text"> 1. 关联远程仓库（仅针对 git init 初始化的项目）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%8E%A8%E9%80%81%E6%9C%AC%E5%9C%B0%E4%BB%A3%E7%A0%81"><span class="nav-number">6.2.</span> <span class="nav-text"> 2. 推送本地代码</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text"> 前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80-%E5%88%9D%E5%A7%8B%E5%8C%96%E4%B8%8E%E5%9F%BA%E7%A1%80%E9%85%8D%E7%BD%AE"><span class="nav-number">2.</span> <span class="nav-text"> 一、 初始化与基础配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E9%85%8D%E7%BD%AE%E5%85%A8%E5%B1%80%E4%BF%A1%E6%81%AF"><span class="nav-number">2.1.</span> <span class="nav-text"> 1. 配置全局信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%BB%BA%E7%AB%8B%E6%9C%AC%E5%9C%B0%E4%BB%A3%E7%A0%81%E5%BA%93"><span class="nav-number">2.2.</span> <span class="nav-text"> 2. 建立本地代码库</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C-%E4%BB%A3%E7%A0%81%E6%8F%90%E4%BA%A4%E6%B5%81%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text"> 二、 代码提交流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%9A%82%E5%AD%98%E4%BB%A3%E7%A0%81%E6%9B%B4%E6%94%B9"><span class="nav-number">3.1.</span> <span class="nav-text"> 1. 暂存代码更改</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E7%94%9F%E6%88%90%E6%8F%90%E4%BA%A4%E7%89%88%E6%9C%AC"><span class="nav-number">3.2.</span> <span class="nav-text"> 2. 生成提交版本</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89-%E7%89%88%E6%9C%AC%E6%9F%A5%E7%9C%8B%E4%B8%8E%E5%9B%9E%E9%80%80"><span class="nav-number">4.</span> <span class="nav-text"> 三、 版本查看与回退</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%9F%A5%E7%9C%8B%E6%8F%90%E4%BA%A4%E5%8E%86%E5%8F%B2"><span class="nav-number">4.1.</span> <span class="nav-text"> 1. 查看提交历史</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%89%A7%E8%A1%8C%E5%9B%9E%E9%80%80%E6%93%8D%E4%BD%9C"><span class="nav-number">4.2.</span> <span class="nav-text"> 2. 执行回退操作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B-%E5%88%86%E6%94%AF%E7%AE%A1%E7%90%86%E4%B8%8E%E4%BB%A3%E7%A0%81%E5%90%88%E5%B9%B6"><span class="nav-number">5.</span> <span class="nav-text"> 四、 分支管理与代码合并</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%88%9B%E5%BB%BA%E5%B9%B6%E5%88%87%E6%8D%A2%E5%88%86%E6%94%AF"><span class="nav-number">5.1.</span> <span class="nav-text"> 1. 创建并切换分支</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%9C%A8%E5%88%86%E6%94%AF%E4%B8%AD%E6%8F%90%E4%BA%A4%E4%BB%A3%E7%A0%81"><span class="nav-number">5.2.</span> <span class="nav-text"> 2. 在分支中提交代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%B0%86%E5%88%86%E6%94%AF%E5%90%88%E5%B9%B6%E5%88%B0%E4%B8%BB%E7%BA%BF"><span class="nav-number">5.3.</span> <span class="nav-text"> 3. 将分支合并到主线</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94-%E4%B8%8E%E8%BF%9C%E7%A8%8B%E4%BA%91%E7%AB%AF%E5%90%8C%E6%AD%A5"><span class="nav-number">6.</span> <span class="nav-text"> 五、 与远程云端同步</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%85%B3%E8%81%94%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93-%E9%92%88%E5%AF%B9-git-init-%E7%9A%84%E9%A1%B9%E7%9B%AE"><span class="nav-number">6.1.</span> <span class="nav-text"> 1. 关联远程仓库 (针对 git init 的项目)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%8E%A8%E9%80%81%E6%9C%AC%E5%9C%B0%E4%BB%A3%E7%A0%81%E5%88%B0%E8%BF%9C%E7%AB%AF"><span class="nav-number">6.2.</span> <span class="nav-text"> 2. 推送本地代码到远端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E4%BB%A3%E7%A0%81%E5%9B%9E%E9%80%80"><span class="nav-number">6.3.</span> <span class="nav-text"> 2. 代码回退</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B-%E5%B9%B3%E8%A1%8C%E5%AE%87%E5%AE%99%E5%88%86%E6%94%AF%E4%B8%8E%E5%90%88%E5%B9%B6"><span class="nav-number">7.</span> <span class="nav-text"> 四、 平行宇宙：分支与合并</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%88%9B%E5%BB%BA%E5%B9%B6%E5%88%87%E6%8D%A2%E5%88%B0%E6%96%B0%E5%88%86%E6%94%AF"><span class="nav-number">7.1.</span> <span class="nav-text"> 1. 创建并切换到新分支</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%9C%A8%E5%88%86%E6%94%AF%E4%B8%8A%E5%BC%80%E5%8F%91%E4%B8%8E%E6%8F%90%E4%BA%A4"><span class="nav-number">7.2.</span> <span class="nav-text"> 2. 在分支上开发与提交</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%90%88%E5%B9%B6%E5%88%86%E6%94%AF"><span class="nav-number">7.3.</span> <span class="nav-text"> 3. 合并分支</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94-%E4%BA%91%E7%AB%AF%E5%90%8C%E6%AD%A5%E6%8E%A8%E9%80%81%E5%88%B0-github"><span class="nav-number">8.</span> <span class="nav-text"> 五、 云端同步：推送到 GitHub</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%85%B3%E8%81%94%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93%E4%BB%85%E9%92%88%E5%AF%B9-git-init-%E5%88%9D%E5%A7%8B%E5%8C%96%E7%9A%84%E9%A1%B9%E7%9B%AE"><span class="nav-number">8.1.</span> <span class="nav-text"> 1. 关联远程仓库（仅针对 git init 初始化的项目）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%8E%A8%E9%80%81%E6%9C%AC%E5%9C%B0%E4%BB%A3%E7%A0%81"><span class="nav-number">8.2.</span> <span class="nav-text"> 2. 推送本地代码</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -201,12 +201,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="Git 极简实用指南：只学工作中最需要的 | 3hree5ive">
+      <meta itemprop="name" content="Git 核心操作记录：面向日常开发的实践总结 | 3hree5ive">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Git 极简实用指南：只学工作中最需要的
+          Git 核心操作记录：面向日常开发的实践总结
         </h1>
 
         <div class="post-meta-container">
@@ -224,7 +224,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-04-29 16:05:33" itemprop="dateModified" datetime="2026-04-29T16:05:33+08:00">2026-04-29</time>
+      <time title="修改时间：2026-04-30 11:08:51" itemprop="dateModified" datetime="2026-04-30T11:08:51+08:00">2026-04-30</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -246,39 +246,75 @@
     
     
     <div class="post-body" itemprop="articleBody"><h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
-<p>学习 Git 最怕的就是一开始就陷入各种复杂的底层原理和冗长的命令参数中。对于绝大多数日常开发而言，我们只需要掌握它作为“代码版本管理工具”的核心用法即可。</p>
-<p>这篇博客主打**“不求搞懂全部原理，只求快速上手工作”**，整理了个人在本地代码管理及 GitHub 交互中最常用的一套极简指令集。</p>
+<p>Git 是开发中绕不开的版本控制工具，但其包含的命令和底层概念非常多。在实际的日常代码管理中，很多时候我们只需要用到它的一小部分核心功能。</p>
+<p>为了提高工作效率，我在这里整理了一份自己平时最常用到的 Git 操作清单，主要涵盖了本地代码的暂存、提交、历史回退以及与远程仓库的交互。这份记录以实用为主，方便在忘记具体指令时随时查阅。</p>
 <hr />
-<h2 id="一-起步配置与初始化"><a class="markdownIt-Anchor" href="#一-起步配置与初始化"></a> 一、 起步：配置与初始化</h2>
-<p>在使用 Git 之前，你需要告诉 Git “你是谁”，这样后续的代码提交记录才知道是谁改的代码。</p>
-<h3 id="1-配置个人姓名和邮箱"><a class="markdownIt-Anchor" href="#1-配置个人姓名和邮箱"></a> 1. 配置个人姓名和邮箱</h3>
-<p>打开终端，运行以下命令（加上 <code>--global</code> 代表全局生效）：</p>
+<h2 id="一-初始化与基础配置"><a class="markdownIt-Anchor" href="#一-初始化与基础配置"></a> 一、 初始化与基础配置</h2>
+<p>在开始管理代码前，第一步需要配置用户信息，这有助于追踪每次提交的代码作者。</p>
+<h3 id="1-配置全局信息"><a class="markdownIt-Anchor" href="#1-配置全局信息"></a> 1. 配置全局信息</h3>
+<p>打开终端，运行以下命令：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git config --global user.name <span class="string">&quot;你的名字&quot;</span></span><br><span class="line">git config --global user.email <span class="string">&quot;你的邮箱@example.com&quot;</span></span><br></pre></td></tr></table></figure>
-<h3 id="2-获取一个代码库"><a class="markdownIt-Anchor" href="#2-获取一个代码库"></a> 2. 获取一个代码库</h3>
-<p>获取一个受 Git 控制的代码库有两种方式：</p>
-<p><strong>方式 A：从零开始初始化一个新的本地项目</strong><br />
-进入你的项目文件夹，执行初始化命令，这会在当前目录下生成一个隐藏的 <code>.git</code> 文件夹：</p>
+<h3 id="2-建立本地代码库"><a class="markdownIt-Anchor" href="#2-建立本地代码库"></a> 2. 建立本地代码库</h3>
+<p>让一个目录受到 Git 管理，通常有两种情况：</p>
+<p><strong>情况 A：初始化本地新项目</strong><br />
+在项目根目录下执行初始化，这会生成一个 <code>.git</code> 隐藏文件夹来管理版本记录：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> your_project_folder</span><br><span class="line">git init</span><br></pre></td></tr></table></figure>
-<p><strong>方式 B：克隆别人的项目</strong><br />
-如果是从 GitHub 下载别人的开源项目，不需要 <code>git init</code>，直接克隆即可，它会自动包含所有版本信息：</p>
+<p><strong>情况 B：克隆远程仓库</strong><br />
+如果项目已经存在于远端（如 GitHub），直接克隆下来即可，不需要再执行 <code>git init</code>：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/用户名/项目名.git</span><br></pre></td></tr></table></figure>
 <hr />
-<h2 id="二-日常开发如何提交更改"><a class="markdownIt-Anchor" href="#二-日常开发如何提交更改"></a> 二、 日常开发：如何提交更改</h2>
-<p>在本地写好代码后，保存版本库通常只需要两步：“添加（Add）”和“提交（Commit）”。</p>
-<h3 id="1-添加到暂存区"><a class="markdownIt-Anchor" href="#1-添加到暂存区"></a> 1. 添加到暂存区</h3>
-<p>告诉 Git 你想把哪些修改了的文件纳入下一次的提交中。通常我们直接把当前目录下的所有更改都加进去：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 添加所有更改的文件（最常用）</span></span><br><span class="line">git add .</span><br></pre></td></tr></table></figure>
-<h3 id="2-提交到本地仓库"><a class="markdownIt-Anchor" href="#2-提交到本地仓库"></a> 2. 提交到本地仓库</h3>
-<p>给这次的更改起一个备忘的名字（Commit Message），把它正式封存为一个版本：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git commit -m <span class="string">&quot;新增了烟雾分割的数据处理脚本&quot;</span></span><br></pre></td></tr></table></figure>
+<h2 id="二-代码提交流程"><a class="markdownIt-Anchor" href="#二-代码提交流程"></a> 二、 代码提交流程</h2>
+<p>写好代码后，需要将其保存到本地仓库的版本记录中。这是一个两步走的过程：先添加到暂存区，再正式提交。</p>
+<h3 id="1-暂存代码更改"><a class="markdownIt-Anchor" href="#1-暂存代码更改"></a> 1. 暂存代码更改</h3>
+<p>将当前目录下的所有文件变更放入暂存区：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 点号代表当前目录所有更改</span></span><br><span class="line">git add .</span><br></pre></td></tr></table></figure>
+<h3 id="2-生成提交版本"><a class="markdownIt-Anchor" href="#2-生成提交版本"></a> 2. 生成提交版本</h3>
+<p>为这次变更附上说明，并生成一个固定的版本记录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git commit -m <span class="string">&quot;新增了烟雾分割的数据预处理脚本&quot;</span></span><br></pre></td></tr></table></figure>
 <blockquote>
-<p>💡 <strong>提示</strong>：良好的 Commit Message 习惯非常重要，最好能简单说明这次提交做了什么。</p>
+<p>💡 <strong>个人体会</strong>：养成写清晰 Commit Message 的习惯在后期回顾代码或与他人协作时能省下很多沟通成本。</p>
 </blockquote>
 <hr />
-<h2 id="三-时光机如何回到某个版本"><a class="markdownIt-Anchor" href="#三-时光机如何回到某个版本"></a> 三、 时光机：如何回到某个版本</h2>
-<p>如果代码改崩了，或者想丢弃掉最近的错误修改，Git 提供了强大的回退功能。</p>
-<h3 id="1-查看历史版本"><a class="markdownIt-Anchor" href="#1-查看历史版本"></a> 1. 查看历史版本</h3>
-<p>首先，查看以往的提交记录，找到你想回去的那个版本的“哈希值（一串黄色字符）”：</p>
+<h2 id="三-版本查看与回退"><a class="markdownIt-Anchor" href="#三-版本查看与回退"></a> 三、 版本查看与回退</h2>
+<p>在开发过程中经常会遇到代码改错或者需要查看过往修改逻辑的情况，这时候就需要用到版本回退功能。</p>
+<h3 id="1-查看提交历史"><a class="markdownIt-Anchor" href="#1-查看提交历史"></a> 1. 查看提交历史</h3>
+<p>获取简略的提交记录列表（主要为了获取版本对应的哈希值）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">log</span> --oneline</span><br></pre></td></tr></table></figure>
+<h3 id="2-执行回退操作"><a class="markdownIt-Anchor" href="#2-执行回退操作"></a> 2. 执行回退操作</h3>
+<p>根据不同情况选择不同的回退指令：</p>
+<ul>
+<li>
+<p><strong>撤销当前工作区尚未 commit 的更改</strong>（放弃最近的修改，恢复到上一次提交时的状态）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 危险操作，未提交的代码将直接覆盖</span></span><br><span class="line">git checkout .</span><br><span class="line"><span class="comment"># 或者使用新版本推荐的命令</span></span><br><span class="line">git restore .</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>彻底回退到历史的某个特定版本</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 回退到指定的 commit_id，并抛弃该版本之后的所有记录（需谨慎使用）</span></span><br><span class="line">git reset --hard &lt;commit_id&gt;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<hr />
+<h2 id="四-分支管理与代码合并"><a class="markdownIt-Anchor" href="#四-分支管理与代码合并"></a> 四、 分支管理与代码合并</h2>
+<p>当开发一个独立的新功能，或者需要修复一个特定的 Bug 时，新建分支可以有效防止未经验证的代码污染主线环境。</p>
+<h3 id="1-创建并切换分支"><a class="markdownIt-Anchor" href="#1-创建并切换分支"></a> 1. 创建并切换分支</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 新建 dev-feature 分支并立刻切换</span></span><br><span class="line">git checkout -b dev-feature</span><br><span class="line"></span><br><span class="line"><span class="comment"># 在较新的 Git 版本中，更推荐使用 switch 语义</span></span><br><span class="line">git switch -c dev-feature</span><br></pre></td></tr></table></figure>
+<h3 id="2-在分支中提交代码"><a class="markdownIt-Anchor" href="#2-在分支中提交代码"></a> 2. 在分支中提交代码</h3>
+<p>在独立分支中的操作和主分支一致：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m <span class="string">&quot;完成了验证集代码的编写&quot;</span></span><br></pre></td></tr></table></figure>
+<h3 id="3-将分支合并到主线"><a class="markdownIt-Anchor" href="#3-将分支合并到主线"></a> 3. 将分支合并到主线</h3>
+<p>新功能开发并测试稳定后，需要将其合并回主线分支（通常为 <code>main</code> 或 <code>master</code>）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 切换回主分支</span></span><br><span class="line">git checkout main</span><br><span class="line"></span><br><span class="line"><span class="comment"># 将指定开发分支的代码合并到当前分支</span></span><br><span class="line">git merge dev-feature</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="五-与远程云端同步"><a class="markdownIt-Anchor" href="#五-与远程云端同步"></a> 五、 与远程云端同步</h2>
+<p>本地代码完成迭代后，通常需要推送到远程仓库进行备份或协作。</p>
+<h3 id="1-关联远程仓库-针对-git-init-的项目"><a class="markdownIt-Anchor" href="#1-关联远程仓库-针对-git-init-的项目"></a> 1. 关联远程仓库 (针对 git init 的项目)</h3>
+<p>如果是手动初始化的项目，需要先跟 GitHub 等平台的空仓库绑定关系：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git remote add origin https://github.com/用户名/你的仓库名.git</span><br></pre></td></tr></table></figure>
+<h3 id="2-推送本地代码到远端"><a class="markdownIt-Anchor" href="#2-推送本地代码到远端"></a> 2. 推送本地代码到远端</h3>
+<p>初次推送一个新分支时，需要加上 <code>-u</code> 参数来建立本地和远程分支的关联：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git push -u origin main</span><br></pre></td></tr></table></figure>
+<p>绑定完成后，后续的常规推送就变得非常简单了：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git commit -m <span class="string">&quot;日常代码更新&quot;</span></span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+<p>掌握了这套基础操作，基本就能应对单人开发以及小规模团队协作的大部分版本控制需求了。找到你想回去的那个版本的“哈希值（一串黄色字符）”：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">log</span> --oneline</span><br></pre></td></tr></table></figure>
 <h3 id="2-代码回退"><a class="markdownIt-Anchor" href="#2-代码回退"></a> 2. 代码回退</h3>
 <p>通常有两种回退需求：</p>
@@ -334,13 +370,13 @@
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2026/04/13/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87/" rel="prev" title="语义分割评价指标">
-                  <i class="fa fa-angle-left"></i> 语义分割评价指标
+                <a href="/2026/04/13/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87/" rel="prev" title="语义分割评价指标梳理与代码实现记录">
+                  <i class="fa fa-angle-left"></i> 语义分割评价指标梳理与代码实现记录
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/" rel="next" title="RTX 5090 深度学习环境显卡瞬间掉线：排查与解决方案">
-                  RTX 5090 深度学习环境显卡瞬间掉线：排查与解决方案 <i class="fa fa-angle-right"></i>
+                <a href="/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/" rel="next" title="RTX 5090 深度学习环境显卡掉线排查记录">
+                  RTX 5090 深度学习环境显卡掉线排查记录 <i class="fa fa-angle-right"></i>
                 </a>
             </div>
           </div>

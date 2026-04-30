@@ -20,15 +20,15 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"3hree5ive.top","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-dark","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="阶段一：基础框架搭建 (Hexo + GitHub Pages) 博客的基础骨架搭建，我主要参考了这篇知乎经验贴： 🔗 参考教程：《Hexo + GitHub Pages 搭建个人博客》  ⚠️ 避坑指南： 虽然这篇文章的整体逻辑非常清晰，但由于距离现在已经过去了好几年，比如 Node.js 版本要求、Hexo 新版本的包管理变动、或者是 GitHub 现如今默认主分支变为 main 而非 m">
+    <meta name="description" content="最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。  阶段一：基础框架搭建 (Hexo + GitHub Pages) 博客的基础骨架搭建，我主要参考了这篇知乎经验贴： 🔗 参考教程：《Hexo + GitHub Pages">
 <meta property="og:type" content="article">
 <meta property="og:title" content="2026版：Hexo + GitHub Pages 个人博客搭建全记录">
 <meta property="og:url" content="https://3hree5ive.top/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/index.html">
 <meta property="og:site_name" content="3hree5ive">
-<meta property="og:description" content="阶段一：基础框架搭建 (Hexo + GitHub Pages) 博客的基础骨架搭建，我主要参考了这篇知乎经验贴： 🔗 参考教程：《Hexo + GitHub Pages 搭建个人博客》  ⚠️ 避坑指南： 虽然这篇文章的整体逻辑非常清晰，但由于距离现在已经过去了好几年，比如 Node.js 版本要求、Hexo 新版本的包管理变动、或者是 GitHub 现如今默认主分支变为 main 而非 m">
+<meta property="og:description" content="最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。  阶段一：基础框架搭建 (Hexo + GitHub Pages) 博客的基础骨架搭建，我主要参考了这篇知乎经验贴： 🔗 参考教程：《Hexo + GitHub Pages">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-03-29T05:41:47.000Z">
-<meta property="article:modified_time" content="2026-04-29T08:22:23.869Z">
+<meta property="article:modified_time" content="2026-04-30T03:04:05.394Z">
 <meta property="article:author" content="KK">
 <meta property="article:tag" content="GitHub Pages">
 <meta property="article:tag" content="Hexo">
@@ -225,7 +225,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-04-29 16:22:23" itemprop="dateModified" datetime="2026-04-29T16:22:23+08:00">2026-04-29</time>
+      <time title="修改时间：2026-04-30 11:04:05" itemprop="dateModified" datetime="2026-04-30T11:04:05+08:00">2026-04-30</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -246,36 +246,37 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
+    <div class="post-body" itemprop="articleBody"><p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
+<h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
 <p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
 🔗 <strong>参考教程</strong>：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
 <blockquote>
-<p>⚠️ <strong>避坑指南</strong>：<br />
-虽然这篇文章的整体逻辑非常清晰，但由于距离现在已经过去了好几年，比如 Node.js 版本要求、Hexo 新版本的包管理变动、或者是 GitHub 现如今默认主分支变为 <code>main</code> 而非 <code>master</code>，都容易导致按照原教程执行时报错。</p>
-<p><em>由于时间流逝，具体踩了哪些坑虽然有些记不清了，但如果您在未来参考时遇到报错，强烈建议直接把终端报错信息交给 AI（比如我），往往能一针见血地指出是因为版本不兼容导致的问题，几分钟就能解决！</em></p>
+<p>💡 <strong>操作记录</strong>：<br />
+虽然这篇文章的整体逻辑很清晰，但因为发布时间较早，很多细节已经发生了变化。例如 Node.js 的版本要求、Hexo 包管理的变动，以及目前 GitHub 默认主分支已经从 <code>master</code> 变成了 <code>main</code>。这些差异很容易导致按照原教程执行时出现报错。</p>
+<p>在实际操作中，如果遇到版本不兼容导致的报错，建议直接将终端报错信息交给大语言模型去分析，通常能很快定位并解决问题，能省下不少查阅旧资料的时间。</p>
 </blockquote>
 <hr />
 <h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
-<p>博客搭建在 GitHub Pages 上后，默认的域名通常是 <code>用户名.github.io</code>。为了让博客看起来更正式、更有辨识度，我决定为它绑定一个专属域名。</p>
+<p>默认部署到 GitHub Pages 上的域名格式通常是 <code>用户名.github.io</code>。为了方便记忆和后续的扩展，我为博客绑定了一个专属的独立域名。</p>
 <p>🔗 <strong>参考教程</strong>：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
-<p><strong>核心操作</strong>：</p>
+<p><strong>核心操作步骤</strong>：</p>
 <ol>
-<li><strong>购买域名</strong>：我直接在阿里云购买了一个以 <code>.top</code> 结尾的域名（性价比极高）。</li>
-<li><strong>DNS 解析配置</strong>：在阿里云的控制台中，添加 <code>CNAME</code> 记录，将其解析指向我自己的 GitHub Pages 地址。</li>
-<li><strong>GitHub 配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚买的域名，并开启 <code>Enforce HTTPS</code>。稍等片刻待 DNS 刷新后，就能通过您的专属独立域名访问博客了！</li>
+<li><strong>域名购买</strong>：我在阿里云购买了一个 <code>.top</code> 后缀的域名，相对来说性价比比较高。</li>
+<li><strong>DNS 解析配置</strong>：进入阿里云控制台，添加一条 <code>CNAME</code> 记录，将其解析指向自己的 GitHub Pages 地址。</li>
+<li><strong>GitHub 仓库配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚购买的域名，并勾选开启 <code>Enforce HTTPS</code> 以保证访问安全。配置完成后，稍微等待 DNS 解析生效，就可以使用独立域名访问博客了。</li>
 </ol>
 <hr />
 <h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
-<p>原生的 Hexo 界面比较极简，为了提升阅读体验和博客的颜值，主题美化是最后也是最折腾人的一个环节。</p>
+<p>原生的 Hexo 界面比较基础，为了提升页面的可读性和排版效果，通常需要对主题进行一定的自定义。</p>
 <p>🔗 <strong>参考教程</strong>：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
-<p><strong>主要的美化方向包括但不限于</strong>：</p>
+<p><strong>我主要进行的配置和调整包括</strong>：</p>
 <ul>
-<li>安装并替换第三方的主题（如经典的 NexT 主题等）。</li>
-<li>配置侧边栏头像、个人信息及社交账号链接。</li>
-<li>修改博客的背景、字体配色，调整文章正文内容的排版样式。</li>
-<li>配置了专属的网站浏览器标签页小图标（Favicon）。</li>
+<li>更换第三方主题（这里我尝试了经典的 NexT 等几款主流主题）。</li>
+<li>配置侧边栏的个人信息、头像以及社交平台链接。</li>
+<li>微调了博客的背景和字体配色，以改善正文内容的阅读体验。</li>
+<li>补充了专属的网站标签页小图标（Favicon）。</li>
 </ul>
-<p>经过这一系列的折腾与打磨，一个排版优雅、拥有专属独立域名的 2026 版个人博客就正式落成啦！</p>
+<p>整个流程走下来，算是一次比较完整的前端部署实践。一个功能完善、排版清晰的博客不仅能作为知识库，也是记录学习日常的好工具。</p>
 
     </div>
 

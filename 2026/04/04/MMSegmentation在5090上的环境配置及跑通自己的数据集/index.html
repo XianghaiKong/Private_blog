@@ -20,19 +20,18 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"3hree5ive.top","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-dark","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="一、RTX 5090 深度学习基础环境配置 针对 RTX 5090 这样基于全新架构的显卡，对基础环境的要求非常严格，核心版本搭配如下：  CUDA: 12.8 (5090 最低要求 12.8 版本的 CUDA) PyTorch: 2.8.0 Python: 3.10 (建议 3.10.x 或 3.12.x)   💡 建议：环境克隆法 由于国内镜像源（如清华源）尚未完全收录最新的 GPU 版本">
+    <meta name="description" content="在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。  一、基础环境配置 RTX 5090 对 CUDA 版本有一定要求，经过测试，以下版本组合运行较为稳定：  CUDA: 12.8 (5090 最低支持 12.8 版">
 <meta property="og:type" content="article">
 <meta property="og:title" content="在 RTX 5090 上配置 MMSegmentation 并跑通自定义数据集 (OneDL 版)">
 <meta property="og:url" content="https://3hree5ive.top/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/index.html">
 <meta property="og:site_name" content="3hree5ive">
-<meta property="og:description" content="一、RTX 5090 深度学习基础环境配置 针对 RTX 5090 这样基于全新架构的显卡，对基础环境的要求非常严格，核心版本搭配如下：  CUDA: 12.8 (5090 最低要求 12.8 版本的 CUDA) PyTorch: 2.8.0 Python: 3.10 (建议 3.10.x 或 3.12.x)   💡 建议：环境克隆法 由于国内镜像源（如清华源）尚未完全收录最新的 GPU 版本">
+<meta property="og:description" content="在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。  一、基础环境配置 RTX 5090 对 CUDA 版本有一定要求，经过测试，以下版本组合运行较为稳定：  CUDA: 12.8 (5090 最低支持 12.8 版">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://3hree5ive.top/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/1.png">
-<meta property="og:image" content="https://3hree5ive.top/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/2.png">
 <meta property="og:image" content="https://3hree5ive.top/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/3.png">
 <meta property="og:image" content="https://3hree5ive.top/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/4.png">
 <meta property="article:published_time" content="2026-04-04T07:11:02.000Z">
-<meta property="article:modified_time" content="2026-04-29T07:59:34.470Z">
+<meta property="article:modified_time" content="2026-04-30T03:04:54.585Z">
 <meta property="article:author" content="KK">
 <meta property="article:tag" content="MMSegmentation">
 <meta property="article:tag" content="RTX 5090">
@@ -145,7 +144,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80-rtx-5090-%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="nav-number">1.</span> <span class="nav-text"> 一、RTX 5090 深度学习基础环境配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C-%E6%A1%86%E6%9E%B6%E9%80%89%E6%8B%A9%E4%B8%BA%E4%BB%80%E4%B9%88%E6%98%AF-onedl-mmsegmentation"><span class="nav-number">2.</span> <span class="nav-text"> 二、框架选择：为什么是 OneDL-MMSegmentation？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89-%E5%AE%8C%E6%95%B4%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE%E8%BF%87%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text"> 三、完整的安装与配置过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%88%9B%E5%BB%BA%E5%9F%BA%E7%A1%80%E7%8E%AF%E5%A2%83%E4%B8%8E%E5%AE%89%E8%A3%85-pytorch"><span class="nav-number">3.1.</span> <span class="nav-text"> 1. 创建基础环境与安装 PyTorch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%AE%89%E8%A3%85%E5%9F%BA%E7%A1%80%E4%BE%9D%E8%B5%96%E5%8C%85"><span class="nav-number">3.2.</span> <span class="nav-text"> 2. 安装基础依赖包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%A0%B8%E5%BF%83%E9%9A%BE%E7%82%B9%E5%AE%89%E8%A3%85-mmcv"><span class="nav-number">3.3.</span> <span class="nav-text"> 3. 核心难点：安装 MMCV</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88-a%E4%BD%BF%E7%94%A8%E9%A2%84%E7%BC%96%E8%AF%91-wheel-%E5%8C%85%E5%AE%89%E8%A3%85-%E6%8E%A8%E8%8D%90"><span class="nav-number">3.3.1.</span> <span class="nav-text"> 解决方案 A：使用预编译 Wheel 包安装 (推荐)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88-b%E4%BB%8E%E6%BA%90%E4%BB%A3%E7%A0%81%E7%BC%96%E8%AF%91-mmcv"><span class="nav-number">3.3.2.</span> <span class="nav-text"> 解决方案 B：从源代码编译 MMCV</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E4%BB%8E%E6%BA%90%E7%A0%81%E5%AE%89%E8%A3%85-onedl-mmsegmentation"><span class="nav-number">3.4.</span> <span class="nav-text"> 4. 从源码安装 OneDL-MMSegmentation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B-%E5%85%A8%E9%9D%A2%E6%B5%8B%E8%AF%95%E4%B8%8E%E9%AA%8C%E8%AF%81"><span class="nav-number">4.</span> <span class="nav-text"> 四、全面测试与验证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94-%E5%9C%A8%E5%85%AC%E5%BC%80%E6%95%B0%E6%8D%AE%E9%9B%86-ade20k-%E4%B8%8A%E7%9A%84%E5%88%9D%E6%AD%A5%E5%B0%9D%E8%AF%95"><span class="nav-number">5.</span> <span class="nav-text"> 五、在公开数据集 ADE20K 上的初步尝试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E7%94%A8%E5%B7%A5%E5%85%B7%E6%8B%93%E5%B1%95%E6%98%BE%E5%8D%A1%E7%9B%91%E6%8E%A7"><span class="nav-number">5.1.</span> <span class="nav-text"> 实用工具拓展：显卡监控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E6%B5%8B%E8%AF%95%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96"><span class="nav-number">5.2.</span> <span class="nav-text"> 模型测试与可视化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD-%E8%B7%91%E9%80%9A%E8%87%AA%E5%AE%9A%E4%B9%89%E6%95%B0%E6%8D%AE%E9%9B%86%E4%BB%A5-smokeseg-%E4%B8%BA%E4%BE%8B"><span class="nav-number">6.</span> <span class="nav-text"> 六、跑通自定义数据集：以 SmokeSeg 为例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%E6%B3%A8%E5%86%8C%E6%96%B0%E6%95%B0%E6%8D%AE%E9%9B%86"><span class="nav-number">6.1.</span> <span class="nav-text"> 第一步：注册新数据集</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%E6%9E%84%E5%BB%BA%E5%AF%B9%E5%BA%94%E7%9A%84%E8%AE%AD%E7%BB%83%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">6.2.</span> <span class="nav-text"> 第二步：构建对应的训练配置文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%E5%BC%80%E5%A7%8B%E8%AE%AD%E7%BB%83"><span class="nav-number">6.3.</span> <span class="nav-text"> 第三步：开始训练</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%E6%B5%8B%E8%AF%95%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96"><span class="nav-number">6.4.</span> <span class="nav-text"> 第四步：测试与可视化</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80-%E5%9F%BA%E7%A1%80%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="nav-number">1.</span> <span class="nav-text"> 一、基础环境配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C-%E6%A1%86%E6%9E%B6%E9%80%89%E6%8B%A9%E4%BD%BF%E7%94%A8-onedl-mmsegmentation"><span class="nav-number">2.</span> <span class="nav-text"> 二、框架选择：使用 OneDL-MMSegmentation</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89-%E5%AE%8C%E6%95%B4%E7%9A%84%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE%E6%B5%81%E7%A8%8B"><span class="nav-number">3.</span> <span class="nav-text"> 三、完整的安装与配置流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%88%9B%E5%BB%BA%E7%8E%AF%E5%A2%83%E4%B8%8E%E5%AE%89%E8%A3%85-pytorch"><span class="nav-number">3.1.</span> <span class="nav-text"> 1. 创建环境与安装 PyTorch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%AE%89%E8%A3%85%E5%9F%BA%E7%A1%80%E4%BE%9D%E8%B5%96%E5%8C%85"><span class="nav-number">3.2.</span> <span class="nav-text"> 2. 安装基础依赖包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%AE%89%E8%A3%85-mmcv"><span class="nav-number">3.3.</span> <span class="nav-text"> 3. 安装 MMCV</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E6%A1%88-a%E4%BD%BF%E7%94%A8%E9%A2%84%E7%BC%96%E8%AF%91-wheel-%E5%8C%85%E5%AE%89%E8%A3%85-%E6%8E%A8%E8%8D%90"><span class="nav-number">3.3.1.</span> <span class="nav-text"> 方案 A：使用预编译 Wheel 包安装 (推荐)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E6%A1%88-b%E4%BB%8E%E6%BA%90%E4%BB%A3%E7%A0%81%E7%BC%96%E8%AF%91"><span class="nav-number">3.3.2.</span> <span class="nav-text"> 方案 B：从源代码编译</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E4%BB%8E%E6%BA%90%E7%A0%81%E5%AE%89%E8%A3%85-onedl-mmsegmentation"><span class="nav-number">3.4.</span> <span class="nav-text"> 4. 从源码安装 OneDL-MMSegmentation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B-%E6%B5%8B%E8%AF%95%E4%B8%8E%E9%AA%8C%E8%AF%81%E7%8E%AF%E5%A2%83"><span class="nav-number">4.</span> <span class="nav-text"> 四、测试与验证环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94-%E5%9C%A8%E5%86%85%E7%BD%AE%E6%95%B0%E6%8D%AE%E9%9B%86-ade20k-%E4%B8%8A%E7%9A%84%E8%AE%AD%E7%BB%83%E5%B0%9D%E8%AF%95"><span class="nav-number">5.</span> <span class="nav-text"> 五、在内置数据集 (ADE20K) 上的训练尝试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%98%BE%E5%8D%A1%E7%8A%B6%E6%80%81%E7%9B%91%E6%8E%A7"><span class="nav-number">5.1.</span> <span class="nav-text"> 显卡状态监控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E9%AA%8C%E8%AF%81"><span class="nav-number">5.2.</span> <span class="nav-text"> 模型验证</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD-%E8%B7%91%E9%80%9A%E8%87%AA%E5%AE%9A%E4%B9%89%E6%95%B0%E6%8D%AE%E9%9B%86%E4%BB%A5-smokeseg-%E4%B8%BA%E4%BE%8B"><span class="nav-number">6.</span> <span class="nav-text"> 六、跑通自定义数据集：以 SmokeSeg 为例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%B3%A8%E5%86%8C%E6%96%B0%E6%95%B0%E6%8D%AE%E9%9B%86"><span class="nav-number">6.1.</span> <span class="nav-text"> 1. 注册新数据集</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E7%BC%96%E5%86%99%E8%AE%AD%E7%BB%83%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">6.2.</span> <span class="nav-text"> 2. 编写训练配置文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%89%A7%E8%A1%8C%E8%AE%AD%E7%BB%83%E4%B8%8E%E5%8F%AF%E8%A7%86%E5%8C%96"><span class="nav-number">6.3.</span> <span class="nav-text"> 3. 执行训练与可视化</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -230,7 +229,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-04-29 15:59:34" itemprop="dateModified" datetime="2026-04-29T15:59:34+08:00">2026-04-29</time>
+      <time title="修改时间：2026-04-30 11:04:54" itemprop="dateModified" datetime="2026-04-30T11:04:54+08:00">2026-04-30</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -251,102 +250,92 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h2 id="一-rtx-5090-深度学习基础环境配置"><a class="markdownIt-Anchor" href="#一-rtx-5090-深度学习基础环境配置"></a> 一、RTX 5090 深度学习基础环境配置</h2>
-<p>针对 RTX 5090 这样基于全新架构的显卡，对基础环境的要求非常严格，核心版本搭配如下：</p>
+    <div class="post-body" itemprop="articleBody"><p>在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。</p>
+<h2 id="一-基础环境配置"><a class="markdownIt-Anchor" href="#一-基础环境配置"></a> 一、基础环境配置</h2>
+<p>RTX 5090 对 CUDA 版本有一定要求，经过测试，以下版本组合运行较为稳定：</p>
 <ul>
-<li><strong>CUDA</strong>: 12.8 (5090 最低要求 12.8 版本的 CUDA)</li>
+<li><strong>CUDA</strong>: 12.8 (5090 最低支持 12.8 版本的 CUDA)</li>
 <li><strong>PyTorch</strong>: 2.8.0</li>
 <li><strong>Python</strong>: 3.10 (建议 3.10.x 或 3.12.x)</li>
 </ul>
 <blockquote>
-<p>💡 <strong>建议：环境克隆法</strong><br />
-由于国内镜像源（如清华源）尚未完全收录最新的 GPU 版本 PyTorch，建议先创建一个仅包含上述核心组件的“基础虚拟环境”。以后每次新建项目时，直接克隆该环境即可，省时省力。</p>
+<p>💡 <strong>个人习惯：建立基础克隆环境</strong><br />
+由于目前部分国内镜像源可能还没有完全同步最新的 GPU 版 PyTorch，我通常会先建一个只包含上述核心组件的“基础环境”。后续新建项目时直接克隆这个基础环境，可以避免重复下载和安装。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda create -n new_env_name --<span class="built_in">clone</span> base_5090_env</span><br></pre></td></tr></table></figure>
 </blockquote>
 <hr />
-<h2 id="二-框架选择为什么是-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#二-框架选择为什么是-onedl-mmsegmentation"></a> 二、框架选择：为什么是 OneDL-MMSegmentation？</h2>
-<p>官方的 OpenMMLab 已经停止维护更新 <code>mmsegmentation</code> 将近两年。即便是最新的 1.x 官方版本，也难以支持目前最新的硬件环境（如 CUDA 12.8）且仅支持 PyTorch 1.x。虽然可以通过手动修改配置、从源码编译 <code>mmcv</code> 来强行适配（详见 <a target="_blank" rel="noopener" href="https://github.com/open-mmlab/mmcv/issues/3283">mmcv issue #3283</a>），但过程极其繁琐。</p>
-<p>幸运的是，我们找到了一个专门维护、重整 OpenMMLab 废弃代码的第三方团队库：<br />
-👉 <strong><a target="_blank" rel="noopener" href="https://github.com/VBTI-development/onedl-mmsegmentation">onedl-mmsegmentation</a></strong></p>
-<p>此版本完美适配当前最新的 PyTorch 2.x。不过需要注意其官方主页的这段重要说明（该说明目前仅在主页展示，未在库文件中同步更新）：</p>
+<h2 id="二-框架选择使用-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#二-框架选择使用-onedl-mmsegmentation"></a> 二、框架选择：使用 OneDL-MMSegmentation</h2>
+<p>官方的 OpenMMLab 库 <code>mmsegmentation</code> 已经有较长一段时间未更新，最新的 1.x 版本在适配最新的硬件环境（如 CUDA 12.8）和 PyTorch 2.x 时会遇到不少兼容性问题。虽然可以通过手动修改配置、从源码编译 <code>mmcv</code> 来强行适配，但维护成本较高。</p>
+<p>在调研后，我选择了第三方维护的复刻版本：<strong><a target="_blank" rel="noopener" href="https://github.com/VBTI-development/onedl-mmsegmentation">onedl-mmsegmentation</a></strong>。该库对最新的 PyTorch 2.x 提供了较好的支持。</p>
 <p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/1.png" class="" title="官方说明: onedl-mmsegmentation 重要提示"></p>
-<p><em>图 1：官方主页中的关键说明。</em></p>
+*图 1：官方主页中的相关兼容性说明。*
 <hr />
-<h2 id="三-完整的安装与配置过程"><a class="markdownIt-Anchor" href="#三-完整的安装与配置过程"></a> 三、完整的安装与配置过程</h2>
-<h3 id="1-创建基础环境与安装-pytorch"><a class="markdownIt-Anchor" href="#1-创建基础环境与安装-pytorch"></a> 1. 创建基础环境与安装 PyTorch</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">conda create -n mmseg python=3.10 -y</span><br><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># ⚠️ 此处 --index-url 参数是安装最新 GPU 版 PyTorch 的关键</span></span><br><span class="line">pip install torch==2.8.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128</span><br></pre></td></tr></table></figure>
+<h2 id="三-完整的安装与配置流程"><a class="markdownIt-Anchor" href="#三-完整的安装与配置流程"></a> 三、完整的安装与配置流程</h2>
+<h3 id="1-创建环境与安装-pytorch"><a class="markdownIt-Anchor" href="#1-创建环境与安装-pytorch"></a> 1. 创建环境与安装 PyTorch</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">conda create -n mmseg python=3.10 -y</span><br><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 注意：需通过官方源安装指定 CUDA 12.8 版本的 PyTorch</span></span><br><span class="line">pip install torch==2.8.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128</span><br></pre></td></tr></table></figure>
 <h3 id="2-安装基础依赖包"><a class="markdownIt-Anchor" href="#2-安装基础依赖包"></a> 2. 安装基础依赖包</h3>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pip install -U onedl-mim</span><br><span class="line">mim install onedl-mmengine</span><br></pre></td></tr></table></figure>
-<h3 id="3-核心难点安装-mmcv"><a class="markdownIt-Anchor" href="#3-核心难点安装-mmcv"></a> 3. 核心难点：安装 MMCV</h3>
-<p>这是整个配置过程中最容易踩坑的环节。我们提供了两种解决方案。</p>
-<h4 id="解决方案-a使用预编译-wheel-包安装-推荐"><a class="markdownIt-Anchor" href="#解决方案-a使用预编译-wheel-包安装-推荐"></a> 解决方案 A：使用预编译 Wheel 包安装 (推荐)</h4>
-<p>最理想的情况是直接通过 <code>mim</code> 安装：</p>
+<h3 id="3-安装-mmcv"><a class="markdownIt-Anchor" href="#3-安装-mmcv"></a> 3. 安装 MMCV</h3>
+<p>在整个配置过程中，<code>mmcv</code> 的安装是比较容易出错的一步。主要有两种方案：</p>
+<h4 id="方案-a使用预编译-wheel-包安装-推荐"><a class="markdownIt-Anchor" href="#方案-a使用预编译-wheel-包安装-推荐"></a> 方案 A：使用预编译 Wheel 包安装 (推荐)</h4>
+<p>最理想的方式是使用 <code>mim</code> 自动安装预编译包：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mim install onedl-mmcv==2.3.2</span><br></pre></td></tr></table></figure>
 <blockquote>
-<p>⚠️ <strong>避坑指南</strong>：<br />
-运行上述命令后，请<strong>务必检查终端输出的日志</strong>。如果你看到类似下图这种“源码包构建 (Building wheel from source)”的日志：</p>
-<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/2.png" class="" title="源码包安装日志: mmcv 安装日志"></p>
-*图 2：出现源码构建日志说明预编译包未成功匹配。*
-<p>这说明当前系统并没有找到与你的 Python/CUDA/PyTorch 版本严格对应的预构建包，它正在尝试本地编译。这种情况下，即使最终提示 <code>Successfully installed</code>，实际往往并没有正确编译 C++ 扩展，后续运行代码会报错 <code>No module named 'mmcv._ext'</code>。</p>
+<p>⚠️ <strong>编译提示</strong>：<br />
+如果在终端日志中看到 <code>Building wheel from source</code>，说明系统未能匹配到合适的预构建包，正在尝试本地编译。这种情况往往由于缺少 C++ 扩展编译环境，导致后续调用 <code>mmcv._ext</code> 时报错。</p>
 </blockquote>
-<p><strong>正确的预编译包安装姿势</strong>：<br />
-根据 <a target="_blank" rel="noopener" href="https://onedl-mmcv.readthedocs.io/en/latest/get_started/installation.html">OneDL-MMCV 官方文档</a>，Python 3.10 + CUDA 12.8 + PyTorch 2.8.0 是有官方预编译包的。<br />
-若 <code>pip install</code> 自动匹配失败（如提示 <code>No matching distribution found</code>），请<strong>直接通过 Wheel 文件的绝对地址安装</strong>：</p>
-<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/3.png" class=""></p>
-<p><em>图 3：官方发布的预编译包列表。</em></p>
+<p>为了避免编译错误，可以根据 <a target="_blank" rel="noopener" href="https://onedl-mmcv.readthedocs.io/en/latest/get_started/installation.html">OneDL-MMCV 官方文档</a> 寻找对应的预编译包（如 Python 3.10 + CUDA 12.8 + PyTorch 2.8.0）。如果自动匹配失败，建议直接通过获取到的 .whl 链接进行安装：</p>
+<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/3.png" class="" title="预编译包列表"></p>
+*图 2：官方发布的预编译包列表。*
 <p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/4.png" class=""></p>
-<p><em>图 4：右键复制对应版本的下载链接。</em></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 直接使用获取到的 .whl 文件链接进行安装</span></span><br><span class="line">pip install https://mmwheels-bucket.onedl.ai/cu128-torch280/onedl-mmcv/onedl_mmcv-2.3.3-cp310-cp310-manylinux_2_34_x86_64.whl</span><br></pre></td></tr></table></figure>
-<h4 id="解决方案-b从源代码编译-mmcv"><a class="markdownIt-Anchor" href="#解决方案-b从源代码编译-mmcv"></a> 解决方案 B：从源代码编译 MMCV</h4>
-<p>如果由于种种原因预编译包不可用，你也可以选择从源码进行编译。建议将 mmcv 克隆到之后存放 <code>mmsegmentation</code> 的同一个父级目录下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/open-mmlab/mmcv.git</span><br><span class="line"><span class="built_in">cd</span> mmcv</span><br><span class="line">git checkout v2.1.0  <span class="comment"># 切换到你需要的版本分支</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置 CUDA 环境变量以强制编译 C++ 算子</span></span><br><span class="line"><span class="built_in">export</span> FORCE_CUDA=1</span><br><span class="line"><span class="built_in">export</span> MMCV_WITH_OPS=1</span><br><span class="line"></span><br><span class="line"><span class="comment"># 编译并安装</span></span><br><span class="line">pip install -r requirements.txt</span><br><span class="line">python setup.py build_ext --inplace</span><br><span class="line">pip install -e .</span><br></pre></td></tr></table></figure>
+*图 3：复制对应版本的下载链接。*
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 示例：通过复制的 .whl 文件绝对链接直接安装</span></span><br><span class="line">pip install https://mmwheels-bucket.onedl.ai/cu128-torch280/onedl-mmcv/onedl_mmcv-2.3.3-cp310-cp310-manylinux_2_34_x86_64.whl</span><br></pre></td></tr></table></figure>
+<h4 id="方案-b从源代码编译"><a class="markdownIt-Anchor" href="#方案-b从源代码编译"></a> 方案 B：从源代码编译</h4>
+<p>如果无法使用预编译包，也可以从源码编译，建议将代码克隆到工程的同级目录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/open-mmlab/mmcv.git</span><br><span class="line"><span class="built_in">cd</span> mmcv</span><br><span class="line">git checkout v2.1.0  <span class="comment"># 切换到所需的分支</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 配置环境变量以编译 C++ 算子</span></span><br><span class="line"><span class="built_in">export</span> FORCE_CUDA=1</span><br><span class="line"><span class="built_in">export</span> MMCV_WITH_OPS=1</span><br><span class="line"></span><br><span class="line">pip install -r requirements.txt</span><br><span class="line">python setup.py build_ext --inplace</span><br><span class="line">pip install -e .</span><br></pre></td></tr></table></figure>
 <h3 id="4-从源码安装-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#4-从源码安装-onedl-mmsegmentation"></a> 4. 从源码安装 OneDL-MMSegmentation</h3>
-<p>确保 <code>mmcv</code> 正确安装（且能导入 <code>mmcv._ext</code> 无报错）后，即可安装分割库本体：</p>
+<p>确认 <code>mmcv</code> 正确安装并能导入 <code>mmcv._ext</code> 后，即可安装主框架：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> -b main https://github.com/vbti-development/onedl-mmsegmentation.git</span><br><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line">pip install -v -e .</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>⚠️ <strong>注意</strong>：由于我们使用的是 <code>-e</code> (editable) 模式从源码安装，配置好环境后<strong>切勿更改 <code>onedl-mmsegmentation</code> 文件夹的名称或路径</strong>，否则会导致包引用失效。</p>
-</blockquote>
 <hr />
-<h2 id="四-全面测试与验证"><a class="markdownIt-Anchor" href="#四-全面测试与验证"></a> 四、全面测试与验证</h2>
-<p>为了确保环境无恙，我们可以运行一个官方提供的推理 Demo：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation  <span class="comment"># 确保在项目主目录</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 下载配置文件与模型权重</span></span><br><span class="line">mim download mmsegmentation --config pspnet_r50-d8_4xb2-40k_cityscapes-512x1024 --dest .</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行单张图片的推理脚本</span></span><br><span class="line">python demo/image_demo.py demo/demo.png \</span><br><span class="line">    configs/pspnet/pspnet_r50-d8_4xb2-40k_cityscapes-512x1024.py \</span><br><span class="line">    pspnet_r50-d8_512x1024_40k_cityscapes_20200605_003338-2966598c.pth \</span><br><span class="line">    --device cuda:0 --out-file result.jpg</span><br></pre></td></tr></table></figure>
-<p>🎉 <strong>如果当前目录下成功生成了带有分割蒙版的 <code>result.jpg</code>，恭喜你，环境配置大功告成！</strong></p>
+<h2 id="四-测试与验证环境"><a class="markdownIt-Anchor" href="#四-测试与验证环境"></a> 四、测试与验证环境</h2>
+<p>完成上述步骤后，可以使用官方提供的 Demo 进行推理测试，以验证环境是否正常配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取测试用的配置和模型权重</span></span><br><span class="line">mim download mmsegmentation --config pspnet_r50-d8_4xb2-40k_cityscapes-512x1024 --dest .</span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行单张图片推理</span></span><br><span class="line">python demo/image_demo.py demo/demo.png \</span><br><span class="line">    configs/pspnet/pspnet_r50-d8_4xb2-40k_cityscapes-512x1024.py \</span><br><span class="line">    pspnet_r50-d8_512x1024_40k_cityscapes_20200605_003338-2966598c.pth \</span><br><span class="line">    --device cuda:0 --out-file result.jpg</span><br></pre></td></tr></table></figure>
+<p>如果当前目录生成了带有分割蒙版的 <code>result.jpg</code>，说明环境的安装配置已经初步完成。</p>
 <hr />
-<h2 id="五-在公开数据集-ade20k-上的初步尝试"><a class="markdownIt-Anchor" href="#五-在公开数据集-ade20k-上的初步尝试"></a> 五、在公开数据集 ADE20K 上的初步尝试</h2>
-<p>在跑自己的数据集之前，强烈建议先用框架内置支持的数据集（如 ADE20K）跑通训练与测试流程。</p>
+<h2 id="五-在内置数据集-ade20k-上的训练尝试"><a class="markdownIt-Anchor" href="#五-在内置数据集-ade20k-上的训练尝试"></a> 五、在内置数据集 (ADE20K) 上的训练尝试</h2>
+<p>在切入自定义数据前，我先尝试用内置的 ADE20K 数据集走了一遍完整的训练和测试流程，以熟悉框架的调用逻辑。</p>
 <ol>
-<li><strong>准备数据</strong>：从官方文档获取 ADE20K 数据集，解压并放置于 <code>data/ade</code> 目录下（内置的配置文件默认读取该路径）。</li>
-<li><strong>启动训练</strong>：尝试运行 Segformer 模型。<br />
-<em>(配置文件命名规则：<code>segformer_mit-b0</code> (主干网络) + <code>8xb2</code> (8张卡每张batch设为2) + <code>160k</code> (总迭代次数) + <code>ade20k-512x512</code> (数据集与裁剪分辨率))</em></li>
+<li><strong>准备数据</strong>：按照官方文档指引，解压 ADE20K 并放至 <code>data/ade</code> 目录。</li>
+<li><strong>启动训练</strong>：尝试使用 Segformer 模型。得益于 5090 充足的显存，可以将 batch size 适当调大以加速验证。</li>
 </ol>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 覆盖默认的超参数以加速验证：</span></span><br><span class="line"><span class="comment"># 由于 5090 显存极大，我们将 batch_size 调大到 16，并开启 8 个数据加载线程</span></span><br><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8</span><br></pre></td></tr></table></figure>
-<p>也可以通过 <code>--cfg-options</code> 快速测试，缩短训练周期：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 修改总迭代次数为 40k 次，每 2k 次验证一次</span></span><br><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k_fast \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 \</span><br><span class="line">                  val_dataloader.batch_size=1 \</span><br><span class="line">                  train_dataloader.num_workers=8 \</span><br><span class="line">                  train_cfg.max_iters=40000 \</span><br><span class="line">                  train_cfg.val_interval=2000</span><br></pre></td></tr></table></figure>
-<h3 id="实用工具拓展显卡监控"><a class="markdownIt-Anchor" href="#实用工具拓展显卡监控"></a> 实用工具拓展：显卡监控</h3>
-<p>你可以使用系统自带工具或进阶工具监控显卡满载状态：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 方法 1：系统自带</span></span><br><span class="line">watch -n 1 nvidia-smi</span><br><span class="line">htop</span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法 2：更直观的 nvitop (建议安装在 base 环境)</span></span><br><span class="line">conda activate base</span><br><span class="line">pip install nvitop</span><br><span class="line">nvitop</span><br></pre></td></tr></table></figure>
-<h3 id="模型测试与可视化"><a class="markdownIt-Anchor" href="#模型测试与可视化"></a> 模型测试与可视化</h3>
-<p>训练完成后，使用以下命令评估精度，并保存预测结果图：<br />
-<em>(注意将 <code>.pth</code> 替换为实际保存的最优权重文件名)</em></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 覆盖默认超参数配置</span></span><br><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8</span><br></pre></td></tr></table></figure>
+<p>也可以通过修改迭代参数进行一次快速测试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k_fast \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8 train_cfg.max_iters=40000 train_cfg.val_interval=2000</span><br></pre></td></tr></table></figure>
+<h3 id="显卡状态监控"><a class="markdownIt-Anchor" href="#显卡状态监控"></a> 显卡状态监控</h3>
+<p>为了观察高负载下的硬件表现，可以在训练期间监控显卡状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 方法 1：系统自带</span></span><br><span class="line">watch -n 1 nvidia-smi</span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法 2：使用第三方库 nvitop</span></span><br><span class="line">conda activate base</span><br><span class="line">pip install nvitop</span><br><span class="line">nvitop</span><br></pre></td></tr></table></figure>
+<h3 id="模型验证"><a class="markdownIt-Anchor" href="#模型验证"></a> 模型验证</h3>
+<p>训练完成后，评估精度并输出预测结果：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">python tools/test.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    work_dirs/segformer_mit-b0_ade20k/best_mIoU_iter_xxx.pth \</span><br><span class="line">    --out work_dirs/segformer_mit-b0_ade20k/results \</span><br><span class="line">    --show-dir work_dirs/segformer_mit-b0_ade20k/vis_results</span><br></pre></td></tr></table></figure>
 <hr />
 <h2 id="六-跑通自定义数据集以-smokeseg-为例"><a class="markdownIt-Anchor" href="#六-跑通自定义数据集以-smokeseg-为例"></a> 六、跑通自定义数据集：以 SmokeSeg 为例</h2>
-<p>跑通官方数据集后，接下来迁移到自己的数据。<br />
-这里以开源的烟雾分割数据集 <strong><a target="_blank" rel="noopener" href="https://github.com/LujianYao/FoSp">SmokeSeg</a></strong> 为例。假设你已经将其转换为标准的 VOC 格式，并放置在项目目录 <code>data/SmokeSeg</code> 中。</p>
-<h3 id="第一步注册新数据集"><a class="markdownIt-Anchor" href="#第一步注册新数据集"></a> 第一步：注册新数据集</h3>
-<p>在 MMSegmentation 1.x 中，自定义数据集都需要继承基类 <code>BaseSegDataset</code>。</p>
-<ol>
-<li>在 <code>mmseg/datasets/</code> 目录下新建 <code>smoke_voc.py</code>，实现你的数据集读取逻辑。</li>
-<li>打开 <code>mmseg/datasets/__init__.py</code>，导入并暴露你的 <code>SmokeSegDataset</code> 模块。</li>
-</ol>
-<h3 id="第二步构建对应的训练配置文件"><a class="markdownIt-Anchor" href="#第二步构建对应的训练配置文件"></a> 第二步：构建对应的训练配置文件</h3>
-<p>前往 <code>configs/segformer/</code> 目录，创建一个专门针对 SmokeSeg 的配置文件，如 <code>segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</code>。<br />
-<em>(Tip: 既然框架原生支持 Segformer，你可以直接利用 <code>_base_</code> 机制继承官方的基础 SegFormer-B5 结构，然后仅仅修改类别数、数据路径等必要信息。)</em></p>
-<h3 id="第三步开始训练"><a class="markdownIt-Anchor" href="#第三步开始训练"></a> 第三步：开始训练</h3>
-<p>指向你的新配置文件，启动训练：</p>
+<p>结合自己课题，这里以开源的烟雾分割数据集 <strong><a target="_blank" rel="noopener" href="https://github.com/LujianYao/FoSp">SmokeSeg</a></strong> 为例，记录了如何将其接入 MMSegmentation 框架。</p>
+<p>假设数据已转为标准 VOC 格式并存放在项目目录的 <code>data/SmokeSeg</code> 中。</p>
+<h3 id="1-注册新数据集"><a class="markdownIt-Anchor" href="#1-注册新数据集"></a> 1. 注册新数据集</h3>
+<p>在 MMSegmentation 1.x 规范中，自定义数据集需继承 <code>BaseSegDataset</code>。</p>
+<ul>
+<li>在 <code>mmseg/datasets/</code> 下创建 <code>smoke_voc.py</code>，编写数据集读取逻辑。</li>
+<li>在 <code>mmseg/datasets/__init__.py</code> 中导入并暴露该模块以便系统调用。</li>
+</ul>
+<h3 id="2-编写训练配置文件"><a class="markdownIt-Anchor" href="#2-编写训练配置文件"></a> 2. 编写训练配置文件</h3>
+<p>在 <code>configs/segformer/</code> 目录下新建对应 SmokeSeg 的配置文件，例如 <code>segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</code>。<br />
+<em>(注: 可以直接利用框架的 <code>_base_</code> 机制继承官方的 SegFormer-B5 配置文件，然后在此基础上仅重写类别数、数据路径等参数。)</em></p>
+<h3 id="3-执行训练与可视化"><a class="markdownIt-Anchor" href="#3-执行训练与可视化"></a> 3. 执行训练与可视化</h3>
+<p>调用新配置开始模型训练：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</span><br></pre></td></tr></table></figure>
-<h3 id="第四步测试与可视化"><a class="markdownIt-Anchor" href="#第四步测试与可视化"></a> 第四步：测试与可视化</h3>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">python tools/test.py \</span><br><span class="line">    configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py \</span><br><span class="line">    你的最佳权重文件路径.pth \</span><br><span class="line">    --show-dir vis_results_smokeseg/</span><br></pre></td></tr></table></figure>
+<p>训练结束后进行测试并可视化：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">python tools/test.py \</span><br><span class="line">    configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py \</span><br><span class="line">    你的最优权重文件路径.pth \</span><br><span class="line">    --show-dir vis_results_smokeseg/</span><br></pre></td></tr></table></figure>
+<p>到这里，整套分割库的本地化配置和运行流程基本走通了。接下来就可以在此框架上开展进一步的调参和对比实验。</p>
 
     </div>
 
@@ -372,8 +361,8 @@
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2026/04/13/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87/" rel="next" title="语义分割评价指标">
-                  语义分割评价指标 <i class="fa fa-angle-right"></i>
+                <a href="/2026/04/13/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87/" rel="next" title="语义分割评价指标梳理与代码实现记录">
+                  语义分割评价指标梳理与代码实现记录 <i class="fa fa-angle-right"></i>
                 </a>
             </div>
           </div>
