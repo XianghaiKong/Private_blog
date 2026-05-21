@@ -216,7 +216,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-04-30 11:03:29" itemprop="dateModified" datetime="2026-04-30T11:03:29+08:00">2026-04-30</time>
+      <time title="修改时间：2026-05-21 15:25:07" itemprop="dateModified" datetime="2026-05-21T15:25:07+08:00">2026-05-21</time>
     </span>
 
   
@@ -264,6 +264,30 @@
 <h3 id="总结与后续优化"><a class="markdownIt-Anchor" href="#总结与后续优化"></a> 总结与后续优化</h3>
 <p>一开始我猜测是核显和独显在抢占输出通道，所以在 BIOS 里把主板核显禁用了。但事实证明，即使禁用了核显，上述黑屏和掉线问题依然会不定期出现。</p>
 <p>综合来看，我觉得 5090 这张卡的瞬态功耗和供电要求确实非常高，即便搭配了 1300W 的金牌电源，依然会在某些特定高负载工况下出现掉线。另外，这种情况我也会更多地考虑散热方面的影响，毕竟高功耗伴随着高发热。后续我打算加装机箱风扇、定期清理灰尘，并把机箱移动到更加通风的位置，因为 1300W 电源在理论上是不可能出现余量不足的。</p>
+<h3 id="内容更新再次频繁遭遇-gpu-掉盘"><a class="markdownIt-Anchor" href="#内容更新再次频繁遭遇-gpu-掉盘"></a> 内容更新：再次频繁遭遇 GPU 掉盘</h3>
+<p>跑代码时，batch 设为 6 可以轻松跑完 40k 步，此时显存仅用约 10 GB；将 batch 改为 12 后，显存占用约 18 GB，训练跑到约 8000 步时显示器黑屏，<code>nvidia-smi</code> 找不到显卡。SSH 仍能连上，风扇狂转，训练实际已停止。物理强制关机重启后一切恢复正常，但再次开跑仍会出现上述情况——这就不是偶然了。</p>
+<p>经过与大模型交流、网上搜索，并结合本机实际硬件配置，可能原因如下：</p>
+<ol>
+<li>
+<p><strong>散热不佳</strong>（可能性最高）</p>
+<ul>
+<li>主机放在桌子下面，空间狭小，通风不良。</li>
+<li>计划在机箱下方和上方加装风扇：下方进冷风，上方排热风；上方至少可加三个风扇，下方尚未查看，应该也能加装。</li>
+<li><strong>验证命令</strong>（重点观察温度）：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">watch -n 1 nvidia-smi -q -d TEMPERATURE</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>GPU Current Temp</strong>：核心温度，一般不要超过 80°C。</li>
+<li><strong>Memory Current Temp</strong>：显存温度，最关键。若在黑屏前一路飙升到 100°C 以上甚至逼近 105°C，基本可以断定是显存过热导致掉盘。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>电源余量不足</strong>（可能性较低）：满载时整机功耗过大，1300 W 电源可能不够。</p>
+</li>
+<li>
+<p><strong>硬件连接</strong>（可能性较低）：显卡支架不稳、供电线插接不牢或弯折过大——已检查，暂无问题。</p>
+</li>
+</ol>
 
       
     </div>
