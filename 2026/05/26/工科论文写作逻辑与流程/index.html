@@ -28,7 +28,7 @@
 <meta property="og:description" content="前言 最近在做烟雾分割相关实验和读文献时，越来越觉得：一篇能中、能留住的工科论文，往往不是「方法堆叠」写得好，而是「问题链条」讲得通。 方法可以换 backbone、换 loss、换训练 trick，但审稿人真正关心的是：你到底在解决什么、为什么现有工作还不够、你的设计是不是冲着这个缺口去的。 这篇文章不是通用写作课笔记，而是结合计算机视觉 → 语义分割 → 烟雾分割这条线，把自己近期梳理的一套">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-05-26T13:09:57.000Z">
-<meta property="article:modified_time" content="2026-05-26T13:17:33.053Z">
+<meta property="article:modified_time" content="2026-05-26T13:20:36.303Z">
 <meta property="article:author" content="KK">
 <meta property="article:tag" content="烟雾分割">
 <meta property="article:tag" content="科研方法">
@@ -139,7 +139,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text"> 前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80-%E6%A0%B8%E5%BF%83%E8%A7%82%E5%BF%B5%E4%BC%98%E7%A7%80%E8%AE%BA%E6%96%87-%E9%97%AE%E9%A2%98%E9%A9%B1%E5%8A%A8%E8%80%8C%E4%B8%8D%E6%98%AF%E6%A8%A1%E5%9D%97%E9%A9%B1%E5%8A%A8"><span class="nav-number">2.</span> <span class="nav-text"> 一、核心观念：优秀论文 &#x3D; 问题驱动，而不是模块驱动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C-%E4%BB%8E%E7%8E%B0%E5%9C%BA%E5%9B%B0%E5%A2%83%E5%88%B0%E8%AE%BA%E6%96%87%E9%97%AE%E9%A2%98%E9%80%90%E6%AD%A5%E6%8B%86%E8%A7%A3"><span class="nav-number">3.</span> <span class="nav-text"> 二、从「现场困境」到「论文问题」：逐步拆解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E7%83%9F%E9%9B%BE%E5%88%86%E5%89%B2%E5%9C%A8%E5%AE%9E%E9%99%85%E9%87%8C%E5%88%B0%E5%BA%95%E9%9A%BE%E5%9C%A8%E5%93%AA"><span class="nav-number">3.1.</span> <span class="nav-text"> 1. 烟雾分割在实际里到底难在哪？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%8A%80%E6%9C%AF%E4%B8%8A%E6%80%8E%E4%B9%88%E5%AE%9A%E4%B9%89%E4%B8%8E%E6%8F%8F%E8%BF%B0%E8%BF%99%E4%B8%AA%E9%97%AE%E9%A2%98"><span class="nav-number">3.2.</span> <span class="nav-text"> 2. 技术上怎么定义与描述这个问题？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%9C%89%E6%B2%A1%E6%9C%89%E7%8E%B0%E6%9C%89%E7%A0%94%E7%A9%B6%E7%BC%BA%E9%99%B7%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">3.3.</span> <span class="nav-text"> 3. 有没有现有研究？缺陷是什么？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E8%8B%A5%E9%97%AE%E9%A2%98%E5%B0%9A%E6%9C%AA%E8%A2%AB%E5%85%85%E5%88%86%E5%AE%9A%E4%B9%89%E5%A6%82%E4%BD%95%E5%BC%80%E6%96%B0%E5%9D%91"><span class="nav-number">3.4.</span> <span class="nav-text"> 4. 若问题尚未被充分定义：如何「开新坑」？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E6%89%93%E7%AE%97%E7%94%A8%E4%BB%80%E4%B9%88%E5%8A%9E%E6%B3%95%E8%A7%A3%E5%86%B3%E4%B8%89%E7%B1%BB%E6%9D%A5%E6%BA%90%E6%80%8E%E4%B9%88%E9%80%89"><span class="nav-number">3.5.</span> <span class="nav-text"> 5. 打算用什么办法解决？——三类来源怎么选</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E5%AE%9E%E9%AA%8C%E6%80%8E%E6%A0%B7%E6%89%8D%E7%AE%97%E8%B6%85%E8%BF%87-sota"><span class="nav-number">3.6.</span> <span class="nav-text"> 6. 实验：怎样才算「超过 SOTA」？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89-%E5%9B%BE%E8%A1%A8%E5%A6%82%E4%BD%95%E7%94%A8-motivation-%E5%9B%BE%E5%92%8C-method-%E5%9B%BE%E6%89%93%E5%8A%A8%E5%AE%A1%E7%A8%BF%E4%BA%BA"><span class="nav-number">4.</span> <span class="nav-text"> 三、图表：如何用 Motivation 图和 Method 图打动审稿人</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-motivation-%E5%9B%BE%E5%BB%BA%E8%AE%AE-1-%E5%BC%A0%E4%BF%A1%E6%81%AF%E5%AF%86%E5%BA%A6%E9%AB%98"><span class="nav-number">4.1.</span> <span class="nav-text"> 1. Motivation 图（建议 1 张，信息密度高）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-method-%E6%A1%86%E6%9E%B6%E5%9B%BE%E5%BB%BA%E8%AE%AE-1-%E5%BC%A0%E6%A8%A1%E5%9D%97%E5%B0%91%E8%80%8C%E5%87%86"><span class="nav-number">4.2.</span> <span class="nav-text"> 2. Method 框架图（建议 1 张，模块少而准）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%AE%9E%E6%93%8D%E5%B0%8F%E8%B4%B4%E5%A3%AB"><span class="nav-number">4.3.</span> <span class="nav-text"> 3. 实操小贴士</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B-%E4%B8%80%E5%A5%97%E5%8F%AF%E8%87%AA%E6%9F%A5%E7%9A%84%E5%86%99%E4%BD%9C%E6%B8%85%E5%8D%95%E5%BC%80%E5%86%99%E5%89%8D%E8%BF%87%E4%B8%80%E9%81%8D"><span class="nav-number">5.</span> <span class="nav-text"> 四、一套可自查的写作清单（开写前过一遍）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">6.</span> <span class="nav-text"> 小结</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text"> 前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80-%E6%A0%B8%E5%BF%83%E8%A7%82%E5%BF%B5%E4%BC%98%E7%A7%80%E8%AE%BA%E6%96%87-%E9%97%AE%E9%A2%98%E9%A9%B1%E5%8A%A8%E8%80%8C%E4%B8%8D%E6%98%AF%E6%A8%A1%E5%9D%97%E9%A9%B1%E5%8A%A8"><span class="nav-number">2.</span> <span class="nav-text"> 一、核心观念：优秀论文 &#x3D; 问题驱动，而不是模块驱动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C-%E4%BB%8E%E7%8E%B0%E5%9C%BA%E5%9B%B0%E5%A2%83%E5%88%B0%E8%AE%BA%E6%96%87%E9%97%AE%E9%A2%98%E9%80%90%E6%AD%A5%E6%8B%86%E8%A7%A3"><span class="nav-number">3.</span> <span class="nav-text"> 二、从「现场困境」到「论文问题」：逐步拆解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E7%83%9F%E9%9B%BE%E5%88%86%E5%89%B2%E5%9C%A8%E5%AE%9E%E9%99%85%E9%87%8C%E5%88%B0%E5%BA%95%E9%9A%BE%E5%9C%A8%E5%93%AA"><span class="nav-number">3.1.</span> <span class="nav-text"> 1. 烟雾分割在实际里到底难在哪？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%8A%80%E6%9C%AF%E4%B8%8A%E6%80%8E%E4%B9%88%E5%AE%9A%E4%B9%89%E4%B8%8E%E6%8F%8F%E8%BF%B0%E8%BF%99%E4%B8%AA%E9%97%AE%E9%A2%98"><span class="nav-number">3.2.</span> <span class="nav-text"> 2. 技术上怎么定义与描述这个问题？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%9C%89%E6%B2%A1%E6%9C%89%E7%8E%B0%E6%9C%89%E7%A0%94%E7%A9%B6%E7%BC%BA%E9%99%B7%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">3.3.</span> <span class="nav-text"> 3. 有没有现有研究？缺陷是什么？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E8%8B%A5%E9%97%AE%E9%A2%98%E5%B0%9A%E6%9C%AA%E8%A2%AB%E5%85%85%E5%88%86%E5%AE%9A%E4%B9%89%E5%A6%82%E4%BD%95%E5%BC%80%E6%96%B0%E5%9D%91"><span class="nav-number">3.4.</span> <span class="nav-text"> 4. 若问题尚未被充分定义：如何「开新坑」？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E6%89%93%E7%AE%97%E7%94%A8%E4%BB%80%E4%B9%88%E5%8A%9E%E6%B3%95%E8%A7%A3%E5%86%B3%E4%B8%89%E7%B1%BB%E6%9D%A5%E6%BA%90%E6%80%8E%E4%B9%88%E9%80%89"><span class="nav-number">3.5.</span> <span class="nav-text"> 5. 打算用什么办法解决？——三类来源怎么选</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E5%AE%9E%E9%AA%8C%E6%80%8E%E6%A0%B7%E6%89%8D%E7%AE%97%E8%B6%85%E8%BF%87-sota"><span class="nav-number">3.6.</span> <span class="nav-text"> 6. 实验：怎样才算「超过 SOTA」？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89-%E5%9B%BE%E8%A1%A8%E5%A6%82%E4%BD%95%E7%94%A8-motivation-%E5%9B%BE%E5%92%8C-method-%E5%9B%BE%E6%89%93%E5%8A%A8%E5%AE%A1%E7%A8%BF%E4%BA%BA"><span class="nav-number">4.</span> <span class="nav-text"> 三、图表：如何用 Motivation 图和 Method 图打动审稿人</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-motivation-%E5%9B%BE%E5%BB%BA%E8%AE%AE-1-%E5%BC%A0%E4%BF%A1%E6%81%AF%E5%AF%86%E5%BA%A6%E9%AB%98"><span class="nav-number">4.1.</span> <span class="nav-text"> 1. Motivation 图（建议 1 张，信息密度高）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-method-%E6%A1%86%E6%9E%B6%E5%9B%BE%E5%BB%BA%E8%AE%AE-1-%E5%BC%A0%E6%A8%A1%E5%9D%97%E5%B0%91%E8%80%8C%E5%87%86"><span class="nav-number">4.2.</span> <span class="nav-text"> 2. Method 框架图（建议 1 张，模块少而准）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%AE%9E%E6%93%8D%E5%B0%8F%E8%B4%B4%E5%A3%AB"><span class="nav-number">4.3.</span> <span class="nav-text"> 3. 实操小贴士</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B-%E4%B8%80%E5%A5%97%E5%8F%AF%E8%87%AA%E6%9F%A5%E7%9A%84%E5%86%99%E4%BD%9C%E6%B8%85%E5%8D%95%E5%BC%80%E5%86%99%E5%89%8D%E8%BF%87%E4%B8%80%E9%81%8D"><span class="nav-number">5.</span> <span class="nav-text"> 四、一套可自查的写作清单（开写前过一遍）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94-%E8%A1%A5%E5%85%85%E6%A1%86%E6%9E%B6%E6%88%90%E7%AB%8B%E4%BD%86%E8%A6%81%E7%95%99%E4%B8%80%E7%82%B9%E5%BC%B9%E6%80%A7"><span class="nav-number">6.</span> <span class="nav-text"> 五、补充：框架成立，但要留一点弹性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E4%B8%8D%E6%98%AF%E6%AF%8F%E7%AF%87%E8%AE%BA%E6%96%87%E9%83%BD%E8%A6%81%E5%BC%80%E6%96%B0%E5%9D%91"><span class="nav-number">6.1.</span> <span class="nav-text"> 1. 不是每篇论文都要「开新坑」</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E9%97%AE%E9%A2%98%E9%A9%B1%E5%8A%A8-%E5%81%9A%E7%A0%94%E7%A9%B6%E6%97%B6%E4%B8%8D%E8%83%BD%E4%BB%8E%E6%96%B9%E6%B3%95%E5%87%BA%E5%8F%91"><span class="nav-number">6.2.</span> <span class="nav-text"> 2. 问题驱动 ≠ 做研究时不能从方法出发</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E8%B6%85%E8%BF%87-sota%E4%B8%8D%E6%98%AF%E5%94%AF%E4%B8%80%E7%9A%84%E6%88%90%E5%8A%9F%E6%A0%87%E5%87%86"><span class="nav-number">6.3.</span> <span class="nav-text"> 3. 「超过 SOTA」不是唯一的成功标准</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E5%9B%BE%E8%83%BD%E6%89%93%E5%8A%A8%E4%BA%BA%E4%BD%86%E9%80%BB%E8%BE%91%E4%B8%8D%E8%83%BD%E5%85%A8%E9%9D%A0%E5%9B%BE"><span class="nav-number">6.4.</span> <span class="nav-text"> 4. 图能打动人，但逻辑不能全靠图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E7%83%9F%E9%9B%BE%E5%88%86%E5%89%B2%E6%96%B9%E5%90%91%E7%9A%84%E4%B8%80%E5%8F%A5%E8%90%BD%E5%9C%B0%E5%BB%BA%E8%AE%AE"><span class="nav-number">6.5.</span> <span class="nav-text"> 5. 烟雾分割方向的一句落地建议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text"> 小结</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -218,7 +218,7 @@
       <span class="post-meta-item-text">发表于</span>
       
 
-      <time title="创建时间：2026-05-26 21:09:57 / 修改时间：21:17:33" itemprop="dateCreated datePublished" datetime="2026-05-26T21:09:57+08:00">2026-05-26</time>
+      <time title="创建时间：2026-05-26 21:09:57 / 修改时间：21:20:36" itemprop="dateCreated datePublished" datetime="2026-05-26T21:09:57+08:00">2026-05-26</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -436,6 +436,51 @@
 <li>Experiment 是否覆盖 Introduction 承诺的 error type？</li>
 <li>Figure 1 是否能在不读正文的情况下传达 Motivation？</li>
 </ol>
+<hr />
+<h2 id="五-补充框架成立但要留一点弹性"><a class="markdownIt-Anchor" href="#五-补充框架成立但要留一点弹性"></a> 五、补充：框架成立，但要留一点弹性</h2>
+<p>上文那条「问题驱动」链条，我认为大方向是对的，也符合审稿人和导师常强调的 story。但在实际写稿、和导师对齐时，还有几条<strong>容易走偏</strong>的地方值得单独记下来，避免把 checklist 用成教条。</p>
+<h3 id="1-不是每篇论文都要开新坑"><a class="markdownIt-Anchor" href="#1-不是每篇论文都要开新坑"></a> 1. 不是每篇论文都要「开新坑」</h3>
+<p>多数稿件的真实形态是：<strong>问题别人提过，但在某个设定下仍没解决好</strong>——例如早期微弱烟雾、某类场景泛化、某套评价协议下的盲区。这类工作的贡献往往是「<strong>把缺口写窄、写具体、用实验钉死</strong>」，而不是宣称提出了一个全新的任务。</p>
+<p>「开新坑」适合那种：公开文献里<strong>尚未被单独命名或系统讨论</strong>的难点（如半透明区域的标注一致性、视频时间一致性是否应纳入分割评价）。此时 Problem formulation + protocol + strong baseline 本身就可以是贡献，不必一上来就全面碾压 SOTA。</p>
+<h3 id="2-问题驱动-做研究时不能从方法出发"><a class="markdownIt-Anchor" href="#2-问题驱动-做研究时不能从方法出发"></a> 2. 问题驱动 ≠ 做研究时不能从方法出发</h3>
+<p>实际科研里，完全「先问题、后方法」的理想顺序并不总成立。有时是先注意到某个可迁移的模块（新的 attention、foundation model、训练策略），再反查它可能缓解哪类 failure case——<strong>这并不丢人</strong>。</p>
+<p>关键是<strong>成稿时必须翻回问题链</strong>：Introduction 和实验仍要回答「我们在解决什么、旧方法缺什么」；若正文读起来像「为了用某模块而硬凑动机」，审稿意见往往会集中在 story 不成立，而不是模块本身不够好。</p>
+<h3 id="3-超过-sota不是唯一的成功标准"><a class="markdownIt-Anchor" href="#3-超过-sota不是唯一的成功标准"></a> 3. 「超过 SOTA」不是唯一的成功标准</h3>
+<p>对烟雾分割这类应用导向任务，主指标涨 0.5% 但早期漏检、云雾误报没改善，story 仍可能站不住；反过来，指标略逊但<strong>明确改善了 Introduction 里承诺的那一两种错误</strong>，论文仍可能成立。</p>
+<p>此外，以下几类工作同样有价值，不必强行套「涨点叙事」：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>典型贡献</th>
+<th>实验重点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>分析型</strong></td>
+<td>揭示某类失败模式的成因</td>
+<td>可视化、统计、对照实验</td>
+</tr>
+<tr>
+<td><strong>协议/指标型</strong></td>
+<td>更合理的子集或评价方式</td>
+<td>证明旧指标会误导结论</td>
+</tr>
+<tr>
+<td><strong>基准/数据型</strong></td>
+<td>新子集、划分或标注规范</td>
+<td>可复现 baseline + 分析</td>
+</tr>
+</tbody>
+</table>
+<p>写稿前先想清楚：本文的主贡献更接近「新方法」「新认识」还是「新尺子」——再决定实验章节的主线，而不是默认必须有一张全面 SOTA 对比表。</p>
+<h3 id="4-图能打动人但逻辑不能全靠图"><a class="markdownIt-Anchor" href="#4-图能打动人但逻辑不能全靠图"></a> 4. 图能打动人，但逻辑不能全靠图</h3>
+<p>Motivation 图和 Method 框架图是<strong>压缩</strong>，不是替代品。若 Figure 1 强调「误检云雾」，Table 里的对比、消融里却没有任何设置针对这一问题，审稿人容易认为 story 是「画出来的」。</p>
+<p>个人习惯：<strong>每个在 Figure 1 出现的 error type，在实验章节至少有一处定量或定性证据对应</strong>（主表、子集、消融或补充材料均可）。</p>
+<h3 id="5-烟雾分割方向的一句落地建议"><a class="markdownIt-Anchor" href="#5-烟雾分割方向的一句落地建议"></a> 5. 烟雾分割方向的一句落地建议</h3>
+<p>这个领域里，<strong>标注歧义、类极度不平衡、与云/雾/尘/反光混淆</strong>几乎是常态。一篇稿子里若能<strong>只钉死 1～2 个 failure mode</strong>（例如「早期极小烟雾漏检」或「云状背景误报」），并让它们贯穿 Introduction → Method → 图 → 表，往往比泛泛宣称「烟雾很难分割」更有说服力。</p>
+<p>也提醒一句：<strong>一篇论文最好只服务一个核心痛点</strong>；若 Introduction 里同时想解决五六个问题，方法、实验和图通常都会散，审稿人也更难记住你的贡献。</p>
 <hr />
 <h2 id="小结"><a class="markdownIt-Anchor" href="#小结"></a> 小结</h2>
 <p>对我目前在做的<strong>烟雾分割</strong>方向而言，一篇值得投的论文，主线 increasingly 清晰：</p>
