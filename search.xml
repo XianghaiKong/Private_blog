@@ -147,6 +147,53 @@
       </tags>
   </entry>
   <entry>
+    <title>2026版：Hexo + GitHub Pages 个人博客搭建全记录</title>
+    <url>/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/</url>
+    <content><![CDATA[<p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
+<span id="more"></span>
+<h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
+<p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
+🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
+<blockquote>
+<p>💡 <strong>操作记录</strong>：<br />
+虽然这篇文章的整体逻辑很清晰，但因为发布时间较早，很多细节已经发生了变化。例如 Node.js 的版本要求、Hexo 包管理的变动，以及目前 GitHub 默认主分支已经从 <code>master</code> 变成了 <code>main</code>。这些差异很容易导致按照原教程执行时出现报错。</p>
+<p>在实际操作中，如果遇到版本不兼容导致的报错，建议直接将终端报错信息交给大语言模型去分析，通常能很快定位并解决问题，能省下不少查阅旧资料的时间。</p>
+</blockquote>
+<hr />
+<h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
+<p>默认部署到 GitHub Pages 上的域名格式通常是 <code>用户名.github.io</code>。为了方便记忆和后续的扩展，我为博客绑定了一个专属的独立域名。</p>
+<p>🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
+<p><strong>核心操作步骤</strong>：</p>
+<ol>
+<li><strong>域名购买</strong>：我在阿里云购买了一个 <code>.top</code> 后缀的域名，相对来说性价比比较高。</li>
+<li><strong>DNS 解析配置</strong>：进入阿里云控制台，添加一条 <code>CNAME</code> 记录，将其解析指向自己的 GitHub Pages 地址。</li>
+<li><strong>GitHub 仓库配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚购买的域名，并勾选开启 <code>Enforce HTTPS</code> 以保证访问安全。配置完成后，稍微等待 DNS 解析生效，就可以使用独立域名访问博客了。</li>
+</ol>
+<hr />
+<h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
+<p>原生的 Hexo 界面比较基础，为了提升页面的可读性和排版效果，通常需要对主题进行一定的自定义。</p>
+<p>🔗 <strong>参考教程</strong>：<a href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
+<p><strong>我主要进行的配置和调整包括</strong>：</p>
+<ul>
+<li>更换第三方主题（这里我尝试了经典的 NexT 等几款主流主题）。</li>
+<li>配置侧边栏的个人信息、头像以及社交平台链接。</li>
+<li>微调了博客的背景和字体配色，以改善正文内容的阅读体验。</li>
+<li>补充了专属的网站标签页小图标（Favicon）。</li>
+</ul>
+<p>整个流程走下来，算是一次比较完整的前端部署实践。一个功能完善、排版清晰的博客不仅能作为知识库，也是记录学习日常的好工具。</p>
+]]></content>
+      <categories>
+        <category>建站教程</category>
+      </categories>
+      <tags>
+        <tag>踩坑记录</tag>
+        <tag>Hexo</tag>
+        <tag>GitHub Pages</tag>
+        <tag>博客搭建</tag>
+        <tag>域名解析</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>在 RTX 5090 上配置 MMSegmentation 并跑通自定义数据集 (OneDL 版)</title>
     <url>/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/</url>
     <content><![CDATA[<p>在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。</p>
@@ -366,80 +413,6 @@
         <tag>踩坑记录</tag>
         <tag>Git</tag>
         <tag>版本控制</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>发挥AI+MMSegmentation的快速验证想法的优势</title>
-    <url>/2026/05/25/%E5%8F%91%E6%8C%A5AI-MMSegmentation%E7%9A%84%E5%BF%AB%E9%80%9F%E9%AA%8C%E8%AF%81%E6%83%B3%E6%B3%95%E7%9A%84%E4%BC%98%E5%8A%BF/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>深度学习</category>
-      </categories>
-      <tags>
-        <tag>深度学习</tag>
-        <tag>AI 编程</tag>
-        <tag>MMSegmentation</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>2026版：Hexo + GitHub Pages 个人博客搭建全记录</title>
-    <url>/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/</url>
-    <content><![CDATA[<p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
-<span id="more"></span>
-<h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
-<p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
-🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
-<blockquote>
-<p>💡 <strong>操作记录</strong>：<br />
-虽然这篇文章的整体逻辑很清晰，但因为发布时间较早，很多细节已经发生了变化。例如 Node.js 的版本要求、Hexo 包管理的变动，以及目前 GitHub 默认主分支已经从 <code>master</code> 变成了 <code>main</code>。这些差异很容易导致按照原教程执行时出现报错。</p>
-<p>在实际操作中，如果遇到版本不兼容导致的报错，建议直接将终端报错信息交给大语言模型去分析，通常能很快定位并解决问题，能省下不少查阅旧资料的时间。</p>
-</blockquote>
-<hr />
-<h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
-<p>默认部署到 GitHub Pages 上的域名格式通常是 <code>用户名.github.io</code>。为了方便记忆和后续的扩展，我为博客绑定了一个专属的独立域名。</p>
-<p>🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
-<p><strong>核心操作步骤</strong>：</p>
-<ol>
-<li><strong>域名购买</strong>：我在阿里云购买了一个 <code>.top</code> 后缀的域名，相对来说性价比比较高。</li>
-<li><strong>DNS 解析配置</strong>：进入阿里云控制台，添加一条 <code>CNAME</code> 记录，将其解析指向自己的 GitHub Pages 地址。</li>
-<li><strong>GitHub 仓库配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚购买的域名，并勾选开启 <code>Enforce HTTPS</code> 以保证访问安全。配置完成后，稍微等待 DNS 解析生效，就可以使用独立域名访问博客了。</li>
-</ol>
-<hr />
-<h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
-<p>原生的 Hexo 界面比较基础，为了提升页面的可读性和排版效果，通常需要对主题进行一定的自定义。</p>
-<p>🔗 <strong>参考教程</strong>：<a href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
-<p><strong>我主要进行的配置和调整包括</strong>：</p>
-<ul>
-<li>更换第三方主题（这里我尝试了经典的 NexT 等几款主流主题）。</li>
-<li>配置侧边栏的个人信息、头像以及社交平台链接。</li>
-<li>微调了博客的背景和字体配色，以改善正文内容的阅读体验。</li>
-<li>补充了专属的网站标签页小图标（Favicon）。</li>
-</ul>
-<p>整个流程走下来，算是一次比较完整的前端部署实践。一个功能完善、排版清晰的博客不仅能作为知识库，也是记录学习日常的好工具。</p>
-]]></content>
-      <categories>
-        <category>建站教程</category>
-      </categories>
-      <tags>
-        <tag>踩坑记录</tag>
-        <tag>Hexo</tag>
-        <tag>GitHub Pages</tag>
-        <tag>博客搭建</tag>
-        <tag>域名解析</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>指标复现与调参</title>
-    <url>/2026/05/25/%E6%8C%87%E6%A0%87%E5%A4%8D%E7%8E%B0%E4%B8%8E%E8%B0%83%E5%8F%82/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>深度学习</category>
-      </categories>
-      <tags>
-        <tag>深度学习</tag>
-        <tag>论文复现</tag>
-        <tag>语义分割</tag>
-        <tag>调参</tag>
       </tags>
   </entry>
   <entry>
@@ -708,6 +681,33 @@
         <tag>科研方法</tag>
         <tag>计算机视觉</tag>
         <tag>烟雾分割</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>发挥AI+MMSegmentation的快速验证想法的优势</title>
+    <url>/2026/05/25/%E5%8F%91%E6%8C%A5AI-MMSegmentation%E7%9A%84%E5%BF%AB%E9%80%9F%E9%AA%8C%E8%AF%81%E6%83%B3%E6%B3%95%E7%9A%84%E4%BC%98%E5%8A%BF/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>深度学习</category>
+      </categories>
+      <tags>
+        <tag>深度学习</tag>
+        <tag>AI 编程</tag>
+        <tag>MMSegmentation</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>指标复现与调参</title>
+    <url>/2026/05/25/%E6%8C%87%E6%A0%87%E5%A4%8D%E7%8E%B0%E4%B8%8E%E8%B0%83%E5%8F%82/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>深度学习</category>
+      </categories>
+      <tags>
+        <tag>深度学习</tag>
+        <tag>论文复现</tag>
+        <tag>语义分割</tag>
+        <tag>调参</tag>
       </tags>
   </entry>
   <entry>
