@@ -20,15 +20,15 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"3hree5ive.top","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-dark","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":2,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="最近在处理烟雾分割任务时，发现现有的语义分割评估指标在应对特定分布（如目标极其微小、类别极度不平衡）时存在一些统计上的盲区。为了更客观地衡量模型性能，我对常用的评价指标进行了梳理，并记录了在 MMSegmentation 框架下实现自定义烟雾分割评价指标的过程。  一、通用语义分割评价指标复习 在语义分割中，预测结果通常被视为逐像素的分类问题。因此，评价指标主要围绕混淆矩阵展开：  TP (Tru">
+    <meta name="description" content="最近在处理烟雾分割任务时，发现现有的语义分割评估指标在应对特定分布（如目标极其微小、类别极度不平衡）时存在一些统计上的盲区。为了更客观地衡量模型性能，我对常用的评价指标进行了梳理，并记录了在 MMSegmentation 框架下实现自定义烟雾分割评价指标的过程。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="语义分割评价指标梳理与代码实现记录">
 <meta property="og:url" content="https://3hree5ive.top/2026/04/13/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87/index.html">
 <meta property="og:site_name" content="3hree5ive">
-<meta property="og:description" content="最近在处理烟雾分割任务时，发现现有的语义分割评估指标在应对特定分布（如目标极其微小、类别极度不平衡）时存在一些统计上的盲区。为了更客观地衡量模型性能，我对常用的评价指标进行了梳理，并记录了在 MMSegmentation 框架下实现自定义烟雾分割评价指标的过程。  一、通用语义分割评价指标复习 在语义分割中，预测结果通常被视为逐像素的分类问题。因此，评价指标主要围绕混淆矩阵展开：  TP (Tru">
+<meta property="og:description" content="最近在处理烟雾分割任务时，发现现有的语义分割评估指标在应对特定分布（如目标极其微小、类别极度不平衡）时存在一些统计上的盲区。为了更客观地衡量模型性能，我对常用的评价指标进行了梳理，并记录了在 MMSegmentation 框架下实现自定义烟雾分割评价指标的过程。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-04-13T08:35:14.000Z">
-<meta property="article:modified_time" content="2026-05-28T02:50:22.980Z">
+<meta property="article:modified_time" content="2026-05-28T04:02:11.102Z">
 <meta property="article:author" content="KK">
 <meta property="article:tag" content="MMSegmentation">
 <meta property="article:tag" content="深度学习">
@@ -262,7 +262,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-05-28 10:50:22" itemprop="dateModified" datetime="2026-05-28T10:50:22+08:00">2026-05-28</time>
+      <time title="修改时间：2026-05-28 12:02:11" itemprop="dateModified" datetime="2026-05-28T12:02:11+08:00">2026-05-28</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -284,6 +284,7 @@
     
     
     <div class="post-body" itemprop="articleBody"><p>最近在处理烟雾分割任务时，发现现有的语义分割评估指标在应对特定分布（如目标极其微小、类别极度不平衡）时存在一些统计上的盲区。为了更客观地衡量模型性能，我对常用的评价指标进行了梳理，并记录了在 MMSegmentation 框架下实现自定义烟雾分割评价指标的过程。</p>
+<span id="more"></span>
 <h2 id="一-通用语义分割评价指标复习"><a class="markdownIt-Anchor" href="#一-通用语义分割评价指标复习"></a> 一、通用语义分割评价指标复习</h2>
 <p>在语义分割中，预测结果通常被视为逐像素的分类问题。因此，评价指标主要围绕混淆矩阵展开：</p>
 <ul>
