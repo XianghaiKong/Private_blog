@@ -28,11 +28,12 @@
 <meta property="og:description" content="最近在处理烟雾分割任务时，发现现有的语义分割评估指标在应对特定分布（如目标极其微小、类别极度不平衡）时存在一些统计上的盲区。为了更客观地衡量模型性能，我对常用的评价指标进行了梳理，并记录了在 MMSegmentation 框架下实现自定义烟雾分割评价指标的过程。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-04-13T08:35:14.000Z">
-<meta property="article:modified_time" content="2026-05-28T04:02:11.102Z">
+<meta property="article:modified_time" content="2026-05-28T07:08:16.529Z">
 <meta property="article:author" content="KK">
-<meta property="article:tag" content="MMSegmentation">
+<meta property="article:tag" content="工程工具">
 <meta property="article:tag" content="深度学习">
-<meta property="article:tag" content="评价指标">
+<meta property="article:tag" content="科研写作">
+<meta property="article:tag" content="计算机视觉">
 <meta property="article:tag" content="语义分割">
 <meta name="twitter:card" content="summary">
 
@@ -117,7 +118,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">23</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-folder-open fa-fw"></i>分类<span class="badge">5</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">9</span></a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-folder-open fa-fw"></i>分类<span class="badge">5</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">9</span></a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
         </a>
@@ -190,11 +191,6 @@
         <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
-      <div class="site-state-item site-state-tags">
-          <a href="/tags/">
-        <span class="site-state-item-count">23</span>
-        <span class="site-state-item-name">标签</span></a>
-      </div>
   </nav>
 </div>
   <div class="links-of-author animated">
@@ -260,7 +256,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-05-28 12:02:11" itemprop="dateModified" datetime="2026-05-28T12:02:11+08:00">2026-05-28</time>
+      <time title="修改时间：2026-05-28 15:08:16" itemprop="dateModified" datetime="2026-05-28T15:08:16+08:00">2026-05-28</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -434,12 +430,6 @@
 </ul>
 </div>
 
-          <div class="post-tags">
-              <a href="/tags/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" rel="tag"><i class="fa fa-tag"></i> 深度学习</a>
-              <a href="/tags/MMSegmentation/" rel="tag"><i class="fa fa-tag"></i> MMSegmentation</a>
-              <a href="/tags/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2/" rel="tag"><i class="fa fa-tag"></i> 语义分割</a>
-              <a href="/tags/%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87/" rel="tag"><i class="fa fa-tag"></i> 评价指标</a>
-          </div>
 
         
 
