@@ -1,6 +1,381 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>RTX 5090 深度学习环境显卡掉线排查记录</title>
+    <url>/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/</url>
+    <content><![CDATA[<p>先交代一下这套深度学习环境的硬件配置：</p>
+<ul>
+<li><strong>显卡</strong>：技嘉 RTX 5090 纯血版（国外背回来的）</li>
+<li><strong>CPU</strong>：AMD 9950X</li>
+<li><strong>主板</strong>：华硕 X870E-PLUS WIFI7</li>
+<li><strong>固态</strong>：三星 990 Pro 2TB</li>
+<li><strong>机械硬盘</strong>：西部数据紫盘 2TB</li>
+<li><strong>机箱</strong>：安钛克 FLUX SE</li>
+<li><strong>电源</strong>：安钛克 NE 1300 金牌</li>
+<li><strong>风冷散热</strong>：九州风神 阿萨辛4</li>
+<li><strong>内存</strong>：美商海盗船 DDR5 5200 32G✖️2</li>
+</ul>
+<p>最近在跑深度学习训练时，接连遇到几类不同表现的黑屏和 GPU 掉盘问题。起初我以为在 BIOS 里禁用核显就能解决，但实际测试下来发现问题仍然存在。为了方便日后查阅，也给遇到类似问题的朋友一个参考，这里把现象、日志证据和排查路径记录下来。</p>
+<span id="more"></span>
+<h2 id="一-最初遇到的三类现象"><a class="markdownIt-Anchor" href="#一-最初遇到的三类现象"></a> 一、最初遇到的三类现象</h2>
+<h3 id="情况一直接掉盘找不到-gpu-节点"><a class="markdownIt-Anchor" href="#情况一直接掉盘找不到-gpu-节点"></a> 情况一：直接掉盘，找不到 GPU 节点</h3>
+<p>这是比较棘手的一种情况。当时正在跑训练，中途桌面突然消失，机箱风扇维持高转速。通过终端 SSH 连进去后，输入 <code>nvidia-smi</code> 提示找不到显卡设备，表现为典型的 GPU 掉盘。</p>
+<p>初步分析，这多半是在负载突变或者供电出现瞬时波动时，触发了主板或电源的某种保护机制，导致 PCIe 设备被系统断开。针对这种硬件级别的保护掉线，最直接的恢复方式只能是硬重启机器。</p>
+<h3 id="情况二能识别显卡但无信号输入且无桌面"><a class="markdownIt-Anchor" href="#情况二能识别显卡但无信号输入且无桌面"></a> 情况二：能识别显卡，但无信号输入且无桌面</h3>
+<p>这种情况表现为：开机后 <code>nvidia-smi</code> 能正常找到显卡并输出状态，但是显示器提示无信号输入，使用 ToDesk 远程连接时也显示没有桌面环境。</p>
+<p>遇到这种状况，我的处理方式是<strong>彻底断电重置</strong>：关机，拔掉主机电源线，静置等待一分钟左右，然后再插上电源开机。通常这样操作一次就能恢复正常。推测可能是主板静电或某些电容的残余电荷干扰了显示输出，拔电静置可以帮助主板彻底放电。</p>
+<h3 id="情况三远程有桌面但本地显示器黑屏"><a class="markdownIt-Anchor" href="#情况三远程有桌面但本地显示器黑屏"></a> 情况三：远程有桌面，但本地显示器黑屏</h3>
+<p>第三种情况有些特殊：本地显示器依然毫无反应（无输入信号），但是通过 ToDesk 远程连接，居然可以正常看到并操作 Ubuntu 桌面。</p>
+<p>经过摸索，这主要可能是 Ubuntu 下的显示服务器配置异常，或者显卡驱动与 Wayland 发生冲突。可以在 ToDesk 里打开终端，尝试重置相关配置：</p>
+<ol>
+<li>
+<p>清理旧的 xorg 配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">rm</span> /etc/X11/xorg.conf</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>重新生成 NVIDIA 的 xconfig：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-xconfig</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>关闭 Wayland，强制系统使用 X11 协议。编辑 gdm3 的配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nano /etc/gdm3/custom.conf</span><br></pre></td></tr></table></figure>
+<p>找到里面被注释掉的 <code>#WaylandEnable=false</code> 这一行，去掉前面的 <code>#</code> 号，变成 <code>WaylandEnable=false</code>，然后保存退出。</p>
+</li>
+<li>
+<p>重启系统：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> reboot</span><br></pre></td></tr></table></figure>
+<p><strong>补充说明</strong>：重启的时候，建议给显示器换一个 DP 接口重新插拔一次，通常就能正常点亮。</p>
+</li>
+</ol>
+<h2 id="二-第一次总结先怀疑散热和供电"><a class="markdownIt-Anchor" href="#二-第一次总结先怀疑散热和供电"></a> 二、第一次总结：先怀疑散热和供电</h2>
+<p>一开始我猜测是核显和独显在抢占输出通道，所以在 BIOS 里把主板核显禁用了。但事实证明，即使禁用了核显，上述黑屏和掉线问题依然会不定期出现。</p>
+<p>综合来看，我觉得 5090 这张卡的瞬态功耗和供电要求确实非常高，即便搭配了 1300W 的金牌电源，依然会在某些特定高负载工况下出现掉线。另外，这种情况我也会更多地考虑散热方面的影响，毕竟高功耗伴随着高发热。后续我打算加装机箱风扇、定期清理灰尘，并把机箱移动到更加通风的位置，因为 1300W 电源在理论上是不可能出现余量不足的。</p>
+<h2 id="三-再次复现batch-增大后频繁掉盘"><a class="markdownIt-Anchor" href="#三-再次复现batch-增大后频繁掉盘"></a> 三、再次复现：batch 增大后频繁掉盘</h2>
+<p>后续又遇到了一次更稳定可复现的问题：batch 设为 6 时，可以轻松跑完 40k 步，此时显存只用约 10GB；将 batch 改为 12 后，显存占用约 18GB，训练跑到约 8000 步时显示器黑屏，<code>nvidia-smi</code> 找不到显卡。</p>
+<p>当时 SSH 仍能连上，风扇狂转，训练实际已经停止。物理强制关机重启后一切恢复正常，但再次开跑仍会出现上述情况，这说明它已经不是偶发现象。</p>
+<p>结合大模型辅助分析、网上资料和本机硬件配置，当时列出了几个可能原因：</p>
+<ol>
+<li>
+<p><strong>散热不佳</strong>（可能性最高）</p>
+<ul>
+<li>
+<p>主机放在桌子下面，空间狭小，通风不良。</p>
+</li>
+<li>
+<p>计划在机箱下方和上方加装风扇：下方进冷风，上方排热风；上方至少可加三个风扇，下方尚未查看，应该也能加装。</p>
+</li>
+<li>
+<p><strong>验证命令</strong>（重点观察温度）：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">watch -n 1 nvidia-smi -q -d TEMPERATURE</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>GPU Current Temp</strong>：核心温度，一般不要超过 80°C。</li>
+<li><strong>Memory Current Temp</strong>：显存温度，最关键。若在黑屏前一路飙升到 100°C 以上甚至逼近 105°C，基本可以断定是显存过热导致掉盘。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>电源余量不足</strong>（可能性较低）：满载时整机功耗过大，1300W 电源可能不够。</p>
+</li>
+<li>
+<p><strong>硬件连接</strong>（可能性较低）：显卡支架不稳、供电线插接不牢或弯折过大。已检查，暂无问题。</p>
+</li>
+</ol>
+<p>当时的计划是：先把主机从桌子底下挪到机架上，并加装风扇；如果之后不再出现“显存总共 32GB、刚用了 20GB 左右就桌面崩溃”的情况，就说明大概率是散热或通风问题；如果仍然不好，再考虑联系售后或上门维修。</p>
+<h2 id="四-再次更新开训-14-秒就崩溃"><a class="markdownIt-Anchor" href="#四-再次更新开训-14-秒就崩溃"></a> 四、再次更新：开训 14 秒就崩溃</h2>
+<p>后来我已经把机器搬到了机架上，也更换了工位。再次启动训练时，又遭遇桌面突然消失、显示器黑屏、风扇狂转，而且这次仅仅开训 <strong>14 秒</strong>就崩了。</p>
+<p>这时基本可以确定：这不是普通的显存 OOM。OOM 通常只会让 Python 进程报错退出，不会让整机黑屏、GPU 掉盘、风扇狂转并且必须硬关机。</p>
+<p>崩溃前内核日志出现大量 NVIDIA GSP 相关错误：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">NVRM: _issueRpcAndWait: rpcSendMessage failed with status 0x0000000f for fn 76</span><br></pre></td></tr></table></figure>
+<p>这表示 NVIDIA GSP（GPU System Processor）固件 RPC 通信失败或超时。换句话说，GPU 的 GSP 固件已经挂掉，驱动只能疯狂重试。一旦 GSP 死掉，挂在 GPU 上的 Xorg 显示就会冻结（黑屏、ToDesk 掉线），风扇也可能因为失去控制进入 100% 失效保护状态。</p>
+<p>继续往前看崩溃第一现场，在 16:12:16，也就是启动训练那一刻，出现了更关键的日志：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">NVRM: Xid (PCI:0000:01:00): 79, ... GPU has fallen off the bus.</span><br><span class="line">NVRM: GPU 0000:01:00.0: GPU has fallen off the bus.</span><br><span class="line">NVRM: Xid 154, GPU recovery action ... Node Reboot Required</span><br></pre></td></tr></table></figure>
+<p>其中 <strong>Xid 79 = GPU 从 PCIe 总线上掉了</strong>。这基本可以解释所有现象：GPU 整个从总线消失后，后面那一大片 GSP RPC 失败只是驱动在对一个“已经不存在的 GPU”疯狂重试的连锁反应。<code>Node Reboot Required</code> 也解释了为什么必须硬关机才能恢复。</p>
+<p>另外还有几个重要细节：</p>
+<ul>
+<li>训练日志目录时间戳是 16:12:02，而 GPU 掉总线发生在 16:12:16，开训仅 14 秒就崩了。</li>
+<li>这正是 GPU 从待机功耗（约 54W）猛地拉载冲向高功耗的瞬间。</li>
+<li>崩溃前没有过热迹象（<code>HW Thermal Slowdown</code> 全为 0，且只训练了 14 秒）。</li>
+<li>没有 PCIe AER 链路报错。</li>
+<li>GPU 功率上限为 600W，最低可限制到 400W。</li>
+</ul>
+<p>这时的初步判断是：RTX 5090 的瞬时功耗尖峰导致供电掉电（brownout），从而让 GPU 掉出 PCIe 总线（Xid 79）。这个问题和显存、训练代码本身关系不大。</p>
+<h2 id="五-第一轮判断瞬时功耗或供电保护"><a class="markdownIt-Anchor" href="#五-第一轮判断瞬时功耗或供电保护"></a> 五、第一轮判断：瞬时功耗或供电保护</h2>
+<p>第一轮排查中，最符合现象的判断是：<strong>GPU 瞬时功耗尖峰导致供电掉电，GPU 掉出 PCIe 总线（Xid 79）</strong>。</p>
+<p>证据链如下：</p>
+<ol>
+<li><code>Xid 79: GPU has fallen off the bus</code> + <code>Xid 154: Node Reboot Required</code>：开训 <strong>14 秒</strong>时触发，GPU 整个从总线消失。</li>
+<li>之后满屏的 <code>GSP RPC failed status 0xf</code> 只是驱动对“已消失的 GPU”疯狂重试的连锁反应，不是病因。</li>
+<li>黑屏 / ToDesk 掉线 = 挂在该 GPU 上的 Xorg 显示瞬间冻结；风扇狂转 = GPU 失控后进入 100% 失效保护；必须硬关机 = 内核提示的 <code>Node Reboot Required</code>。</li>
+<li><strong>无过热、无 PCIe AER 链路错误</strong>，因此初步排除散热和逐渐恶化的链路报错，指向<strong>供电瞬态</strong>。</li>
+</ol>
+<p>RTX 5090 标称功耗约 575–600W，但毫秒级瞬时尖峰可能冲到 <strong>900W+</strong>。如果电源额定不够，或者 12VHPWR / 12V-2x6 供电线接触不良、使用转接头，开训那一刻拉满载就可能瞬间掉电。</p>
+<h3 id="立即缓解先限制功耗"><a class="markdownIt-Anchor" href="#立即缓解先限制功耗"></a> 立即缓解：先限制功耗</h3>
+<p>先用<strong>降功耗上限</strong>削平尖峰，既能马上训练，也能验证问题是否和供电瞬态相关：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pm 1        <span class="comment"># 持久模式</span></span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 400      <span class="comment"># 功耗上限 600W -&gt; 400W（最低可设 400）</span></span><br></pre></td></tr></table></figure>
+<p>然后重新起训观察：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> /home/kxh/Projects/gqa</span><br><span class="line">python tools/train.py my_configs/segformer/segformer_mit-b2_multinatsmoke_align.py</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>若限到 400W 后能稳定训练</strong>：基本确认是供电瞬态问题。</li>
+<li><strong>若仍然崩溃</strong>：继续压制瞬时峰值，或者转向 PCIe 链路问题排查。</li>
+</ul>
+<p>还可以进一步锁定 GPU 频率上限：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -lgc 210,2400</span><br></pre></td></tr></table></figure>
+<p>这些设置<strong>重启后会失效</strong>，但安全可逆。确认有效后，可以再考虑做成 systemd 服务，让它开机自动生效。</p>
+<h2 id="六-第二轮排查电源容量足够后怀疑-pcie-gen5-链路"><a class="markdownIt-Anchor" href="#六-第二轮排查电源容量足够后怀疑-pcie-gen5-链路"></a> 六、第二轮排查：电源容量足够后，怀疑 PCIe Gen5 链路</h2>
+<p>后续我补充了完整硬件配置，并确认电源线是原生线且插得很紧。这样一来，<strong>电源容量不足</strong>这个原因就基本可以排除了：</p>
+<ul>
+<li>安钛克 NE1300G 是 1300W 金牌 ATX 3.0；</li>
+<li>原生 12V-2x6 供电线；</li>
+<li>5090 + 9950X 的额定功率余量理论上足够；</li>
+<li>供电线已经重新检查，确认插紧。</li>
+</ul>
+<p>这时问题更可能转向另一个方向：<strong>PCIe Gen5 链路稳定性</strong>。</p>
+<p>排查 PCIe 链路代数时，看到当前 GPU 正运行在 PCIe Gen5 x16：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">pcie.link.gen.current = 5</span><br></pre></td></tr></table></figure>
+<p>结合这套硬件配置，矛头开始指向 50 系显卡 + AM5 / X870E 平台上更容易出现的问题：<strong>PCIe Gen5 链路在满载瞬间不稳定，导致 GPU 掉出总线（Xid 79）</strong>。</p>
+<p>原因是 RTX 50 系 + AM5 平台跑 PCIe Gen5 x16 时，信号完整性要求极高。开训那一刻，GPU 链路状态切换叠加负载骤增，Gen5 链路可能瞬间崩掉，表现就是“毫无征兆掉总线、黑屏、必须硬重启”。这和当前现象以及 Xid 79 完全吻合。</p>
+<p>同时，我这里没有过热、没有 PCIe AER 渐进报错，电源容量也足够。因此后续重点应放在<strong>链路稳定性 / 瞬态稳定性</strong>上。</p>
+<h2 id="七-后续排查顺序"><a class="markdownIt-Anchor" href="#七-后续排查顺序"></a> 七、后续排查顺序</h2>
+<h3 id="第-1-步功耗上限测试"><a class="markdownIt-Anchor" href="#第-1-步功耗上限测试"></a> 第 1 步：功耗上限测试</h3>
+<p>先用功耗上限测试区分病因：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pm 1</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 400</span><br><span class="line"><span class="built_in">cd</span> /home/kxh/Projects/gqa</span><br><span class="line">python tools/train.py my_configs/segformer/segformer_mit-b2_multinatsmoke_align.py</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>能稳定训练</strong>：偏向瞬态供电问题，可能是电源 OCP 对 5090 尖峰比较敏感。</li>
+<li><strong>仍然崩溃</strong>：基本就转向 PCIe Gen5 链路问题，继续做第 2 步。</li>
+</ul>
+<h3 id="第-2-步bios-中将显卡插槽降到-pcie-gen4"><a class="markdownIt-Anchor" href="#第-2-步bios-中将显卡插槽降到-pcie-gen4"></a> 第 2 步：BIOS 中将显卡插槽降到 PCIe Gen4</h3>
+<p>这是 50 系显卡掉总线问题中比较有效的修复方式。</p>
+<p>操作路径大致为：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">重启按 Del 进入 ASUS BIOS</span><br><span class="line">-&gt; Advanced（高级）</span><br><span class="line">-&gt; PCI Subsystem Settings</span><br><span class="line">-&gt; PCIe Link Speed / PCIEX16_1 Link Speed</span><br><span class="line">-&gt; 从 Auto / Gen5 改成 Gen4</span><br><span class="line">-&gt; 保存并重启</span><br></pre></td></tr></table></figure>
+<p>对单卡训练来说，PCIe Gen4 x16 的带宽基本够用，对训练性能影响很小，但可能显著提升稳定性。</p>
+<h3 id="第-3-步更新主板-bios"><a class="markdownIt-Anchor" href="#第-3-步更新主板-bios"></a> 第 3 步：更新主板 BIOS</h3>
+<p>X870E 早期 BIOS 对 Gen5 显卡稳定性可能存在兼容性问题，华硕后续 AGESA 更新修复了不少相关问题。建议去华硕官网下载安装 X870E-PLUS WIFI7 的最新 BIOS。</p>
+<h3 id="第-4-步可选关闭-aspm"><a class="markdownIt-Anchor" href="#第-4-步可选关闭-aspm"></a> 第 4 步（可选）：关闭 ASPM</h3>
+<p>可以在内核启动参数中加入：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">pcie_aspm=off</span><br></pre></td></tr></table></figure>
+<p>这样可以排除 PCIe 省电状态切换导致掉链路的可能性。不过这一步属于系统配置调整，建议在前面几步无效后再做。</p>
+<h2 id="八-是否需要联系售后"><a class="markdownIt-Anchor" href="#八-是否需要联系售后"></a> 八、是否需要联系售后</h2>
+<p>目前暂时不建议立刻叫维修师傅。根据硬件清单和装机情况，这更像是 BIOS / PCIe 配置层面的兼容性问题，不一定是硬件损坏。</p>
+<p>只有在以下几项都做完后仍然崩溃，才建议考虑售后或上门检测：</p>
+<ul>
+<li>限功耗到 400W；</li>
+<li>PCIe 从 Gen5 降到 Gen4；</li>
+<li>主板 BIOS 更新到最新；</li>
+<li>必要时关闭 ASPM。</li>
+</ul>
+<p>如果这些操作都无效，才更可能是这块 5090 或这台电源存在个体瑕疵，再走保修、换件检测会更有意义。</p>
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>这次问题的关键并不是“显存不够”，而是 <strong>GPU 从 PCIe 总线上掉了（Xid 79）</strong>。第一轮排查指向 5090 瞬时功耗尖峰导致供电掉电；第二轮结合 1300W 原生电源线和 PCIe Gen5 x16 状态后，进一步怀疑是 <strong>PCIe Gen5 链路在满载瞬间不稳定</strong>。</p>
+<p>后续最建议的排查顺序是：</p>
+<ol>
+<li>先用 <code>sudo nvidia-smi -pl 400</code> 限功耗验证；</li>
+<li>若仍然崩溃，就在 BIOS 中把显卡插槽从 Gen5 降到 Gen4；</li>
+<li>更新主板 BIOS；</li>
+<li>必要时再测试 <code>pcie_aspm=off</code>；</li>
+<li>上述方法都无效后，再考虑售后或换件检测。</li>
+</ol>
+<hr />
+<h2 id="title-rtx-5090-深度学习环境显卡掉线排查记录date-2026-04-29-144749categories-深度学习"><a class="markdownIt-Anchor" href="#title-rtx-5090-深度学习环境显卡掉线排查记录date-2026-04-29-144749categories-深度学习"></a> title: RTX 5090 深度学习环境显卡掉线排查记录<br />
+date: 2026-04-29 14:47:49<br />
+categories: 深度学习</h2>
+<p>先交代下这套深度学习环境的硬件配置：</p>
+<ul>
+<li><strong>显卡</strong>：技嘉5090纯血版（国外背回来的）</li>
+<li><strong>CPU</strong>：AMD 9950X</li>
+<li><strong>主板</strong>：华硕 X870E-PLUS WIFI7</li>
+<li><strong>固态</strong>：三星990pro 2TB</li>
+<li><strong>机械</strong>：西部数据紫盘 2TB</li>
+<li><strong>机箱</strong>：安钛克FLUX SE</li>
+<li><strong>电源</strong>：安钛克NE 1300金</li>
+<li><strong>风冷散热</strong>：九州风神 阿萨辛4</li>
+<li><strong>内存</strong>：美商海盗船 DDR5 5200 32G✖️2</li>
+</ul>
+<p>最近在跑代码时，接连遇到了三次不同表现的桌面显示问题。起初我以为在 BIOS 里禁用核显就能解决，但实际测试下来发现并非如此。为了方便日后查阅，也希望能给遇到类似问题的朋友一些参考，这里把这三种情况及对应的解决思路记录下来。</p>
+<!-- more -->
+<h3 id="情况一直接掉盘找不到-gpu-节点-2"><a class="markdownIt-Anchor" href="#情况一直接掉盘找不到-gpu-节点-2"></a> 情况一：直接掉盘，找不到 GPU 节点</h3>
+<p>这是比较棘手的一种情况。当时正在跑训练，中途桌面突然消失，机箱风扇维持高转速。通过终端 SSH 连进去后，输入 <code>nvidia-smi</code> 提示找不到显卡设备，表现为典型的 GPU 掉盘。</p>
+<p>初步分析，这多半是在负载突变或者供电出现瞬时波动时，触发了主板或者电源的某种保护机制，导致 PCIe 设备被系统断开。针对这种硬件级别的保护掉线，目前最直接的办法只能是硬重启机器。</p>
+<h3 id="情况二能识别显卡但无信号输入且无桌面-2"><a class="markdownIt-Anchor" href="#情况二能识别显卡但无信号输入且无桌面-2"></a> 情况二：能识别显卡，但无信号输入且无桌面</h3>
+<p>这种情况表现为：开机后 <code>nvidia-smi</code> 能正常找到显卡并输出状态，但是显示器提示无信号输入，使用 ToDesk 远程连接时也显示没有桌面环境。</p>
+<p>遇到这种状况，我的处理方式是<strong>彻底断电重置</strong>：关机，拔掉主机电源线，静置等待一分钟左右，然后再插上电源开机。通常这样操作一次就能恢复正常。推测可能是主板静电或某些电容的残余电荷干扰了显示输出，拔电静置可以帮助主板彻底放电。</p>
+<h3 id="情况三远程有桌面但本地显示器黑屏-2"><a class="markdownIt-Anchor" href="#情况三远程有桌面但本地显示器黑屏-2"></a> 情况三：远程有桌面，但本地显示器黑屏</h3>
+<p>第三种情况有些特殊：本地显示器依然毫无反应（无输入信号），但是通过 ToDesk 远程连接，居然可以正常看到并操作 Ubuntu 桌面。</p>
+<p>经过摸索，这主要是 Ubuntu 下的显示服务器配置出现异常，或者显卡驱动与 Wayland 发生了冲突。可以在 ToDesk 里打开终端，尝试重置相关配置：</p>
+<ol>
+<li>清理旧的 xorg 配置文件：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">rm</span> /etc/X11/xorg.conf</span><br></pre></td></tr></table></figure>
+</li>
+<li>重新生成 NVIDIA 的 xconfig：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-xconfig</span><br></pre></td></tr></table></figure>
+</li>
+<li>关闭 Wayland，强制系统使用 X11 协议。编辑 gdm3 的配置文件：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nano /etc/gdm3/custom.conf</span><br></pre></td></tr></table></figure>
+找到里面被注释掉的 <code>#WaylandEnable=false</code> 这一行，去掉前面的 <code>#</code> 号，变成 <code>WaylandEnable=false</code>，然后保存退出。</li>
+<li>重启系统：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> reboot</span><br></pre></td></tr></table></figure>
+<strong>补充说明</strong>：重启的时候，建议给显示器换一个 DP 接口重新插拔一次，通常就能正常点亮了。</li>
+</ol>
+<h3 id="总结与后续优化"><a class="markdownIt-Anchor" href="#总结与后续优化"></a> 总结与后续优化</h3>
+<p>一开始我猜测是核显和独显在抢占输出通道，所以在 BIOS 里把主板核显禁用了。但事实证明，即使禁用了核显，上述黑屏和掉线问题依然会不定期出现。</p>
+<p>综合来看，我觉得 5090 这张卡的瞬态功耗和供电要求确实非常高，即便搭配了 1300W 的金牌电源，依然会在某些特定高负载工况下出现掉线。另外，这种情况我也会更多地考虑散热方面的影响，毕竟高功耗伴随着高发热。后续我打算加装机箱风扇、定期清理灰尘，并把机箱移动到更加通风的位置，因为 1300W 电源在理论上是不可能出现余量不足的。</p>
+<h3 id="内容更新再次频繁遭遇-gpu-掉盘"><a class="markdownIt-Anchor" href="#内容更新再次频繁遭遇-gpu-掉盘"></a> 内容更新：再次频繁遭遇 GPU 掉盘</h3>
+<p>跑代码时，batch 设为 6 可以轻松跑完 40k 步，此时显存仅用约 10 GB；将 batch 改为 12 后，显存占用约 18 GB，训练跑到约 8000 步时显示器黑屏，<code>nvidia-smi</code> 找不到显卡。SSH 仍能连上，风扇狂转，训练实际已停止。物理强制关机重启后一切恢复正常，但再次开跑仍会出现上述情况——这就不是偶然了。</p>
+<p>经过与大模型交流、网上搜索，并结合本机实际硬件配置，可能原因如下：</p>
+<ol>
+<li>
+<p><strong>散热不佳</strong>（可能性最高）</p>
+<ul>
+<li>主机放在桌子下面，空间狭小，通风不良。</li>
+<li>计划在机箱下方和上方加装风扇：下方进冷风，上方排热风；上方至少可加三个风扇，下方尚未查看，应该也能加装。</li>
+<li><strong>验证命令</strong>（重点观察温度）：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">watch -n 1 nvidia-smi -q -d TEMPERATURE</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>GPU Current Temp</strong>：核心温度，一般不要超过 80°C。</li>
+<li><strong>Memory Current Temp</strong>：显存温度，最关键。若在黑屏前一路飙升到 100°C 以上甚至逼近 105°C，基本可以断定是显存过热导致掉盘。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>电源余量不足</strong>（可能性较低）：满载时整机功耗过大，1300 W 电源可能不够。</p>
+</li>
+<li>
+<p><strong>硬件连接</strong>（可能性较低）：显卡支架不稳、供电线插接不牢或弯折过大——已检查，暂无问题。</p>
+</li>
+</ol>
+<p>总结就是，后续会将主机挪到机架上，也就是不在桌子底下，并加装风扇，到时候再跑一下代码尝试，如果不再出现上述情况（比如显存总共32G，而刚用了20G就桌面崩溃），那就解决了，如果还没好，那么就从京东喊师傅上门维修。</p>
+<p>再次更新：<br />
+此时已经把机器搬到了机架上，也更换了工位，再次想跑训练代码时，又遭遇桌面突然消失，显示器黑屏，风扇狂转，而且这次仅仅开训14秒就这样了，在cursor中问了大模型，结论如下：</p>
+<p>这是系统级硬崩溃（黑屏 + 掉线 + 风扇狂转 + 必须硬关机），不是普通的显存 OOM —— OOM 只会让 Python 进程报错退出，绝不会让整机断电。最可能是电源(PSU)瞬时功率不足 / 驱动崩溃 / 供电保护触发。5090 瞬时功耗尖峰极高，这是经典症状。</p>
+<p>关键证据已经出现。崩溃前内核日志被刷屏：</p>
+<p>NVRM: _issueRpcAndWait: rpcSendMessage failed with status 0x0000000f for fn 76<br />
+这是 NVIDIA GSP（GPU 系统处理器）固件 RPC 通信失败/超时 —— GPU 的 GSP 固件挂掉了，驱动在疯狂重试。一旦 GSP 死掉，挂在 GPU 上的 Xorg 显示就冻结（黑屏、ToDesk 掉线），风扇因失去控制进入 100% 失效保护（狂转）。这是驱动/GSP 固件问题，不是显存不够。</p>
+<p>我要看清崩溃的第一现场：RPC 刷屏之前发生了什么（是否有 Xid 错误、电源、温度告警）。</p>
+<p>找到决定性证据了。崩溃第一现场（16:12:16，就在你启动训练那一刻）：</p>
+<p>NVRM: Xid (PCI:0000:01:00): 79, … GPU has fallen off the bus.<br />
+NVRM: GPU 0000:01:00.0: GPU has fallen off the bus.<br />
+NVRM: Xid 154, GPU recovery action … Node Reboot Required<br />
+Xid 79 = “GPU 从 PCIe 总线上掉了” —— 这是教科书级的硬件/供电故障signature。GPU 整个从总线消失后，后面那一大片 GSP RPC 失败只是驱动在对一个&quot;已经不存在的 GPU&quot;疯狂重试的连锁反应。Node Reboot Required 也解释了为什么你必须硬关机才能恢复。</p>
+<p>让我再取证：确认这是反复发生、并排查是否伴随 PCIe 链路错误。</p>
+<p>诊断已经完全清晰了。再补两个决定性细节：</p>
+<p>训练日志目录时间戳 16:12:02，而 GPU 掉总线发生在 16:12:16 —— 开训仅 14 秒就崩了。这正是 GPU 从待机（~54W）猛地拉载冲向高功耗的瞬间。<br />
+崩溃前无任何过热（HW Thermal Slowdown 全 0，崩时才训 14 秒）、无 PCIe AER 链路报错。属于&quot;毫无征兆、瞬间掉总线&quot;。<br />
+GPU 功率上限 600W，最低可限到 400W。<br />
+这是 RTX 5090 经典的瞬时功耗尖峰导致供电掉电（brownout）→ GPU 掉出 PCIe 总线（Xid 79） 的典型案例，跟显存、跟你的代码完全无关</p>
+<h2 id="一-根本原因已确诊"><a class="markdownIt-Anchor" href="#一-根本原因已确诊"></a> 一、根本原因（已确诊）</h2>
+<p><strong>GPU 瞬时功耗尖峰导致供电掉电，GPU 掉出 PCIe 总线（Xid 79）。</strong> 与显存、与你的训练代码无关。</p>
+<p>证据链：</p>
+<ol>
+<li><code>Xid 79: GPU has fallen off the bus</code> + <code>Xid 154: Node Reboot Required</code> —— 开训 <strong>14 秒</strong>时触发，GPU 整个从总线消失。</li>
+<li>之后满屏的 <code>GSP RPC failed status 0xf</code> 只是驱动对&quot;已消失的 GPU&quot;疯狂重试的连锁反应（不是病因）。</li>
+<li>黑屏/ToDesk 掉线 = 挂在该 GPU 上的 Xorg 显示瞬间冻结；风扇狂转 = GPU 失控后进入 100% 失效保护；必须硬关机 = 内核提示的 “Node Reboot Required”。</li>
+<li><strong>无过热、无 PCIe AER 链路错误</strong> → 排除散热、排除信号链路老化，指向<strong>供电瞬态</strong>。</li>
+</ol>
+<p>RTX 5090 标称 ~575–600W，但毫秒级瞬时尖峰可冲到 <strong>900W+</strong>。如果电源额定不够、或 12VHPWR/12V-2x6 供电线接触不良/用了转接头，开训那一刻拉满载就会瞬间掉电。</p>
+<h2 id="二-立即缓解你来执行需-sudo"><a class="markdownIt-Anchor" href="#二-立即缓解你来执行需-sudo"></a> 二、立即缓解（你来执行，需 sudo）</h2>
+<p>先用<strong>降功耗上限</strong>削平尖峰，既能马上训练，也能验证就是供电问题：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pm 1        <span class="comment"># 持久模式</span></span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 400      <span class="comment"># 功耗上限 600W → 400W（最低可设400）</span></span><br></pre></td></tr></table></figure>
+<p>然后重新起训观察：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> /home/kxh/Projects/gqa</span><br><span class="line">python tools/train.py my_configs/segformer/segformer_mit-b2_multinatsmoke_align.py</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>若限到 400W 后能稳定训练 → 100% 确认是供电问题。</strong></li>
+<li>还不行就更激进，进一步压制瞬时峰值（锁最大频率）：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -lgc 210,2400   <span class="comment"># 锁定 GPU 频率上限，显著降低瞬态</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<blockquote>
+<p>这些设置<strong>重启后失效</strong>（安全可逆）。确认有效后想开机自动生效，可做成 systemd 服务，我可以帮你写。</p>
+</blockquote>
+<h2 id="三-真正的根治硬件按优先级"><a class="markdownIt-Anchor" href="#三-真正的根治硬件按优先级"></a> 三、真正的根治（硬件，按优先级）</h2>
+<ol>
+<li><strong>检查 12VHPWR / 12V-2x6 供电线</strong>（最高嫌疑）：
+<ul>
+<li>必须用电源<strong>原生</strong>那根 16-pin 线，<strong>不要</strong>用一拖二/菊花链转接头；</li>
+<li>GPU 端和电源端<strong>都重新插拔到底</strong>（听到/感到卡扣到位），这是 4090/5090 掉总线最常见的元凶。</li>
+</ul>
+</li>
+<li><strong>电源额定功率</strong>：5090 建议 <strong>≥1000W（最好 1200W）ATX 3.0/3.1</strong> 且原生 12V-2x6 接口。若你现在是 850W 或更低、或老电源用转接头，几乎必然瞬态掉电。</li>
+<li><strong>重插 GPU 到 PCIe 槽</strong>，确认供电稳固。</li>
+<li>BIOS / 主板供电相关项更新。</li>
+</ol>
+<h2 id="四-补充建议"><a class="markdownIt-Anchor" href="#四-补充建议"></a> 四、补充建议</h2>
+<ul>
+<li>驱动是 <code>590.48.01</code>（开源内核模块 + GSP），属较新版本。Xid 79 是硬件级&quot;掉总线&quot;，<strong>首要是供电而非驱动</strong>；但若硬件排查后限功耗仍偶发，可考虑换一个稳定驱动分支测试。</li>
+<li>日志已持久化（能读到上次崩溃记录），以后再崩可直接 <code>journalctl -b -1 -k | grep Xid</code> 复查。</li>
+</ul>
+<hr />
+<p><strong>结论</strong>：不是&quot;显存不够&quot;，而是 <strong>5090 瞬时功耗把供电拉崩、GPU 掉出总线</strong>。先执行第二节的 <code>nvidia-smi -pl 400</code> 验证，然后重点查第三节的 12VHPWR 供电线与电源额定，再考虑是否要把功率限制设置为系统开机服务，不用每次手动设置。</p>
+<p>在我进一步与大模型沟通后，我发了硬件配置给他，并说明电源线我检查过了，插得很紧，同时也问他需不需要叫维修师傅，它进行了第二轮排查：</p>
+<p>你这套配置非常硬核 —— 安钛克 NE1300G 是 1300W 金牌 ATX3.0、原生 12V-2x6，带 5090+9950X 容量绰绰有余，加上你确认线是原生且插紧。所以&quot;电源功率不够&quot;基本可以排除。那问题就更可能在另外两个方向，我先取证再下结论。</p>
+<p>让我查 PCIe 链路代数和内核启动参数。</p>
+<p>查到了第二个关键证据：</p>
+<p>pcie.link.gen.current = 5   ← GPU 正跑在 PCIe Gen5 x16<br />
+结合你这套硬件（1300W 金牌原生线、线插紧），&quot;电源容量不足&quot;基本排除，矛头强烈指向另一个 50 系显卡 + AM5 平台的高发问题：PCIe Gen5 链路在满载瞬间不稳定，导致 GPU 掉出总线（Xid 79）。</p>
+<p>为什么是这个原因<br />
+RTX 50 系 + AM5（X870E）跑 PCIe Gen5 x16 时，信号完整性要求极高。开训那一刻 GPU 链路状态切换 + 负载骤增，Gen5 链路容易瞬间崩掉，表现就是&quot;毫无征兆掉总线、黑屏、要硬重启&quot;——和你的现象、和 Xid 79 完全吻合。<br />
+你没有任何过热、没有 PCIe AER 渐进报错、电源又足够 → 不是散热、不是容量、不是线材老化，就是链路/瞬态层面的稳定性。</p>
+<p>现在该做什么（按顺序，先软后硬，几乎都不用叫师傅）<br />
+第 1 步：功耗上限测试（5 分钟，区分病因）</p>
+<p>sudo nvidia-smi -pm 1<br />
+sudo nvidia-smi -pl 400<br />
+cd /home/kxh/Projects/gqa<br />
+python tools/train.py my_configs/segformer/segformer_mit-b2_multinatsmoke_align.py<br />
+能稳定训练 → 偏向瞬态供电（电源 OCP 对 5090 尖峰敏感）。<br />
+仍然崩 → 基本就是 PCIe Gen5 链路问题，做第 2 步。<br />
+第 2 步：BIOS 里把显卡插槽降到 PCIe Gen4（这是 50 系掉总线最有效的修复）</p>
+<p>重启按 Del 进 ASUS BIOS → Advanced（高级） → 找 PCI Subsystem Settings 或 PCIe Link Speed / PCIEX16_1 Link Speed；<br />
+把它从 Auto/Gen5 改成 Gen4 → 保存重启。<br />
+对你的训练性能几乎无损（Gen4 x16 带宽对单卡训练完全够），但稳定性大幅提升。<br />
+第 3 步：更新主板 BIOS</p>
+<p>X870E 早期 BIOS 对 Gen5 显卡稳定性有已知问题，华硕后续 AGESA 更新修了很多。到华硕官网下 X870E-PLUS WIFI7 最新 BIOS 刷一下。<br />
+第 4 步（可选）：关闭 ASPM</p>
+<p>内核启动参数加 pcie_aspm=off（我可以帮你改 GRUB），排除省电状态切换导致掉链路。<br />
+要不要叫维修师傅？<br />
+先别叫。 你的硬件清单和装机都没问题，这大概率是 BIOS/PCIe 配置层面的兼容性问题，不是硬件坏了。按上面 1→2→3 走，绝大多数 5090 掉总线都能解决。</p>
+<p>只有在以下情况才考虑联系售后/师傅：</p>
+<p>降到 Gen4 + 限功耗 400W + 最新 BIOS，三管齐下还是崩 → 可能是这块 5090 或这台电源的个体瑕疵（marginal unit），那时再走保修/换件检测才有意义。<br />
+建议你现在先跑第 1 步告诉我结果（限 400W 后还崩不崩），我就能帮你精确锁定是&quot;瞬态供电&quot;还是&quot;Gen5 链路&quot;，再决定下一步。要我帮你把 pcie_aspm=off 和开机自动限功耗一起配好吗？</p>
+]]></content>
+      <categories>
+        <category>深度学习</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>2026版：Hexo + GitHub Pages 个人博客搭建全记录</title>
+    <url>/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/</url>
+    <content><![CDATA[<p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
+<span id="more"></span>
+<h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
+<p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
+🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
+<blockquote>
+<p>💡 <strong>操作记录</strong>：<br />
+虽然这篇文章的整体逻辑很清晰，但因为发布时间较早，很多细节已经发生了变化。例如 Node.js 的版本要求、Hexo 包管理的变动，以及目前 GitHub 默认主分支已经从 <code>master</code> 变成了 <code>main</code>。这些差异很容易导致按照原教程执行时出现报错。</p>
+<p>在实际操作中，如果遇到版本不兼容导致的报错，建议直接将终端报错信息交给大语言模型去分析，通常能很快定位并解决问题，能省下不少查阅旧资料的时间。</p>
+</blockquote>
+<hr />
+<h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
+<p>默认部署到 GitHub Pages 上的域名格式通常是 <code>用户名.github.io</code>。为了方便记忆和后续的扩展，我为博客绑定了一个专属的独立域名。</p>
+<p>🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
+<p><strong>核心操作步骤</strong>：</p>
+<ol>
+<li><strong>域名购买</strong>：我在阿里云购买了一个 <code>.top</code> 后缀的域名，相对来说性价比比较高。</li>
+<li><strong>DNS 解析配置</strong>：进入阿里云控制台，添加一条 <code>CNAME</code> 记录，将其解析指向自己的 GitHub Pages 地址。</li>
+<li><strong>GitHub 仓库配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚购买的域名，并勾选开启 <code>Enforce HTTPS</code> 以保证访问安全。配置完成后，稍微等待 DNS 解析生效，就可以使用独立域名访问博客了。</li>
+</ol>
+<hr />
+<h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
+<p>原生的 Hexo 界面比较基础，为了提升页面的可读性和排版效果，通常需要对主题进行一定的自定义。</p>
+<p>🔗 <strong>参考教程</strong>：<a href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
+<p><strong>我主要进行的配置和调整包括</strong>：</p>
+<ul>
+<li>更换第三方主题（这里我尝试了经典的 NexT 等几款主流主题）。</li>
+<li>配置侧边栏的个人信息、头像以及社交平台链接。</li>
+<li>微调了博客的背景和字体配色，以改善正文内容的阅读体验。</li>
+<li>补充了专属的网站标签页小图标（Favicon）。</li>
+</ul>
+<p>整个流程走下来，算是一次比较完整的前端部署实践。一个功能完善、排版清晰的博客不仅能作为知识库，也是记录学习日常的好工具。</p>
+]]></content>
+      <categories>
+        <category>建站教程</category>
+      </categories>
+  </entry>
+  <entry>
     <title>在 RTX 5090 上配置 MMSegmentation 并跑通自定义数据集 (OneDL 版)</title>
     <url>/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/</url>
     <content><![CDATA[<p>在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。</p>
@@ -161,6 +536,14 @@
       </categories>
   </entry>
   <entry>
+    <title>发挥AI+MMSegmentation的快速验证想法的优势</title>
+    <url>/2026/05/25/%E5%8F%91%E6%8C%A5AI-MMSegmentation%E7%9A%84%E5%BF%AB%E9%80%9F%E9%AA%8C%E8%AF%81%E6%83%B3%E6%B3%95%E7%9A%84%E4%BC%98%E5%8A%BF/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>深度学习</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Git 核心操作记录：面向日常开发的实践总结</title>
     <url>/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/</url>
     <content><![CDATA[<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
@@ -273,14 +656,6 @@
 ]]></content>
       <categories>
         <category>工具教程</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>发挥AI+MMSegmentation的快速验证想法的优势</title>
-    <url>/2026/05/25/%E5%8F%91%E6%8C%A5AI-MMSegmentation%E7%9A%84%E5%BF%AB%E9%80%9F%E9%AA%8C%E8%AF%81%E6%83%B3%E6%B3%95%E7%9A%84%E4%BC%98%E5%8A%BF/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>深度学习</category>
       </categories>
   </entry>
   <entry>
@@ -546,120 +921,11 @@
       </categories>
   </entry>
   <entry>
-    <title>RTX 5090 深度学习环境显卡掉线排查记录</title>
-    <url>/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/</url>
-    <content><![CDATA[<p>先交代下这套深度学习环境的硬件配置：</p>
-<ul>
-<li><strong>显卡</strong>：技嘉5090纯血版（国外背回来的）</li>
-<li><strong>CPU</strong>：AMD 9950X</li>
-<li><strong>主板</strong>：华硕 X870E-PLUS WIFI7</li>
-<li><strong>固态</strong>：三星990pro 2TB</li>
-<li><strong>机械</strong>：西部数据紫盘 2TB</li>
-<li><strong>机箱</strong>：安钛克FLUX SE</li>
-<li><strong>电源</strong>：安钛克NE 1300金</li>
-<li><strong>风冷散热</strong>：九州风神 阿萨辛4</li>
-<li><strong>内存</strong>：美商海盗船 DDR5 5200 32G✖️2</li>
-</ul>
-<p>最近在跑代码时，接连遇到了三次不同表现的桌面显示问题。起初我以为在 BIOS 里禁用核显就能解决，但实际测试下来发现并非如此。为了方便日后查阅，也希望能给遇到类似问题的朋友一些参考，这里把这三种情况及对应的解决思路记录下来。</p>
-<span id="more"></span>
-<h3 id="情况一直接掉盘找不到-gpu-节点"><a class="markdownIt-Anchor" href="#情况一直接掉盘找不到-gpu-节点"></a> 情况一：直接掉盘，找不到 GPU 节点</h3>
-<p>这是比较棘手的一种情况。当时正在跑训练，中途桌面突然消失，机箱风扇维持高转速。通过终端 SSH 连进去后，输入 <code>nvidia-smi</code> 提示找不到显卡设备，表现为典型的 GPU 掉盘。</p>
-<p>初步分析，这多半是在负载突变或者供电出现瞬时波动时，触发了主板或者电源的某种保护机制，导致 PCIe 设备被系统断开。针对这种硬件级别的保护掉线，目前最直接的办法只能是硬重启机器。</p>
-<h3 id="情况二能识别显卡但无信号输入且无桌面"><a class="markdownIt-Anchor" href="#情况二能识别显卡但无信号输入且无桌面"></a> 情况二：能识别显卡，但无信号输入且无桌面</h3>
-<p>这种情况表现为：开机后 <code>nvidia-smi</code> 能正常找到显卡并输出状态，但是显示器提示无信号输入，使用 ToDesk 远程连接时也显示没有桌面环境。</p>
-<p>遇到这种状况，我的处理方式是<strong>彻底断电重置</strong>：关机，拔掉主机电源线，静置等待一分钟左右，然后再插上电源开机。通常这样操作一次就能恢复正常。推测可能是主板静电或某些电容的残余电荷干扰了显示输出，拔电静置可以帮助主板彻底放电。</p>
-<h3 id="情况三远程有桌面但本地显示器黑屏"><a class="markdownIt-Anchor" href="#情况三远程有桌面但本地显示器黑屏"></a> 情况三：远程有桌面，但本地显示器黑屏</h3>
-<p>第三种情况有些特殊：本地显示器依然毫无反应（无输入信号），但是通过 ToDesk 远程连接，居然可以正常看到并操作 Ubuntu 桌面。</p>
-<p>经过摸索，这主要是 Ubuntu 下的显示服务器配置出现异常，或者显卡驱动与 Wayland 发生了冲突。可以在 ToDesk 里打开终端，尝试重置相关配置：</p>
-<ol>
-<li>清理旧的 xorg 配置文件：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">rm</span> /etc/X11/xorg.conf</span><br></pre></td></tr></table></figure>
-</li>
-<li>重新生成 NVIDIA 的 xconfig：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-xconfig</span><br></pre></td></tr></table></figure>
-</li>
-<li>关闭 Wayland，强制系统使用 X11 协议。编辑 gdm3 的配置文件：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nano /etc/gdm3/custom.conf</span><br></pre></td></tr></table></figure>
-找到里面被注释掉的 <code>#WaylandEnable=false</code> 这一行，去掉前面的 <code>#</code> 号，变成 <code>WaylandEnable=false</code>，然后保存退出。</li>
-<li>重启系统：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> reboot</span><br></pre></td></tr></table></figure>
-<strong>补充说明</strong>：重启的时候，建议给显示器换一个 DP 接口重新插拔一次，通常就能正常点亮了。</li>
-</ol>
-<h3 id="总结与后续优化"><a class="markdownIt-Anchor" href="#总结与后续优化"></a> 总结与后续优化</h3>
-<p>一开始我猜测是核显和独显在抢占输出通道，所以在 BIOS 里把主板核显禁用了。但事实证明，即使禁用了核显，上述黑屏和掉线问题依然会不定期出现。</p>
-<p>综合来看，我觉得 5090 这张卡的瞬态功耗和供电要求确实非常高，即便搭配了 1300W 的金牌电源，依然会在某些特定高负载工况下出现掉线。另外，这种情况我也会更多地考虑散热方面的影响，毕竟高功耗伴随着高发热。后续我打算加装机箱风扇、定期清理灰尘，并把机箱移动到更加通风的位置，因为 1300W 电源在理论上是不可能出现余量不足的。</p>
-<h3 id="内容更新再次频繁遭遇-gpu-掉盘"><a class="markdownIt-Anchor" href="#内容更新再次频繁遭遇-gpu-掉盘"></a> 内容更新：再次频繁遭遇 GPU 掉盘</h3>
-<p>跑代码时，batch 设为 6 可以轻松跑完 40k 步，此时显存仅用约 10 GB；将 batch 改为 12 后，显存占用约 18 GB，训练跑到约 8000 步时显示器黑屏，<code>nvidia-smi</code> 找不到显卡。SSH 仍能连上，风扇狂转，训练实际已停止。物理强制关机重启后一切恢复正常，但再次开跑仍会出现上述情况——这就不是偶然了。</p>
-<p>经过与大模型交流、网上搜索，并结合本机实际硬件配置，可能原因如下：</p>
-<ol>
-<li>
-<p><strong>散热不佳</strong>（可能性最高）</p>
-<ul>
-<li>主机放在桌子下面，空间狭小，通风不良。</li>
-<li>计划在机箱下方和上方加装风扇：下方进冷风，上方排热风；上方至少可加三个风扇，下方尚未查看，应该也能加装。</li>
-<li><strong>验证命令</strong>（重点观察温度）：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">watch -n 1 nvidia-smi -q -d TEMPERATURE</span><br></pre></td></tr></table></figure>
-<ul>
-<li><strong>GPU Current Temp</strong>：核心温度，一般不要超过 80°C。</li>
-<li><strong>Memory Current Temp</strong>：显存温度，最关键。若在黑屏前一路飙升到 100°C 以上甚至逼近 105°C，基本可以断定是显存过热导致掉盘。</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p><strong>电源余量不足</strong>（可能性较低）：满载时整机功耗过大，1300 W 电源可能不够。</p>
-</li>
-<li>
-<p><strong>硬件连接</strong>（可能性较低）：显卡支架不稳、供电线插接不牢或弯折过大——已检查，暂无问题。</p>
-</li>
-</ol>
-<p>总结就是，后续会将主机挪到机架上，也就是不在桌子底下，并加装风扇，到时候再跑一下代码尝试，如果不再出现上述情况（比如显存总共32G，而刚用了20G就桌面崩溃），那就解决了，如果还没好，那么就从京东喊师傅上门维修。</p>
-]]></content>
-      <categories>
-        <category>深度学习</category>
-      </categories>
-  </entry>
-  <entry>
     <title>指标复现与调参</title>
     <url>/2026/05/25/%E6%8C%87%E6%A0%87%E5%A4%8D%E7%8E%B0%E4%B8%8E%E8%B0%83%E5%8F%82/</url>
     <content><![CDATA[]]></content>
       <categories>
         <category>深度学习</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>2026版：Hexo + GitHub Pages 个人博客搭建全记录</title>
-    <url>/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/</url>
-    <content><![CDATA[<p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
-<span id="more"></span>
-<h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
-<p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
-🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
-<blockquote>
-<p>💡 <strong>操作记录</strong>：<br />
-虽然这篇文章的整体逻辑很清晰，但因为发布时间较早，很多细节已经发生了变化。例如 Node.js 的版本要求、Hexo 包管理的变动，以及目前 GitHub 默认主分支已经从 <code>master</code> 变成了 <code>main</code>。这些差异很容易导致按照原教程执行时出现报错。</p>
-<p>在实际操作中，如果遇到版本不兼容导致的报错，建议直接将终端报错信息交给大语言模型去分析，通常能很快定位并解决问题，能省下不少查阅旧资料的时间。</p>
-</blockquote>
-<hr />
-<h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
-<p>默认部署到 GitHub Pages 上的域名格式通常是 <code>用户名.github.io</code>。为了方便记忆和后续的扩展，我为博客绑定了一个专属的独立域名。</p>
-<p>🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
-<p><strong>核心操作步骤</strong>：</p>
-<ol>
-<li><strong>域名购买</strong>：我在阿里云购买了一个 <code>.top</code> 后缀的域名，相对来说性价比比较高。</li>
-<li><strong>DNS 解析配置</strong>：进入阿里云控制台，添加一条 <code>CNAME</code> 记录，将其解析指向自己的 GitHub Pages 地址。</li>
-<li><strong>GitHub 仓库配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚购买的域名，并勾选开启 <code>Enforce HTTPS</code> 以保证访问安全。配置完成后，稍微等待 DNS 解析生效，就可以使用独立域名访问博客了。</li>
-</ol>
-<hr />
-<h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
-<p>原生的 Hexo 界面比较基础，为了提升页面的可读性和排版效果，通常需要对主题进行一定的自定义。</p>
-<p>🔗 <strong>参考教程</strong>：<a href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
-<p><strong>我主要进行的配置和调整包括</strong>：</p>
-<ul>
-<li>更换第三方主题（这里我尝试了经典的 NexT 等几款主流主题）。</li>
-<li>配置侧边栏的个人信息、头像以及社交平台链接。</li>
-<li>微调了博客的背景和字体配色，以改善正文内容的阅读体验。</li>
-<li>补充了专属的网站标签页小图标（Favicon）。</li>
-</ul>
-<p>整个流程走下来，算是一次比较完整的前端部署实践。一个功能完善、排版清晰的博客不仅能作为知识库，也是记录学习日常的好工具。</p>
-]]></content>
-      <categories>
-        <category>建站教程</category>
       </categories>
   </entry>
   <entry>
