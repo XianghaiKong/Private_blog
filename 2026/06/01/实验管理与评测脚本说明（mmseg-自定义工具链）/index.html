@@ -28,7 +28,7 @@
 <meta property="og:description" content="实验管理与评测脚本说明（mmseg 自定义工具链）  本文介绍在本项目（基于 MMSegmentation 1.x）里自建的一套实验管理 + 评测工具， 用于解决&quot;多次跑同一模型不同超参会互相覆盖&quot;“结果难以横向对比”“评测要分尺寸&#x2F;分子集” 等问题。全部改动只在 my_configs&#x2F;paths.py 与 tools&#x2F;*.py，不触碰 mmseg 内核， 训练&#x2F;评测的数值与">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-06-01T08:46:40.000Z">
-<meta property="article:modified_time" content="2026-06-02T06:06:24.725Z">
+<meta property="article:modified_time" content="2026-06-04T08:47:55.189Z">
 <meta property="article:author" content="KK">
 <meta property="article:tag" content="工程工具">
 <meta property="article:tag" content="深度学习">
@@ -256,7 +256,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-06-02 14:06:24" itemprop="dateModified" datetime="2026-06-02T14:06:24+08:00">2026-06-02</time>
+      <time title="修改时间：2026-06-04 16:47:55" itemprop="dateModified" datetime="2026-06-04T16:47:55+08:00">2026-06-04</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -291,6 +291,7 @@
 <li><code>tools/smoke_test.py</code>：单次测试（指标 + 可视化 + 台账）</li>
 <li><code>tools/smoke_test_multiscale.py</code>：分划分一键测试（自动发现，数据集无关）</li>
 </ul>
+<span id="more"></span>
 <hr />
 <h2 id="一-实验管理机制时间戳运行目录-csv-台账"><a class="markdownIt-Anchor" href="#一-实验管理机制时间戳运行目录-csv-台账"></a> 一、实验管理机制：时间戳运行目录 + CSV 台账</h2>
 <h3 id="11-目录规则"><a class="markdownIt-Anchor" href="#11-目录规则"></a> 1.1 目录规则</h3>
