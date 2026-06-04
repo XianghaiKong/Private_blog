@@ -281,6 +281,46 @@
       </categories>
   </entry>
   <entry>
+    <title>2026版：Hexo + GitHub Pages 个人博客搭建全记录</title>
+    <url>/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/</url>
+    <content><![CDATA[<p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
+<span id="more"></span>
+<h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
+<p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
+🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
+<blockquote>
+<p>💡 <strong>操作记录</strong>：<br />
+虽然这篇文章的整体逻辑很清晰，但因为发布时间较早，很多细节已经发生了变化。例如 Node.js 的版本要求、Hexo 包管理的变动，以及目前 GitHub 默认主分支已经从 <code>master</code> 变成了 <code>main</code>。这些差异很容易导致按照原教程执行时出现报错。</p>
+<p>在实际操作中，如果遇到版本不兼容导致的报错，建议直接将终端报错信息交给大语言模型去分析，通常能很快定位并解决问题，能省下不少查阅旧资料的时间。</p>
+</blockquote>
+<hr />
+<h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
+<p>默认部署到 GitHub Pages 上的域名格式通常是 <code>用户名.github.io</code>。为了方便记忆和后续的扩展，我为博客绑定了一个专属的独立域名。</p>
+<p>🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
+<p><strong>核心操作步骤</strong>：</p>
+<ol>
+<li><strong>域名购买</strong>：我在阿里云购买了一个 <code>.top</code> 后缀的域名，相对来说性价比比较高。</li>
+<li><strong>DNS 解析配置</strong>：进入阿里云控制台，添加一条 <code>CNAME</code> 记录，将其解析指向自己的 GitHub Pages 地址。</li>
+<li><strong>GitHub 仓库配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚购买的域名，并勾选开启 <code>Enforce HTTPS</code> 以保证访问安全。配置完成后，稍微等待 DNS 解析生效，就可以使用独立域名访问博客了。</li>
+</ol>
+<hr />
+<h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
+<p>原生的 Hexo 界面比较基础，为了提升页面的可读性和排版效果，通常需要对主题进行一定的自定义。</p>
+<p>🔗 <strong>参考教程</strong>：<a href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
+<p><strong>我主要进行的配置和调整包括</strong>：</p>
+<ul>
+<li>更换第三方主题（这里我尝试了经典的 NexT 等几款主流主题）。</li>
+<li>配置侧边栏的个人信息、头像以及社交平台链接。</li>
+<li>微调了博客的背景和字体配色，以改善正文内容的阅读体验。</li>
+<li>补充了专属的网站标签页小图标（Favicon）。</li>
+</ul>
+<p>整个流程走下来，算是一次比较完整的前端部署实践。一个功能完善、排版清晰的博客不仅能作为知识库，也是记录学习日常的好工具。</p>
+]]></content>
+      <categories>
+        <category>建站教程</category>
+      </categories>
+  </entry>
+  <entry>
     <title>在 RTX 5090 上配置 MMSegmentation 并跑通自定义数据集 (OneDL 版)</title>
     <url>/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/</url>
     <content><![CDATA[<p>在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。</p>
@@ -952,54 +992,6 @@ config 里列出各划分</strong>。</li>
       </categories>
   </entry>
   <entry>
-    <title>指标复现与调参</title>
-    <url>/2026/05/25/%E6%8C%87%E6%A0%87%E5%A4%8D%E7%8E%B0%E4%B8%8E%E8%B0%83%E5%8F%82/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>深度学习</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>2026版：Hexo + GitHub Pages 个人博客搭建全记录</title>
-    <url>/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/</url>
-    <content><![CDATA[<p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
-<span id="more"></span>
-<h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
-<p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
-🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
-<blockquote>
-<p>💡 <strong>操作记录</strong>：<br />
-虽然这篇文章的整体逻辑很清晰，但因为发布时间较早，很多细节已经发生了变化。例如 Node.js 的版本要求、Hexo 包管理的变动，以及目前 GitHub 默认主分支已经从 <code>master</code> 变成了 <code>main</code>。这些差异很容易导致按照原教程执行时出现报错。</p>
-<p>在实际操作中，如果遇到版本不兼容导致的报错，建议直接将终端报错信息交给大语言模型去分析，通常能很快定位并解决问题，能省下不少查阅旧资料的时间。</p>
-</blockquote>
-<hr />
-<h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
-<p>默认部署到 GitHub Pages 上的域名格式通常是 <code>用户名.github.io</code>。为了方便记忆和后续的扩展，我为博客绑定了一个专属的独立域名。</p>
-<p>🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
-<p><strong>核心操作步骤</strong>：</p>
-<ol>
-<li><strong>域名购买</strong>：我在阿里云购买了一个 <code>.top</code> 后缀的域名，相对来说性价比比较高。</li>
-<li><strong>DNS 解析配置</strong>：进入阿里云控制台，添加一条 <code>CNAME</code> 记录，将其解析指向自己的 GitHub Pages 地址。</li>
-<li><strong>GitHub 仓库配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚购买的域名，并勾选开启 <code>Enforce HTTPS</code> 以保证访问安全。配置完成后，稍微等待 DNS 解析生效，就可以使用独立域名访问博客了。</li>
-</ol>
-<hr />
-<h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
-<p>原生的 Hexo 界面比较基础，为了提升页面的可读性和排版效果，通常需要对主题进行一定的自定义。</p>
-<p>🔗 <strong>参考教程</strong>：<a href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
-<p><strong>我主要进行的配置和调整包括</strong>：</p>
-<ul>
-<li>更换第三方主题（这里我尝试了经典的 NexT 等几款主流主题）。</li>
-<li>配置侧边栏的个人信息、头像以及社交平台链接。</li>
-<li>微调了博客的背景和字体配色，以改善正文内容的阅读体验。</li>
-<li>补充了专属的网站标签页小图标（Favicon）。</li>
-</ul>
-<p>整个流程走下来，算是一次比较完整的前端部署实践。一个功能完善、排版清晰的博客不仅能作为知识库，也是记录学习日常的好工具。</p>
-]]></content>
-      <categories>
-        <category>建站教程</category>
-      </categories>
-  </entry>
-  <entry>
     <title>语义分割评价指标梳理与代码实现记录</title>
     <url>/2026/04/13/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87/</url>
     <content><![CDATA[<p>最近在处理烟雾分割任务时，发现现有的语义分割评估指标在应对特定分布（如目标极其微小、类别极度不平衡）时存在一些统计上的盲区。为了更客观地衡量模型性能，我对常用的评价指标进行了梳理，并记录了在 MMSegmentation 框架下实现自定义烟雾分割评价指标的过程。</p>
@@ -1130,6 +1122,550 @@ config 里列出各划分</strong>。</li>
 </ol>
 <p><strong>具体实现代码如下</strong>：</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Copyright (c) OpenMMLab. All rights reserved.</span></span><br><span class="line"><span class="keyword">import</span> os.path <span class="keyword">as</span> osp</span><br><span class="line"><span class="keyword">from</span> collections <span class="keyword">import</span> OrderedDict</span><br><span class="line"><span class="keyword">from</span> typing <span class="keyword">import</span> <span class="type">Dict</span>, <span class="type">List</span>, <span class="type">Optional</span>, <span class="type">Sequence</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">from</span> mmengine.dist <span class="keyword">import</span> is_main_process</span><br><span class="line"><span class="keyword">from</span> mmengine.logging <span class="keyword">import</span> MMLogger, print_log</span><br><span class="line"><span class="keyword">from</span> mmengine.utils <span class="keyword">import</span> mkdir_or_exist</span><br><span class="line"><span class="keyword">from</span> PIL <span class="keyword">import</span> Image</span><br><span class="line"><span class="keyword">from</span> prettytable <span class="keyword">import</span> PrettyTable</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> mmseg.registry <span class="keyword">import</span> METRICS</span><br><span class="line"><span class="keyword">from</span> .iou_metric <span class="keyword">import</span> IoUMetric</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@METRICS.register_module()</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SmokeSegMetric</span>(<span class="title class_ inherited__">IoUMetric</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;烟雾分割评价指标。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    在官方 IoUMetric（pixel-level 全局累积）的基础上，新增 image-level</span></span><br><span class="line"><span class="string">    Macro-Average 指标：逐图计算 IoU、Fβ、Precision、Recall，然后对</span></span><br><span class="line"><span class="string">    所有图片取均值。两种指标同时输出。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Image-level 指标会**分别计算每个类**（如 _background_ 和 smoke），</span></span><br><span class="line"><span class="string">    最终输出每个类的 Img_IoU、Img_Fbeta、Img_Precision、Img_Recall。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">    Args:</span></span><br><span class="line"><span class="string">        ignore_index (int): 评估时忽略的标签索引。默认: 255。</span></span><br><span class="line"><span class="string">        iou_metrics (list[str] | str): 官方 pixel-level 指标类型，</span></span><br><span class="line"><span class="string">            支持 &#x27;mIoU&#x27;、&#x27;mDice&#x27;、&#x27;mFscore&#x27;。默认: [&#x27;mIoU&#x27;]。</span></span><br><span class="line"><span class="string">        nan_to_num (int, optional): 如果指定，NaN 值将被替换为该数值。</span></span><br><span class="line"><span class="string">            默认: None。</span></span><br><span class="line"><span class="string">        beta (int): Fβ 的 β 值，决定 Recall 在综合得分中的权重。</span></span><br><span class="line"><span class="string">            β=1 时为 F1-Score，β=2 时更侧重 Recall。默认: 1。</span></span><br><span class="line"><span class="string">        collect_device (str): 分布式训练时收集结果的设备。默认: &#x27;cpu&#x27;。</span></span><br><span class="line"><span class="string">        output_dir (str): 输出预测结果的目录。默认: None。</span></span><br><span class="line"><span class="string">        format_only (bool): 仅格式化结果不进行评估。默认: False。</span></span><br><span class="line"><span class="string">        prefix (str, optional): 指标名称前缀。默认: None。</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self,</span></span><br><span class="line"><span class="params">                 ignore_index: <span class="built_in">int</span> = <span class="number">255</span>,</span></span><br><span class="line"><span class="params">                 iou_metrics: <span class="type">List</span>[<span class="built_in">str</span>] = [<span class="string">&#x27;mIoU&#x27;</span>],</span></span><br><span class="line"><span class="params">                 nan_to_num: <span class="type">Optional</span>[<span class="built_in">int</span>] = <span class="literal">None</span>,</span></span><br><span class="line"><span class="params">                 beta: <span class="built_in">int</span> = <span class="number">1</span>,</span></span><br><span class="line"><span class="params">                 collect_device: <span class="built_in">str</span> = <span class="string">&#x27;cpu&#x27;</span>,</span></span><br><span class="line"><span class="params">                 output_dir: <span class="type">Optional</span>[<span class="built_in">str</span>] = <span class="literal">None</span>,</span></span><br><span class="line"><span class="params">                 format_only: <span class="built_in">bool</span> = <span class="literal">False</span>,</span></span><br><span class="line"><span class="params">                 prefix: <span class="type">Optional</span>[<span class="built_in">str</span>] = <span class="literal">None</span>,</span></span><br><span class="line"><span class="params">                 **kwargs</span>) -&gt; <span class="literal">None</span>:</span><br><span class="line">        <span class="built_in">super</span>().__init__(</span><br><span class="line">            ignore_index=ignore_index,</span><br><span class="line">            iou_metrics=iou_metrics,</span><br><span class="line">            nan_to_num=nan_to_num,</span><br><span class="line">            beta=beta,</span><br><span class="line">            collect_device=collect_device,</span><br><span class="line">            output_dir=output_dir,</span><br><span class="line">            format_only=format_only,</span><br><span class="line">            prefix=prefix,</span><br><span class="line">            **kwargs)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">process</span>(<span class="params">self, data_batch: <span class="built_in">dict</span>,</span></span><br><span class="line"><span class="params">                data_samples: <span class="type">Sequence</span>[<span class="built_in">dict</span>]</span>) -&gt; <span class="literal">None</span>:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;处理一个 batch 的数据。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        在父类 IoUMetric.process() 的基础上，额外从 seg_logits（sigmoid</span></span><br><span class="line"><span class="string">        后的概率图）计算每张图的 RMSE，一并存入 self.results。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        每张图的结果为 8 元组：</span></span><br><span class="line"><span class="string">        (area_intersect, area_union, area_pred_label, area_label, rmse_prob, mse_prob, rmse_binary, mse_binary)</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            data_batch (dict): 一个 batch 的输入数据。</span></span><br><span class="line"><span class="string">            data_samples (Sequence[dict]): 一个 batch 的模型输出。</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        num_classes = <span class="built_in">len</span>(<span class="variable language_">self</span>.dataset_meta[<span class="string">&#x27;classes&#x27;</span>])</span><br><span class="line">        <span class="keyword">for</span> data_sample <span class="keyword">in</span> data_samples:</span><br><span class="line">            pred_label = data_sample[<span class="string">&#x27;pred_sem_seg&#x27;</span>][<span class="string">&#x27;data&#x27;</span>].squeeze()</span><br><span class="line">            <span class="comment"># format_only 模式不计算指标</span></span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> <span class="variable language_">self</span>.format_only:</span><br><span class="line">                label = data_sample[<span class="string">&#x27;gt_sem_seg&#x27;</span>][<span class="string">&#x27;data&#x27;</span>].squeeze().to(</span><br><span class="line">                    pred_label)</span><br><span class="line">                <span class="comment"># 计算 intersect_and_union（与父类一致）</span></span><br><span class="line">                iau = <span class="variable language_">self</span>.intersect_and_union(</span><br><span class="line">                    pred_label, label, num_classes, <span class="variable language_">self</span>.ignore_index)</span><br><span class="line"></span><br><span class="line">                <span class="comment"># ========== 1. 从概率图计算 RMSE_Prob 和 MSE_Prob ==========</span></span><br><span class="line">                seg_logits = data_sample[<span class="string">&#x27;seg_logits&#x27;</span>][<span class="string">&#x27;data&#x27;</span>].squeeze()</span><br><span class="line">                gt_float = label.<span class="built_in">float</span>()</span><br><span class="line">                <span class="comment"># seg_logits 在 out_channels==1 时已经是 sigmoid 后的概率图</span></span><br><span class="line">                mse_prob = torch.mean((seg_logits - gt_float) ** <span class="number">2</span>).item()</span><br><span class="line">                rmse_prob = torch.sqrt(torch.tensor(mse_prob)).item()</span><br><span class="line"></span><br><span class="line">                <span class="comment"># ========== 2. 从二值化预测图计算 RMSE_Binary 和 MSE_Binary ==========</span></span><br><span class="line">                <span class="comment"># 按照 deep-smoke-segmentation 等计算二值化后的误差</span></span><br><span class="line">                <span class="comment"># 注意：直接使用已经根据 threshold(如0.4) 生成好的二值图 pred_label</span></span><br><span class="line">                pred_binary = pred_label.<span class="built_in">float</span>()</span><br><span class="line">                mse_binary = torch.mean((pred_binary - gt_float) ** <span class="number">2</span>).item()</span><br><span class="line">                rmse_binary = torch.sqrt(torch.tensor(mse_binary)).item()</span><br><span class="line"></span><br><span class="line">                <span class="comment"># 存储 8 元组</span></span><br><span class="line">                <span class="variable language_">self</span>.results.append((*iau, rmse_prob, mse_prob, rmse_binary, mse_binary))</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 保存预测结果到文件（与父类一致）</span></span><br><span class="line">            <span class="keyword">if</span> <span class="variable language_">self</span>.output_dir <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">                basename = osp.splitext(osp.basename(</span><br><span class="line">                    data_sample[<span class="string">&#x27;img_path&#x27;</span>]))[<span class="number">0</span>]</span><br><span class="line">                png_filename = osp.abspath(</span><br><span class="line">                    osp.join(<span class="variable language_">self</span>.output_dir, <span class="string">f&#x27;<span class="subst">&#123;basename&#125;</span>.png&#x27;</span>))</span><br><span class="line">                output_mask = pred_label.cpu().numpy()</span><br><span class="line">                <span class="keyword">if</span> data_sample.get(<span class="string">&#x27;reduce_zero_label&#x27;</span>, <span class="literal">False</span>):</span><br><span class="line">                    output_mask = output_mask + <span class="number">1</span></span><br><span class="line">                output = Image.fromarray(output_mask.astype(np.uint8))</span><br><span class="line">                output.save(png_filename)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">compute_metrics</span>(<span class="params">self, results: <span class="built_in">list</span></span>) -&gt; <span class="type">Dict</span>[<span class="built_in">str</span>, <span class="built_in">float</span>]:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;计算评价指标。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        同时输出：</span></span><br><span class="line"><span class="string">        1. 官方 pixel-level 指标（通过父类逻辑）</span></span><br><span class="line"><span class="string">        2. image-level Macro-Average 指标（逐图计算后取均值）</span></span><br><span class="line"><span class="string">        3. RMSE 指标（逐图计算后取均值）</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            results (list): 每张图片的处理结果，每项为</span></span><br><span class="line"><span class="string">                (area_intersect, area_union, area_pred_label, area_label, rmse_prob, mse_prob, rmse_binary, mse_binary)</span></span><br><span class="line"><span class="string">                的 8 元组。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Returns:</span></span><br><span class="line"><span class="string">            Dict[str, float]: 所有评价指标的字典。</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        logger: MMLogger = MMLogger.get_current_instance()</span><br><span class="line">        <span class="keyword">if</span> <span class="variable language_">self</span>.format_only:</span><br><span class="line">            logger.info(<span class="string">&#x27;results are saved to &#x27;</span></span><br><span class="line">                        <span class="string">f&#x27;<span class="subst">&#123;self.output_dir&#125;</span>&#x27;</span>)</span><br><span class="line">            <span class="keyword">return</span> OrderedDict()</span><br><span class="line"></span><br><span class="line">        <span class="comment"># ========== 第一部分：官方 pixel-level 指标 ==========</span></span><br><span class="line">        <span class="comment"># 转换数据格式：list of 8-tuples → tuple of lists</span></span><br><span class="line">        results_tuple = <span class="built_in">tuple</span>(<span class="built_in">zip</span>(*results))</span><br><span class="line">        <span class="keyword">assert</span> <span class="built_in">len</span>(results_tuple) == <span class="number">8</span></span><br><span class="line"></span><br><span class="line">        total_area_intersect = <span class="built_in">sum</span>(results_tuple[<span class="number">0</span>])</span><br><span class="line">        total_area_union = <span class="built_in">sum</span>(results_tuple[<span class="number">1</span>])</span><br><span class="line">        total_area_pred_label = <span class="built_in">sum</span>(results_tuple[<span class="number">2</span>])</span><br><span class="line">        total_area_label = <span class="built_in">sum</span>(results_tuple[<span class="number">3</span>])</span><br><span class="line">        rmse_prob_list = <span class="built_in">list</span>(results_tuple[<span class="number">4</span>])</span><br><span class="line">        mse_prob_list = <span class="built_in">list</span>(results_tuple[<span class="number">5</span>])</span><br><span class="line">        rmse_binary_list = <span class="built_in">list</span>(results_tuple[<span class="number">6</span>])</span><br><span class="line">        mse_binary_list = <span class="built_in">list</span>(results_tuple[<span class="number">7</span>])</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 使用父类的静态方法计算 pixel-level 指标</span></span><br><span class="line">        ret_metrics = <span class="variable language_">self</span>.total_area_to_metrics(</span><br><span class="line">            total_area_intersect, total_area_union, total_area_pred_label,</span><br><span class="line">            total_area_label, <span class="variable language_">self</span>.metrics, <span class="variable language_">self</span>.nan_to_num, <span class="variable language_">self</span>.beta)</span><br><span class="line"></span><br><span class="line">        class_names = <span class="variable language_">self</span>.dataset_meta[<span class="string">&#x27;classes&#x27;</span>]</span><br><span class="line">        num_classes = <span class="built_in">len</span>(class_names)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 汇总表（pixel-level）</span></span><br><span class="line">        ret_metrics_summary = OrderedDict(&#123;</span><br><span class="line">            ret_metric:</span><br><span class="line">            np.<span class="built_in">round</span>(np.nanmean(ret_metric_value) * <span class="number">100</span>, <span class="number">2</span>)</span><br><span class="line">            <span class="keyword">for</span> ret_metric, ret_metric_value <span class="keyword">in</span> ret_metrics.items()</span><br><span class="line">        &#125;)</span><br><span class="line">        metrics = <span class="built_in">dict</span>()</span><br><span class="line">        <span class="keyword">for</span> key, val <span class="keyword">in</span> ret_metrics_summary.items():</span><br><span class="line">            <span class="keyword">if</span> key == <span class="string">&#x27;aAcc&#x27;</span>:</span><br><span class="line">                metrics[key] = val</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                metrics[<span class="string">&#x27;m&#x27;</span> + key] = val</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 每类表（pixel-level）</span></span><br><span class="line">        ret_metrics.pop(<span class="string">&#x27;aAcc&#x27;</span>, <span class="literal">None</span>)</span><br><span class="line">        ret_metrics_class = OrderedDict(&#123;</span><br><span class="line">            ret_metric:</span><br><span class="line">            np.<span class="built_in">round</span>(ret_metric_value * <span class="number">100</span>, <span class="number">2</span>)</span><br><span class="line">            <span class="keyword">for</span> ret_metric, ret_metric_value <span class="keyword">in</span> ret_metrics.items()</span><br><span class="line">        &#125;)</span><br><span class="line">        ret_metrics_class.update(&#123;<span class="string">&#x27;Class&#x27;</span>: class_names&#125;)</span><br><span class="line">        ret_metrics_class.move_to_end(<span class="string">&#x27;Class&#x27;</span>, last=<span class="literal">False</span>)</span><br><span class="line">        class_table_data = PrettyTable()</span><br><span class="line">        <span class="keyword">for</span> key, val <span class="keyword">in</span> ret_metrics_class.items():</span><br><span class="line">            class_table_data.add_column(key, val)</span><br><span class="line"></span><br><span class="line">        print_log(<span class="string">&#x27;per class results (pixel-level):&#x27;</span>, logger)</span><br><span class="line">        print_log(<span class="string">&#x27;\n&#x27;</span> + class_table_data.get_string(), logger=logger)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># ========== 第二部分：image-level Macro-Average 指标 ==========</span></span><br><span class="line">        <span class="comment"># 提取前 4 项（intersect_and_union 结果）用于 image-level 指标</span></span><br><span class="line">        iau_results = [(r[<span class="number">0</span>], r[<span class="number">1</span>], r[<span class="number">2</span>], r[<span class="number">3</span>]) <span class="keyword">for</span> r <span class="keyword">in</span> results]</span><br><span class="line">        img_metrics = <span class="variable language_">self</span>._compute_image_level_metrics(</span><br><span class="line">            iau_results, num_classes)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># RMSE 和 MSE（逐图均值）</span></span><br><span class="line">        mean_rmse_prob = np.<span class="built_in">round</span>(np.mean(rmse_prob_list), <span class="number">4</span>)</span><br><span class="line">        mean_mse_prob = np.<span class="built_in">round</span>(np.mean(mse_prob_list), <span class="number">4</span>)</span><br><span class="line">        mean_rmse_binary = np.<span class="built_in">round</span>(np.mean(rmse_binary_list), <span class="number">4</span>)</span><br><span class="line">        mean_mse_binary = np.<span class="built_in">round</span>(np.mean(mse_binary_list), <span class="number">4</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 打印 image-level 表格</span></span><br><span class="line">        img_table_data = PrettyTable()</span><br><span class="line">        img_table_data.add_column(<span class="string">&#x27;Class&#x27;</span>, <span class="built_in">list</span>(class_names))</span><br><span class="line">        <span class="keyword">for</span> key <span class="keyword">in</span> [<span class="string">&#x27;Img_IoU&#x27;</span>, <span class="string">&#x27;Img_Fbeta&#x27;</span>, <span class="string">&#x27;Img_Prec&#x27;</span>, <span class="string">&#x27;Img_Rec&#x27;</span>]:</span><br><span class="line">            img_table_data.add_column(</span><br><span class="line">                key,</span><br><span class="line">                [np.<span class="built_in">round</span>(img_metrics[key][c] * <span class="number">100</span>, <span class="number">2</span>)</span><br><span class="line">                 <span class="keyword">for</span> c <span class="keyword">in</span> <span class="built_in">range</span>(num_classes)])</span><br><span class="line"></span><br><span class="line">        print_log(<span class="string">&#x27;per class results (image-level macro-average):&#x27;</span>, logger)</span><br><span class="line">        print_log(<span class="string">&#x27;\n&#x27;</span> + img_table_data.get_string(), logger=logger)</span><br><span class="line">        print_log(<span class="string">f&#x27;RMSE_Prob:   <span class="subst">&#123;mean_rmse_prob&#125;</span>&#x27;</span>, logger)</span><br><span class="line">        print_log(<span class="string">f&#x27;MSE_Prob:    <span class="subst">&#123;mean_mse_prob&#125;</span>&#x27;</span>, logger)</span><br><span class="line">        print_log(<span class="string">f&#x27;RMSE_Binary: <span class="subst">&#123;mean_rmse_binary&#125;</span>&#x27;</span>, logger)</span><br><span class="line">        print_log(<span class="string">f&#x27;MSE_Binary:  <span class="subst">&#123;mean_mse_binary&#125;</span>&#x27;</span>, logger)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 汇总 image-level 指标到返回字典（按类分别输出）</span></span><br><span class="line">        <span class="keyword">for</span> key <span class="keyword">in</span> [<span class="string">&#x27;Img_IoU&#x27;</span>, <span class="string">&#x27;Img_Fbeta&#x27;</span>, <span class="string">&#x27;Img_Prec&#x27;</span>, <span class="string">&#x27;Img_Rec&#x27;</span>]:</span><br><span class="line">            <span class="keyword">for</span> c <span class="keyword">in</span> <span class="built_in">range</span>(num_classes):</span><br><span class="line">                class_key = <span class="string">f&#x27;<span class="subst">&#123;class_names[c]&#125;</span>.<span class="subst">&#123;key&#125;</span>&#x27;</span></span><br><span class="line">                metrics[class_key] = np.<span class="built_in">round</span>(</span><br><span class="line">                    img_metrics[key][c] * <span class="number">100</span>, <span class="number">2</span>)</span><br><span class="line">        metrics[<span class="string">&#x27;RMSE_Prob&#x27;</span>] = mean_rmse_prob</span><br><span class="line">        metrics[<span class="string">&#x27;MSE_Prob&#x27;</span>] = mean_mse_prob</span><br><span class="line">        metrics[<span class="string">&#x27;RMSE_Binary&#x27;</span>] = mean_rmse_binary</span><br><span class="line">        metrics[<span class="string">&#x27;MSE_Binary&#x27;</span>] = mean_mse_binary</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> metrics</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">_compute_image_level_metrics</span>(<span class="params"></span></span><br><span class="line"><span class="params">            self,</span></span><br><span class="line"><span class="params">            results: <span class="built_in">list</span>,</span></span><br><span class="line"><span class="params">            num_classes: <span class="built_in">int</span></span>) -&gt; <span class="type">Dict</span>[<span class="built_in">str</span>, np.ndarray]:</span><br><span class="line">        <span class="string">&quot;&quot;&quot;逐图计算 IoU、Fβ、Precision、Recall，然后取均值。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        模仿 FoSp 的处理方式：</span></span><br><span class="line"><span class="string">        - 所有图片都参与均值计算，不跳过任何图</span></span><br><span class="line"><span class="string">        - 分母为 0 时用 max(1, x) 保护，使该项结果为 0</span></span><br><span class="line"><span class="string">        - 最终除以总图片数取算术平均</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            results (list): 每张图的 4 元组列表。</span></span><br><span class="line"><span class="string">            num_classes (int): 类别数量。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">        Returns:</span></span><br><span class="line"><span class="string">            Dict[str, np.ndarray]: 每个类的 image-level 均值指标，</span></span><br><span class="line"><span class="string">                shape = (num_classes,)。</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        n_images = <span class="built_in">len</span>(results)</span><br><span class="line">        beta = <span class="variable language_">self</span>.beta</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 累积每个类的指标和，shape = (num_classes,)</span></span><br><span class="line">        iou_sum = np.zeros(num_classes)</span><br><span class="line">        precision_sum = np.zeros(num_classes)</span><br><span class="line">        recall_sum = np.zeros(num_classes)</span><br><span class="line">        fbeta_sum = np.zeros(num_classes)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> area_intersect, area_union, \</span><br><span class="line">                area_pred_label, area_label <span class="keyword">in</span> results:</span><br><span class="line">            <span class="keyword">for</span> c <span class="keyword">in</span> <span class="built_in">range</span>(num_classes):</span><br><span class="line">                intersect = area_intersect[c].item()</span><br><span class="line">                union = area_union[c].item()</span><br><span class="line">                pred = area_pred_label[c].item()</span><br><span class="line">                label = area_label[c].item()</span><br><span class="line"></span><br><span class="line">                <span class="comment"># IoU：交集 / 并集（union 不可能为 0，因为每张图中</span></span><br><span class="line">                <span class="comment"># 每个类在 GT 或预测中至少有一方存在像素）</span></span><br><span class="line">                iou_sum[c] += intersect / union</span><br><span class="line"></span><br><span class="line">                <span class="comment"># Precision：交集 / max(1, 预测面积)</span></span><br><span class="line">                p = intersect / <span class="built_in">max</span>(<span class="number">1</span>, pred)</span><br><span class="line">                precision_sum[c] += p</span><br><span class="line"></span><br><span class="line">                <span class="comment"># Recall：交集 / max(1, GT面积)</span></span><br><span class="line">                r = intersect / <span class="built_in">max</span>(<span class="number">1</span>, label)</span><br><span class="line">                recall_sum[c] += r</span><br><span class="line"></span><br><span class="line">                <span class="comment"># Fβ = (1+β²) * P * R / max(β²*P + R, 1e-3)</span></span><br><span class="line">                denom = (beta ** <span class="number">2</span>) * p + r</span><br><span class="line">                fbeta_sum[c] += (<span class="number">1</span> + beta ** <span class="number">2</span>) * p * r / <span class="built_in">max</span>(denom, <span class="number">1e-3</span>)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 除以总图片数取均值</span></span><br><span class="line">        img_metrics = &#123;</span><br><span class="line">            <span class="string">&#x27;Img_IoU&#x27;</span>: iou_sum / n_images,</span><br><span class="line">            <span class="string">&#x27;Img_Fbeta&#x27;</span>: fbeta_sum / n_images,</span><br><span class="line">            <span class="string">&#x27;Img_Prec&#x27;</span>: precision_sum / n_images,</span><br><span class="line">            <span class="string">&#x27;Img_Rec&#x27;</span>: recall_sum / n_images,</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> img_metrics</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>深度学习</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>指标复现与调参</title>
+    <url>/2026/06/04/%E6%8C%87%E6%A0%87%E5%A4%8D%E7%8E%B0%E4%B8%8E%E8%B0%83%E5%8F%82/</url>
+    <content><![CDATA[<p>最近花了将近一周的时间，把一篇 WACV 2026 论文（<em>AusSmoke meets MultiNatSmoke</em>）中基于 HuggingFace 的 SegFormer 基线，完整迁移到了 MMSegmentation 1.x 框架上，并试图逐项对齐其训练与评估口径。这个过程踩了不少坑——论文和代码不一致、框架默认值陷阱、评测口径分歧……这里把全流程记录下来，方便日后回顾，也希望能帮到有类似需求的同学。</p>
+<span id="more"></span>
+<hr />
+<h2 id="tldr结论先行"><a class="markdownIt-Anchor" href="#tldr结论先行"></a> TL;DR（结论先行）</h2>
+<ul>
+<li>论文用的是 <strong>HuggingFace 的 SegFormer</strong>，复现到 mmseg 要逐项对齐，且 <strong>论文正文与官方开源代码有多处不一致</strong>，需逐条判断「认论文还是认代码」。</li>
+<li>三个最关键、最容易踩的坑：
+<ol>
+<li><strong>骨干是 MiT-b2，不是 b5</strong>（代码脚本里写的是 b5，属遗留错误；论文 Table 3 的 SegFormer 数字是 b2）。</li>
+<li><strong>解码器通道是 768，不是 256</strong>（mmseg 全系列默认 256，是个轻量化取舍；原论文 / HF 的 B2–B5 都是 768）。这是导致首轮复现 IoU 系统性偏低约 5 点的主因。</li>
+<li><strong>指标是「前景 + 逐 batch 平均」的特殊口径</strong>（论文只给数学公式，实际数字来自代码的 batch-averaged 实现）。复现表格数字必须对齐这个实现。</li>
+</ol>
+</li>
+<li>其它判断：论文说「用了早停」，但代码<strong>根本没实现早停</strong> → 判定实际未用，认代码、不加早停。</li>
+<li>预训练权重 mmseg 与 HF <strong>同源等价</strong>，不是误差来源。</li>
+<li><strong>三轮迭代最终结果</strong>：all IoU <strong>69.54</strong>（论文 73.47，-3.93）；small <strong>61.79</strong> 已追平论文；对齐头 + 抗锯齿仅带来边际提升，<strong>C=768 仍是最大单跳</strong>。</li>
+</ul>
+<hr />
+<h2 id="1-背景"><a class="markdownIt-Anchor" href="#1-背景"></a> 1. 背景</h2>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>论文</td>
+<td>WACV 2026《AusSmoke meets MultiNatSmoke: a fully-labelled diverse smoke segmentation dataset》</td>
+</tr>
+<tr>
+<td>任务</td>
+<td>烟雾二分类语义分割（背景 / smoke）</td>
+</tr>
+<tr>
+<td>数据集</td>
+<td>MultiNatSmoke，train 59,735 / test 11,083，并按烟雾像素占比分 Small/Medium/Large</td>
+</tr>
+<tr>
+<td>官方实现</td>
+<td><code>code/src/segformer/train.py</code>，基于 HuggingFace <code>transformers</code></td>
+</tr>
+<tr>
+<td>复现框架</td>
+<td>MMSegmentation 1.x（onedl 维护版，PyTorch 2.x + MMEngine）</td>
+</tr>
+</tbody>
+</table>
+<p>复现产物：</p>
+<ul>
+<li>论文对齐配置（推荐）：<code>my_configs/segformer/segformer_mit-b2_multinatsmoke_align.py</code></li>
+<li>更强变体（非论文）：<code>my_configs/segformer/segformer_mit-b5_multinatsmoke_align.py</code></li>
+<li>对齐口径指标：<code>mmseg/evaluation/metrics/multinat_smoke_metric.py</code>（<code>MultiNatSmokeMetric</code>）</li>
+<li>分尺度评测脚本：<code>tools/smoke_test_multiscale.py</code></li>
+</ul>
+<hr />
+<h2 id="2-论文-vs-官方代码关键不一致"><a class="markdownIt-Anchor" href="#2-论文-vs-官方代码关键不一致"></a> 2. 论文 vs 官方代码：关键不一致</h2>
+<p>复现的第一原则：<strong>论文正文代表作者意图，代码代表实际跑出数字的过程。两者冲突时逐条判断。</strong></p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>📄 论文正文</th>
+<th>💻 官方代码</th>
+<th>采纳</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SegFormer 骨干</td>
+<td><strong>MiT-b2</strong>（§4.2）</td>
+<td>脚本写 <code>mit-b5</code></td>
+<td><strong>认论文：b2</strong></td>
+<td>Table 3 的 73.47 对应 b2；代码是改实验遗留</td>
+</tr>
+<tr>
+<td>训练轮次</td>
+<td><strong>20 epoch</strong>（§4.2）</td>
+<td><code>num_epochs=15</code></td>
+<td><strong>认论文：20</strong></td>
+<td>正文是作者意图</td>
+</tr>
+<tr>
+<td>早停</td>
+<td>“with early stopping”（§4.2）</td>
+<td><strong>完全没实现</strong></td>
+<td><strong>认代码：不用早停</strong></td>
+<td>整套机制都不存在，非小遗漏，判定论文行文不实</td>
+</tr>
+<tr>
+<td>训练集</td>
+<td><strong>全量 59,735</strong>（§3.4）</td>
+<td>路径写 <code>AnySmokeTrain5k</code></td>
+<td><strong>认论文：全量</strong></td>
+<td>Table 5 “full” = Table 3 数字</td>
+</tr>
+<tr>
+<td>指标算法</td>
+<td>给数学公式（§4.3）</td>
+<td>逐 batch 平均实现</td>
+<td><strong>复现数字认代码</strong></td>
+<td>表格数字由代码产生</td>
+</tr>
+<tr>
+<td>batch / lr / wd / 损失 / 全参可训 / 框架</td>
+<td>一致</td>
+<td>一致</td>
+<td>—</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 划分规模：论文 train 59,735 / test 11,083；本地 VOC 为 59,734 / 11,082，仅差 1（firecam 文件名含分号去重所致，不影响使用）。</p>
+</blockquote>
+<hr />
+<h2 id="3-训练策略对齐逐项"><a class="markdownIt-Anchor" href="#3-训练策略对齐逐项"></a> 3. 训练策略对齐（逐项）</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>📄 论文</th>
+<th>本项目 b2 对齐配置</th>
+<th>对齐</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>骨干</td>
+<td>MiT-B2</td>
+<td><code>num_layers=[3,4,6,3]</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>解码器通道 C</strong></td>
+<td><strong>768</strong></td>
+<td><code>SegformerHeadAligned(channels=768)</code></td>
+<td>✅（见 §5）</td>
+</tr>
+<tr>
+<td><strong>解码头结构</strong></td>
+<td>All-MLP 纯线性投影</td>
+<td><code>SegformerHeadAligned</code>（无 per-stage BN/ReLU）</td>
+<td>✅（见 §9.3）</td>
+</tr>
+<tr>
+<td>输入尺寸</td>
+<td>512×512</td>
+<td>512×512</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>归一化</td>
+<td>ImageNet（0~1）</td>
+<td><code>mean/std ×255</code> 等值</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>损失</td>
+<td>BCE（单通道 sigmoid）</td>
+<td><code>CrossEntropyLoss(use_sigmoid=True)</code>, <code>out_channels=1</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>优化器</td>
+<td>AdamW lr=1e-4 wd=0.01</td>
+<td>同</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>学习率调度</td>
+<td>无（常数）</td>
+<td><code>param_scheduler=[]</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>参数分组</td>
+<td>全部统一 lr</td>
+<td>无 <code>paramwise_cfg</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>训练增强</td>
+<td>仅 Resize（antialias）</td>
+<td><code>AntiAliasResize(512,512)</code></td>
+<td>✅（见 §9.3）</td>
+</tr>
+<tr>
+<td>轮次</td>
+<td>20 epoch</td>
+<td><code>EpochBasedTrainLoop(max_epochs=20)</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>早停</td>
+<td>（判定未用）</td>
+<td><code>custom_hooks=[]</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>训练集</td>
+<td>全量 59,735</td>
+<td><code>train.txt</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Batch</td>
+<td>32（2×4090，每卡 16）</td>
+<td><code>batch=16 × accumulative_counts=2 = 32</code></td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 <strong>关于 BN</strong>：HF SegFormer 解码头用普通 BatchNorm，多卡时按<strong>每卡</strong>统计。论文每卡 16 张，本项目单卡 micro-batch 也是 16 → <strong>BN 行为一致</strong>，梯度累积不引入 BN 偏差。</p>
+</blockquote>
+<hr />
+<h2 id="4-评价指标论文公式-vs-代码实现"><a class="markdownIt-Anchor" href="#4-评价指标论文公式-vs-代码实现"></a> 4. 评价指标：论文公式 vs 代码实现</h2>
+<p>论文 §4.3 给出<strong>数学定义</strong>：IoU = |A∩B|/|A∪B|、Precision = TP/(TP+FP)、Recall = TP/(TP+FN)、F1（β=1 调和平均）、MSE = (1/N)Σ(Pᵢ−Gᵢ)²（前景概率 vs GT 的逐像素均方误差）。</p>
+<p>但<strong>官方代码实际是另一种口径</strong>：</p>
+<ul>
+<li>只评估<strong>前景一类（smoke）</strong>，不含背景、不做两类平均；</li>
+<li><strong>逐 batch</strong> 把该 batch 所有图、所有像素拉平统计前景指标，<strong>再对所有 batch 取算术平均</strong>（<code>metrics_sum[k] /= n_batches</code>）；</li>
+<li>阈值 0.5，MSE 用概率图，<code>eps=1e-6</code>。</li>
+</ul>
+<p>这是「<strong>batch 内 micro + batch 间 macro</strong>」的混合口径——既不是全局像素累积，也不是逐图平均。论文表格的数字来自代码，所以：</p>
+<table>
+<thead>
+<tr>
+<th>目的</th>
+<th>口径</th>
+<th>本项目实现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>逐位复现论文 Table 3 数字</td>
+<td>batch-averaged（batch=32）</td>
+<td><code>MultiNatSmokeMetric(aggregate='batch')</code></td>
+</tr>
+<tr>
+<td>方法学正确 / 与 batch 解耦</td>
+<td>全局像素累积</td>
+<td><code>MultiNatSmokeMetric(aggregate='global')</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>即便口径完全对齐，也<strong>做不到逐位 bit 相同</strong>：batch-averaged 依赖样本顺序与不满尾批的权重，而 mmseg 的样本顺序（按 <code>ann_file</code>）与官方（按 <code>os.listdir</code>）不同。属「同口径复现」，偏差通常在零点几个百分点量级。</p>
+</blockquote>
+<hr />
+<h2 id="5-最大的坑mmseg-解码器通道-256-vs-官方-768"><a class="markdownIt-Anchor" href="#5-最大的坑mmseg-解码器通道-256-vs-官方-768"></a> 5. 最大的坑：mmseg 解码器通道 256 vs 官方 768</h2>
+<p>首轮复现 IoU 系统性偏低约 5 点，定位到主因：<strong>mmseg 的 SegFormer 全系列把解码器通道写死为 256</strong>（<code>segformer_mit-b0.py</code> base 里 <code>channels=256</code>，b1–b5 配置都只覆盖 backbone、不覆盖 <code>channels</code>），而论文用的 HF SegFormer-b2 解码器是 <strong>768</strong>。</p>
+<p><strong>权威来源：</strong></p>
+<ul>
+<li>
+<p><strong>原始 SegFormer 论文（NeurIPS 2021）Table 1b 原文</strong>：</p>
+<blockquote>
+<p>“we choose <strong>C = 256</strong> for our real-time models SegFormer-<strong>B0, B1</strong> and <strong>C = 768</strong> for the rest.”</p>
+</blockquote>
+<p>即 B2/B3/B4/B5 的解码器维度都是 768。</p>
+</li>
+<li>
+<p><strong>HuggingFace</strong>：<code>SegformerConfig</code> 通用默认是 256，但预训练权重 <code>nvidia/mit-b2</code> 的 config.json 覆盖为 <code>decoder_hidden_size=768</code>（depths <code>[3,4,6,3]</code>）；<code>nvidia/segformer-b5</code> 同为 768（depths <code>[3,6,40,3]</code>）。论文 <code>from_pretrained</code> 加载的就是 768。</p>
+</li>
+</ul>
+<p><strong>那 mmseg 为什么用 256？</strong> 这是 mmseg 维护者<strong>刻意的「轻量化 + 统一」取舍</strong>，不是 bug，但偏离了原版架构。代价可从 mmseg 自己的 ADE20K model zoo 看出（单尺度 mIoU）：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>mmseg(256)</th>
+<th>原论文(768)</th>
+<th>差</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B2</td>
+<td>45.58</td>
+<td>46.5</td>
+<td>≈ -0.9</td>
+</tr>
+<tr>
+<td>B5</td>
+<td>49.13</td>
+<td>51.0</td>
+<td>≈ -1.9</td>
+</tr>
+</tbody>
+</table>
+<p>可见 256 比官方 768 低约 1–2 点。mmseg 在它**自己的训练配方（160k iter + 完整增强）**下认为这点损失可接受；但当我们要复现一篇用 768、且配方更短（20 epoch、无增强）的论文时，解码器容量更敏感，256 不仅没补回那 1–2 点，反而在烟雾任务上拉开了约 5 点。</p>
+<p>→ **要对齐论文必须用 768。**已将两个配置 <code>SegformerHead.channels</code> 改为 768。</p>
+<hr />
+<h2 id="6-预训练权重同源等价不是误差来源"><a class="markdownIt-Anchor" href="#6-预训练权重同源等价不是误差来源"></a> 6. 预训练权重：同源等价，不是误差来源</h2>
+<p>mmseg 的 <code>mit_b2_*.pth</code> 与 HF 的 <code>nvidia/mit-b2</code>，<strong>都是同一份 SegFormer 作者发布的官方 MiT ImageNet-1K 骨干权重</strong>，只是转换成了两个框架的 key 命名。数值本质相同；而<strong>解码头在两边都是随机初始化从头训练的</strong>。因此预训练权重不会造成几个点差距，可排除。真正的病因就是解码器 256 vs 768。</p>
+<hr />
+<h2 id="7-验证集与选模型val-test-batch-averaged"><a class="markdownIt-Anchor" href="#7-验证集与选模型val-test-batch-averaged"></a> 7. 验证集与选模型：val = test + batch-averaged</h2>
+<p>官方「用 test 当验证集」（无独立 val，VOC 也只有 train/test），按 best IoU 选模型。本项目据此设置。</p>
+<p>一个改进点：最初验证用 <code>global</code> 口径仅作监控，可能「按 global 选出的最优权重并非论文目标指标下的最优」。现已把<strong>验证改为与 test 完全一致的 batch-averaged 口径</strong>（全集 test.txt、batch=32、<code>aggregate='batch'</code>），使 <code>save_best</code> 直接优化论文目标指标。val/test 的 <code>num_workers=2</code>，以防 batch=32 把 16G 的 <code>/dev/shm</code> 撑爆（见 §8）。</p>
+<hr />
+<h2 id="8-单卡复现的两个工程问题简记"><a class="markdownIt-Anchor" href="#8-单卡复现的两个工程问题简记"></a> 8. 单卡复现的两个工程问题（简记）</h2>
+<h3 id="81-训练即整机黑屏-掉总线"><a class="markdownIt-Anchor" href="#81-训练即整机黑屏-掉总线"></a> 8.1 训练即整机黑屏 / 掉总线</h3>
+<p>RTX 5090 满功耗 (600W) 瞬时尖峰触发供电保护，GPU 掉出 PCIe 总线（内核日志 <code>Xid 79: GPU has fallen off the bus</code>）。<code>sudo nvidia-smi -pl 400</code> 限功耗后稳定。与显存、代码无关，<strong>不影响精度结果</strong>。</p>
+<h3 id="82-测试-dataloader-报-bus-error-no-space-left"><a class="markdownIt-Anchor" href="#82-测试-dataloader-报-bus-error-no-space-left"></a> 8.2 测试 DataLoader 报 Bus error / No space left</h3>
+<p>测试 batch=32 + num_workers=8 下，原分辨率 GT 撑爆 16G <code>/dev/shm</code>。把测试 <code>num_workers</code> 降到 2 即解决（不影响指标口径）。</p>
+<hr />
+<h2 id="9-复现实测结果与迭代"><a class="markdownIt-Anchor" href="#9-复现实测结果与迭代"></a> 9. 复现实测结果与迭代</h2>
+<p>三轮实验均在 <strong>MiT-B2 + batch-averaged 口径 + 单卡测试</strong> 下进行；权重分别来自 <code>best_mns_IoU_epoch_17</code>（第 2 轮）、<code>best_mns_IoU_epoch_19</code>（第 3 轮）。</p>
+<h3 id="91-分轮次对比batch-averaged-口径iou"><a class="markdownIt-Anchor" href="#91-分轮次对比batch-averaged-口径iou"></a> 9.1 分轮次对比（batch-averaged 口径，IoU）</h3>
+<table>
+<thead>
+<tr>
+<th>划分</th>
+<th>第1轮 C256</th>
+<th>第2轮 C768</th>
+<th>第3轮 对齐头+抗锯齿</th>
+<th>📄 论文</th>
+<th>第3 vs 论文</th>
+<th>第2→第3 Δ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>all</td>
+<td>68.35</td>
+<td>69.37</td>
+<td><strong>69.54</strong></td>
+<td>73.47</td>
+<td><strong>-3.93</strong></td>
+<td>+0.17</td>
+</tr>
+<tr>
+<td>small</td>
+<td>58.14</td>
+<td>61.12</td>
+<td><strong>61.79</strong></td>
+<td>61.73</td>
+<td><strong>+0.06</strong></td>
+<td>+0.67</td>
+</tr>
+<tr>
+<td>medium</td>
+<td>63.62</td>
+<td>65.62</td>
+<td>63.74</td>
+<td>65.30</td>
+<td>-1.56</td>
+<td>-0.88</td>
+</tr>
+<tr>
+<td>large</td>
+<td>77.59</td>
+<td>76.81</td>
+<td><strong>77.63</strong></td>
+<td>79.57</td>
+<td>-1.94</td>
+<td>+0.82</td>
+</tr>
+</tbody>
+</table>
+<p><strong>第 3 轮其它指标（all）</strong>：F1 81.1 / Prec 83.75 / Rec 80.2 / MSE 0.01246（论文 84.21 / 85.18 / 84.20 / 0.0118）。</p>
+<p><strong>第 3 轮 large 细分</strong>（对比第 2 轮；论文 large Recall <strong>87.49</strong>）：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>第2轮</th>
+<th>第3轮</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>IoU</td>
+<td>76.81</td>
+<td><strong>77.63</strong></td>
+</tr>
+<tr>
+<td>Precision</td>
+<td>89.83</td>
+<td>87.93</td>
+</tr>
+<tr>
+<td>Recall</td>
+<td>83.71</td>
+<td><strong>86.44</strong></td>
+</tr>
+<tr>
+<td>MSE</td>
+<td>0.0360</td>
+<td>0.0360</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>测试时若出现 <code>Image shapes are different in the batch</code> warning：DataPreprocessor 在组 batch 时发现各图 H×W 不完全一致（极少数边界情况），会自动 padding，<strong>不影响指标</strong>——<code>MultiNatSmokeMetric</code> 在 eval 阶段统一插值到 512×512 再计算。</p>
+</blockquote>
+<h3 id="92-三轮迭代总结"><a class="markdownIt-Anchor" href="#92-三轮迭代总结"></a> 9.2 三轮迭代总结</h3>
+<table>
+<thead>
+<tr>
+<th>轮次</th>
+<th>主要改动</th>
+<th>all IoU</th>
+<th>相对论文</th>
+<th>结论</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第1轮</td>
+<td>mmseg 默认 C=256 + 标准 SegformerHead</td>
+<td>68.35</td>
+<td>-5.12</td>
+<td>解码器容量不足，系统性偏低</td>
+</tr>
+<tr>
+<td>第2轮</td>
+<td>C=768</td>
+<td>69.37</td>
+<td>-4.10</td>
+<td><strong>最大单跳</strong>（+1.02），small/medium 已接近</td>
+</tr>
+<tr>
+<td>第3轮</td>
+<td>+ SegformerHeadAligned + AntiAliasResize</td>
+<td><strong>69.54</strong></td>
+<td><strong>-3.93</strong></td>
+<td>边际提升（+0.17），small 追平</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键发现：</strong></p>
+<ol>
+<li><strong>C=768 是主因</strong>（68.35 → 69.37，+1.02 IoU）；对齐头 + 抗锯齿仅带来 <strong>+0.17 all IoU</strong>，说明 mmseg 侧可逐项对齐的 pipeline 差异已基本挖尽。</li>
+<li><strong>small 已与论文持平</strong>（61.79 vs 61.73，+0.06）；<strong>large 仍是主要缺口</strong>（-1.94 IoU）。</li>
+<li>第 3 轮 large 的 <strong>Recall 显著改善</strong>（83.71 → 86.44，论文 87.49），抗锯齿 / 对齐头确实帮助大烟羽召回；但 Precision 从 89.83 降到 87.93，IoU 净增仅 +0.82。</li>
+<li>medium 在第 3 轮<strong>略降</strong>（65.62 → 63.74），可能与抗锯齿下采样改变 medium 尺度烟羽边界有关，属分尺度 trade-off，不影响 all 仍被 large 主导的判断。</li>
+<li>验证 IoU 自 epoch 11 起进入<strong>平台期</strong>（第 3 轮峰值 69.54 @ epoch 19）、训练 loss≈0.01 → <strong>已收敛，非欠拟合</strong>；预训练权重加载干净（missing keys=0）。</li>
+</ol>
+<h3 id="93-第三轮修正已完成"><a class="markdownIt-Anchor" href="#93-第三轮修正已完成"></a> 9.3 第三轮修正（已完成）</h3>
+<table>
+<thead>
+<tr>
+<th>修复</th>
+<th>实现</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 对齐解码头</td>
+<td><code>SegformerHeadAligned</code>（每级纯线性投影，无 BN/ReLU）</td>
+<td>large Recall +2.73</td>
+</tr>
+<tr>
+<td>② 抗锯齿缩放</td>
+<td><code>AntiAliasResize</code>（下采样 area、上采样 bilinear）</td>
+<td>small IoU +0.67</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>[x] 用第三轮配置重训 b2（<code>c768_alignedhead_aaresize__20260602_170053</code>）</li>
+<li>[x] 分尺度重测（<code>eval/best_mns_IoU_epoch_19/stratified_metrics.json</code>）</li>
+</ul>
+<p><strong>剩余 ~4 点 all IoU 差距的可能来源</strong>（难以在 mmseg 内继续消除）：</p>
+<ol>
+<li><strong>框架差异</strong>：HF SegFormer 解码头初始化、优化器 / step 实现、loss 数值路径与 mmseg 不完全相同。</li>
+<li><strong>batch-averaged 样本顺序</strong>：mmseg 按 <code>ann_file</code> 排序，官方按 <code>os.listdir</code>，尾批权重不同。</li>
+<li><strong>图像后端</strong>：PIL / torchvision vs OpenCV 的 resize / 读图差异，即便加了 <code>AntiAliasResize</code> 仍难逐位一致。</li>
+</ol>
+<p><strong>最终定位</strong>：在 mmseg + 同骨干预训练 + 同训练协议下，达到 <strong>69.54 all IoU（-3.93 vs 论文）</strong>，small 分尺度可认为<strong>已复现</strong>；all / large 属 <strong>「同口径接近复现」</strong>，不宜声称逐位相同。若需进一步验证上限，建议在 HF 环境用同一数据跑对照，或尝试 HF <code>nvidia/mit-b2</code> 权重初始化解码头。</p>
+<hr />
+<h2 id="10-复现命令"><a class="markdownIt-Anchor" href="#10-复现命令"></a> 10. 复现命令</h2>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 限功耗（避免 5090 掉总线，可做成开机服务）</span></span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pm 1 &amp;&amp; <span class="built_in">sudo</span> nvidia-smi -pl 400</span><br><span class="line"></span><br><span class="line"><span class="comment"># 训练（论文对齐 b2）</span></span><br><span class="line">python tools/train.py my_configs/segformer/segformer_mit-b2_multinatsmoke_align.py</span><br><span class="line"></span><br><span class="line"><span class="comment"># 分尺度测试（对齐论文 batch-averaged 口径，务必单卡）</span></span><br><span class="line">python tools/smoke_test_multiscale.py \</span><br><span class="line">  my_configs/segformer/segformer_mit-b2_multinatsmoke_align.py \</span><br><span class="line">  work_dirs/MultiNatSmoke/segformer_mit_b2_align/c768_alignedhead_aaresize__20260602_170053/best_mns_IoU_epoch_19.pth</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="11-能否与论文直接对比"><a class="markdownIt-Anchor" href="#11-能否与论文直接对比"></a> 11. 能否与论文直接对比？</h2>
+<p><strong>用 b2 对齐配置 + batch-averaged 口径单卡测试，可与论文 SegFormer 数字做同口径公平对比。</strong></p>
+<ul>
+<li>论文目标值（Table 3）：IoU <strong>73.47</strong> / F1 <strong>84.21</strong> / MSE <strong>0.0118</strong> / Prec 85.18 / Rec 84.20。</li>
+<li>分尺度目标值（Table 4，IoU）：Small <strong>61.73</strong> / Medium <strong>65.30</strong> / Large <strong>79.57</strong>。</li>
+<li>本项目最佳结果（第 3 轮，batch-averaged）：IoU <strong>69.54</strong> / F1 <strong>81.1</strong> / MSE <strong>0.01246</strong>；Small <strong>61.79</strong> / Medium <strong>63.74</strong> / Large <strong>77.63</strong>（vs 论文 all <strong>-3.93</strong>，small <strong>+0.06</strong>）。</li>
+<li>⚠️ 受样本顺序、尾批权重、预训练权重转换等客观因素，结果<strong>接近但非逐位相同</strong>，应表述为「同口径复现」而非「逐位复现」。</li>
+<li>⚠️ <strong>B5 配置不可与论文 SegFormer 直接比较</strong>（骨干不同），仅作更强的自有 baseline。</li>
+</ul>
+<hr />
+<h2 id="附-a实验环境"><a class="markdownIt-Anchor" href="#附-a实验环境"></a> 附 A：实验环境</h2>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>系统</td>
+<td>Ubuntu 24.04.4 LTS，内核 6.17.0-29-generic</td>
+</tr>
+<tr>
+<td>GPU / 驱动</td>
+<td>RTX 5090（32GB），NVIDIA 590.48.01（开源内核模块），CUDA 13.1</td>
+</tr>
+<tr>
+<td>Python 环境</td>
+<td>conda 虚拟环境 <code>GQA</code>，Python 3.10.20</td>
+</tr>
+<tr>
+<td>PyTorch</td>
+<td>2.8.0+cu128（CUDA 12.8）</td>
+</tr>
+<tr>
+<td>MMEngine / MMCV / MMSegmentation</td>
+<td>0.10.10 / 2.3.3 / 1.4.0（onedl 维护版）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>训练时建议先 <code>sudo nvidia-smi -pl 400</code> 限功耗，避免 5090 满载瞬时尖峰导致整机掉总线。</p>
+</blockquote>
+<hr />
+<h2 id="附-b复现-segformer-on-mmseg-的避坑清单"><a class="markdownIt-Anchor" href="#附-b复现-segformer-on-mmseg-的避坑清单"></a> 附 B：复现 SegFormer-on-mmseg 的避坑清单</h2>
+<ol>
+<li>✅ 骨干认论文（b2），别被代码里的 b5 误导。</li>
+<li>✅ 解码器 <code>channels=768</code>（mmseg 默认 256 会偏低 1–5 点）。</li>
+<li>✅ 指标用 batch-averaged 复现表格、global 做稳健监控。</li>
+<li>✅ 训练协议：20 epoch、常数 lr、无 paramwise、仅 Resize、全量数据、无早停。</li>
+<li>✅ 预训练权重同源，不用纠结。</li>
+<li>✅ 单卡 5090 先限功耗防掉总线；测试调小 <code>num_workers</code> 防 <code>/dev/shm</code> 撑爆。</li>
+<li>✅ 评测单卡，否则 batch-averaged 口径会变。</li>
+<li>✅ 解码头用 <code>SegformerHeadAligned</code>（无 per-stage BN/ReLU）；缩放用 <code>AntiAliasResize</code>。</li>
+<li>✅ 测试出现 <code>Image shapes are different in the batch</code> 可忽略，不影响 batch-averaged 指标。</li>
+</ol>
 ]]></content>
       <categories>
         <category>深度学习</category>
