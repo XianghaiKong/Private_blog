@@ -1,6 +1,206 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>CodeX/CC科研向使用经验</title>
+    <url>/2026/05/28/CodeX-CC%E7%A7%91%E7%A0%94%E5%90%91%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/</url>
+    <content><![CDATA[<p>结合最近一段时间的科研实践（主要是论文复现）以及 <a href="https://mp.weixin.qq.com/s/gyLbhAIIe67KhfrCqtWXmw">Datawhale 的公众号经验贴</a>，这里整理一些使用 CodeX / Claude Code 这类编程 Agent 辅助科研开发的经验。</p>
+<p>核心思路可以概括为一句话：<strong>模型能力固然重要，但上下文、长期规则和验收标准同样重要。</strong></p>
+<h2 id="总工作流"><a class="markdownIt-Anchor" href="#总工作流"></a> 总工作流</h2>
+<p>比较稳定的一套流程是：</p>
+<blockquote>
+<p>读上下文 -&gt; 写计划 -&gt; 确认范围 -&gt; 小步实现 -&gt; 跑验证 -&gt; 总结结果 -&gt; <code>/new</code> 开新对话</p>
+</blockquote>
+<p>Agent 很适合做“有明确边界的工程任务”，但不适合在上下文混乱、目标模糊、验证缺失的情况下自由发挥。因此，每次让它动手之前，都要先让它理解项目、对齐任务，并明确最后如何验收。</p>
+<span id="more"></span>
+<hr />
+<h2 id="一-先让-agent-阅读项目框架"><a class="markdownIt-Anchor" href="#一-先让-agent-阅读项目框架"></a> 一、先让 Agent 阅读项目框架</h2>
+<p>进入一个新的代码仓库后，不要一上来就让 Agent 改代码。更稳妥的方式是先让它阅读项目结构，建立最基本的上下文。</p>
+<p>可以使用类似下面的 Prompt：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">先不要修改代码。请先阅读这个项目，告诉我：</span><br><span class="line"></span><br><span class="line">1. 项目结构是什么</span><br><span class="line">2. 主要入口在哪里</span><br><span class="line">3. 训练/测试/运行命令分别是什么</span><br><span class="line">4. 哪些文件最可能和当前任务有关</span><br><span class="line">5. 你不确定的地方有哪些</span><br></pre></td></tr></table></figure>
+<p>这样做的好处是，Agent 会先主动梳理工程结构，而不是凭借文件名或局部代码直接猜测实现方式。对于论文复现类项目尤其重要，因为很多仓库的训练入口、配置文件、数据集注册逻辑并不直观。</p>
+<hr />
+<h2 id="二-在-agentsmd-中写长期规则"><a class="markdownIt-Anchor" href="#二-在-agentsmd-中写长期规则"></a> 二、在 <code>AGENTS.md</code> 中写长期规则</h2>
+<p>如果一个项目会反复使用 Agent 协助开发，建议在仓库中写一个 <code>AGENTS.md</code>，用于记录长期规则。这样每次新会话都能继承基本约束，减少重复说明。</p>
+<p>例如：</p>
+<figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line"><span class="section">## 工作规则</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 默认先阅读相关代码和文档，再开始修改。</span><br><span class="line"><span class="bullet">-</span> 修改前先说明影响范围。</span><br><span class="line"><span class="bullet">-</span> 只做和当前任务相关的最小改动。</span><br><span class="line"><span class="bullet">-</span> 提交前必须运行最小验证。</span><br><span class="line"><span class="bullet">-</span> 说明用中文，代码、命令、文件名保持英文。</span><br><span class="line"><span class="bullet">-</span> 不要修改无关文件。</span><br><span class="line"></span><br><span class="line"><span class="section">## 实验原则</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 实验必须服务于明确假设或决策。</span><br><span class="line"><span class="bullet">-</span> 不要为了补齐表格而穷举低价值 ablation。</span><br></pre></td></tr></table></figure>
+<p>这类规则的价值不在于“控制模型”，而在于给 Agent 一个稳定的工作边界。特别是在科研代码中，很多修改看似只是小改动，实际可能会影响实验公平性、配置一致性或结果可复现性。</p>
+<hr />
+<h2 id="三-先对齐-plan再开始实现"><a class="markdownIt-Anchor" href="#三-先对齐-plan再开始实现"></a> 三、先对齐 Plan，再开始实现</h2>
+<p>对于稍微复杂一点的任务，不建议直接说“帮我实现某功能”。更好的方式是先进入计划阶段，让 Agent 明确问题、影响范围和验证方式。</p>
+<p>可以使用下面的 Prompt：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">先不要写代码。请进入计划模式，帮我设计实现方案：</span><br><span class="line"></span><br><span class="line">1. 明确这次要解决的问题</span><br><span class="line">2. 列出会影响哪些模块</span><br><span class="line">3. 拆成 3-7 个步骤</span><br><span class="line">4. 每一步怎么验证</span><br><span class="line">5. 哪些地方最容易出错</span><br><span class="line"></span><br><span class="line">等我确认后再开始实现。</span><br></pre></td></tr></table></figure>
+<p>这个步骤可以有效避免 Agent 在需求还没对齐时就开始大范围修改。尤其是模型训练、数据预处理、评估指标这类任务，一旦改错位置，后面排查成本会很高。</p>
+<hr />
+<h2 id="四-复现和研究类任务要先查证"><a class="markdownIt-Anchor" href="#四-复现和研究类任务要先查证"></a> 四、复现和研究类任务要先查证</h2>
+<p>论文复现、方法解释、官方实现对照这类任务，不要直接让 Agent “按论文实现”。更稳妥的做法是先让它查证论文和官方代码，再决定是否需要实现。</p>
+<p>可以使用下面的 Prompt：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">请先阅读论文和官方 repo，不要开始写代码。</span><br><span class="line"></span><br><span class="line">先输出：</span><br><span class="line"></span><br><span class="line">1. 论文核心 idea</span><br><span class="line">2. 关键公式/模块</span><br><span class="line">3. 官方实现和论文描述是否一致</span><br><span class="line">4. 复现最小路径</span><br><span class="line">5. 可能复现不出来的风险点</span><br></pre></td></tr></table></figure>
+<p>这样可以减少“为了完成而完成”的情况。很多论文的官方代码和论文描述并不完全一致，甚至有些细节只存在于配置文件或 issue 讨论中。如果不先查证，Agent 很容易生成一个看似合理但并不忠于原实现的版本。</p>
+<hr />
+<h2 id="五-任务完成后及时开新会话"><a class="markdownIt-Anchor" href="#五-任务完成后及时开新会话"></a> 五、任务完成后及时开新会话</h2>
+<p>一个任务完成后，建议让 Agent 先总结当前状态，然后开启新会话。长上下文会提高幻觉和错误假设的概率，尤其是当中间经历过多次修改、回滚、报错和调试时。</p>
+<p>可以使用下面的 Prompt：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">请用一句话总结刚完成的任务、修改过的文件、当前状态和下一步注意事项。</span><br><span class="line"></span><br><span class="line">然后 /new，在新会话里贴这个总结，再开始下一个任务。</span><br></pre></td></tr></table></figure>
+<p>这样可以保留必要信息，同时避免旧上下文中的错误判断继续影响后续任务。</p>
+<hr />
+<h2 id="六-不要只相信已完成"><a class="markdownIt-Anchor" href="#六-不要只相信已完成"></a> 六、不要只相信“已完成”</h2>
+<p>Agent 说任务完成，并不等于任务真的完成。最后一定要让它对齐修改内容和验证结果。</p>
+<p>可以让它按下面几个问题总结：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">请总结这次任务：</span><br><span class="line"></span><br><span class="line">1. 修改了哪些文件</span><br><span class="line">2. 每个文件为什么改</span><br><span class="line">3. 运行了哪些验证</span><br><span class="line">4. 还有哪些没验证</span><br><span class="line">5. 哪些地方需要我人工确认</span><br></pre></td></tr></table></figure>
+<p>这一步很重要。它可以帮助我们区分“代码已经写了”“验证已经跑了”和“结果确实可信”这三件事。科研场景里，尤其不能把能运行等同于实验正确。</p>
+<hr />
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>使用 CodeX / Claude Code 这类 Agent 做科研开发时，关键不只是选择哪个模型，而是建立一套稳定的工作方式：</p>
+<ul>
+<li>先让 Agent 理解项目，而不是直接改代码。</li>
+<li>把长期偏好和约束写进 <code>AGENTS.md</code>。</li>
+<li>复杂任务先做 Plan，再确认实现。</li>
+<li>论文复现任务先查证论文和官方实现。</li>
+<li>每个任务结束后及时总结并开新会话。</li>
+<li>最后用文件、原因和验证结果来验收，而不是只听 Agent 的完成声明。</li>
+</ul>
+<p>简单来说，Agent 更像一个执行力很强的研究助理。给它清晰的上下文、边界和验收标准，它才能稳定地产出有用结果。</p>
+]]></content>
+      <categories>
+        <category>科研工具</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>2026版：Hexo + GitHub Pages 个人博客搭建全记录</title>
+    <url>/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/</url>
+    <content><![CDATA[<p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
+<span id="more"></span>
+<h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
+<p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
+🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
+<blockquote>
+<p>💡 <strong>操作记录</strong>：<br />
+虽然这篇文章的整体逻辑很清晰，但因为发布时间较早，很多细节已经发生了变化。例如 Node.js 的版本要求、Hexo 包管理的变动，以及目前 GitHub 默认主分支已经从 <code>master</code> 变成了 <code>main</code>。这些差异很容易导致按照原教程执行时出现报错。</p>
+<p>在实际操作中，如果遇到版本不兼容导致的报错，建议直接将终端报错信息交给大语言模型去分析，通常能很快定位并解决问题，能省下不少查阅旧资料的时间。</p>
+</blockquote>
+<hr />
+<h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
+<p>默认部署到 GitHub Pages 上的域名格式通常是 <code>用户名.github.io</code>。为了方便记忆和后续的扩展，我为博客绑定了一个专属的独立域名。</p>
+<p>🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
+<p><strong>核心操作步骤</strong>：</p>
+<ol>
+<li><strong>域名购买</strong>：我在阿里云购买了一个 <code>.top</code> 后缀的域名，相对来说性价比比较高。</li>
+<li><strong>DNS 解析配置</strong>：进入阿里云控制台，添加一条 <code>CNAME</code> 记录，将其解析指向自己的 GitHub Pages 地址。</li>
+<li><strong>GitHub 仓库配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚购买的域名，并勾选开启 <code>Enforce HTTPS</code> 以保证访问安全。配置完成后，稍微等待 DNS 解析生效，就可以使用独立域名访问博客了。</li>
+</ol>
+<hr />
+<h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
+<p>原生的 Hexo 界面比较基础，为了提升页面的可读性和排版效果，通常需要对主题进行一定的自定义。</p>
+<p>🔗 <strong>参考教程</strong>：<a href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
+<p><strong>我主要进行的配置和调整包括</strong>：</p>
+<ul>
+<li>更换第三方主题（这里我尝试了经典的 NexT 等几款主流主题）。</li>
+<li>配置侧边栏的个人信息、头像以及社交平台链接。</li>
+<li>微调了博客的背景和字体配色，以改善正文内容的阅读体验。</li>
+<li>补充了专属的网站标签页小图标（Favicon）。</li>
+</ul>
+<p>整个流程走下来，算是一次比较完整的前端部署实践。一个功能完善、排版清晰的博客不仅能作为知识库，也是记录学习日常的好工具。</p>
+]]></content>
+      <categories>
+        <category>建站教程</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>在 RTX 5090 上配置 MMSegmentation 并跑通自定义数据集 (OneDL 版)</title>
+    <url>/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/</url>
+    <content><![CDATA[<p>在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。</p>
+<span id="more"></span>
+<h2 id="一-基础环境配置"><a class="markdownIt-Anchor" href="#一-基础环境配置"></a> 一、基础环境配置</h2>
+<p>RTX 5090 对 CUDA 版本有一定要求，经过测试，以下版本组合运行较为稳定：</p>
+<ul>
+<li><strong>CUDA</strong>: 12.8 (5090 最低支持 12.8 版本的 CUDA)</li>
+<li><strong>PyTorch</strong>: 2.8.0</li>
+<li><strong>Python</strong>: 3.10 (建议 3.10.x 或 3.12.x)</li>
+</ul>
+<blockquote>
+<p>💡 <strong>个人习惯：建立基础克隆环境</strong><br />
+由于目前部分国内镜像源可能还没有完全同步最新的 GPU 版 PyTorch，我通常会先建一个只包含上述核心组件的“基础环境”。后续新建项目时直接克隆这个基础环境，可以避免重复下载和安装。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda create -n new_env_name --<span class="built_in">clone</span> base_5090_env</span><br></pre></td></tr></table></figure>
+</blockquote>
+<hr />
+<h2 id="二-框架选择使用-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#二-框架选择使用-onedl-mmsegmentation"></a> 二、框架选择：使用 OneDL-MMSegmentation</h2>
+<p>官方的 OpenMMLab 库 <code>mmsegmentation</code> 已经有较长一段时间未更新，最新的 1.x 版本在适配最新的硬件环境（如 CUDA 12.8）和 PyTorch 2.x 时会遇到不少兼容性问题。虽然可以通过手动修改配置、从源码编译 <code>mmcv</code> 来强行适配，但维护成本较高。</p>
+<p>在调研后，我选择了第三方维护的复刻版本：<strong><a href="https://github.com/VBTI-development/onedl-mmsegmentation">onedl-mmsegmentation</a></strong>。该库对最新的 PyTorch 2.x 提供了较好的支持。</p>
+<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/1.png" class="" title="官方说明: onedl-mmsegmentation 重要提示"></p>
+*图 1：官方主页中的相关兼容性说明。*
+<hr />
+<h2 id="三-完整的安装与配置流程"><a class="markdownIt-Anchor" href="#三-完整的安装与配置流程"></a> 三、完整的安装与配置流程</h2>
+<h3 id="1-创建环境与安装-pytorch"><a class="markdownIt-Anchor" href="#1-创建环境与安装-pytorch"></a> 1. 创建环境与安装 PyTorch</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda create -n mmseg python=3.10 -y</span><br><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 注意：需通过官方源安装指定 CUDA 12.8 版本的 PyTorch</span></span><br><span class="line">pip install torch==2.8.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128</span><br></pre></td></tr></table></figure>
+<h3 id="2-安装基础依赖包"><a class="markdownIt-Anchor" href="#2-安装基础依赖包"></a> 2. 安装基础依赖包</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install -U onedl-mim</span><br><span class="line">mim install onedl-mmengine</span><br></pre></td></tr></table></figure>
+<h3 id="3-安装-mmcv"><a class="markdownIt-Anchor" href="#3-安装-mmcv"></a> 3. 安装 MMCV</h3>
+<p>在整个配置过程中，<code>mmcv</code> 的安装是比较容易出错的一步。主要有两种方案：</p>
+<h4 id="方案-a使用预编译-wheel-包安装-推荐"><a class="markdownIt-Anchor" href="#方案-a使用预编译-wheel-包安装-推荐"></a> 方案 A：使用预编译 Wheel 包安装 (推荐)</h4>
+<p>最理想的方式是使用 <code>mim</code> 自动安装预编译包：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mim install onedl-mmcv==2.3.2</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>⚠️ <strong>编译提示</strong>：<br />
+如果在终端日志中看到 <code>Building wheel from source</code>，说明系统未能匹配到合适的预构建包，正在尝试本地编译。这种情况往往由于缺少 C++ 扩展编译环境，导致后续调用 <code>mmcv._ext</code> 时报错。</p>
+</blockquote>
+<p>为了避免编译错误，可以根据 <a href="https://onedl-mmcv.readthedocs.io/en/latest/get_started/installation.html">OneDL-MMCV 官方文档</a> 寻找对应的预编译包（如 Python 3.10 + CUDA 12.8 + PyTorch 2.8.0）。如果自动匹配失败，建议直接通过获取到的 .whl 链接进行安装：</p>
+<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/3.png" class="" title="预编译包列表"></p>
+*图 2：官方发布的预编译包列表。*
+<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/4.png" class=""></p>
+*图 3：复制对应版本的下载链接。*
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 示例：通过复制的 .whl 文件绝对链接直接安装</span></span><br><span class="line">pip install https://mmwheels-bucket.onedl.ai/cu128-torch280/onedl-mmcv/onedl_mmcv-2.3.3-cp310-cp310-manylinux_2_34_x86_64.whl</span><br></pre></td></tr></table></figure>
+<h4 id="方案-b从源代码编译"><a class="markdownIt-Anchor" href="#方案-b从源代码编译"></a> 方案 B：从源代码编译</h4>
+<p>如果无法使用预编译包，也可以从源码编译，建议将代码克隆到工程的同级目录：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/open-mmlab/mmcv.git</span><br><span class="line"><span class="built_in">cd</span> mmcv</span><br><span class="line">git checkout v2.1.0  <span class="comment"># 切换到所需的分支</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 配置环境变量以编译 C++ 算子</span></span><br><span class="line"><span class="built_in">export</span> FORCE_CUDA=1</span><br><span class="line"><span class="built_in">export</span> MMCV_WITH_OPS=1</span><br><span class="line"></span><br><span class="line">pip install -r requirements.txt</span><br><span class="line">python setup.py build_ext --inplace</span><br><span class="line">pip install -e .</span><br></pre></td></tr></table></figure>
+<h3 id="4-从源码安装-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#4-从源码安装-onedl-mmsegmentation"></a> 4. 从源码安装 OneDL-MMSegmentation</h3>
+<p>确认 <code>mmcv</code> 正确安装并能导入 <code>mmcv._ext</code> 后，即可安装主框架：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> -b main https://github.com/vbti-development/onedl-mmsegmentation.git</span><br><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line">pip install -v -e .</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="四-测试与验证环境"><a class="markdownIt-Anchor" href="#四-测试与验证环境"></a> 四、测试与验证环境</h2>
+<p>完成上述步骤后，可以使用官方提供的 Demo 进行推理测试，以验证环境是否正常配置：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取测试用的配置和模型权重</span></span><br><span class="line">mim download mmsegmentation --config pspnet_r50-d8_4xb2-40k_cityscapes-512x1024 --dest .</span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行单张图片推理</span></span><br><span class="line">python demo/image_demo.py demo/demo.png \</span><br><span class="line">    configs/pspnet/pspnet_r50-d8_4xb2-40k_cityscapes-512x1024.py \</span><br><span class="line">    pspnet_r50-d8_512x1024_40k_cityscapes_20200605_003338-2966598c.pth \</span><br><span class="line">    --device cuda:0 --out-file result.jpg</span><br></pre></td></tr></table></figure>
+<p>如果当前目录生成了带有分割蒙版的 <code>result.jpg</code>，说明环境的安装配置已经初步完成。</p>
+<hr />
+<h2 id="五-在内置数据集-ade20k-上的训练尝试"><a class="markdownIt-Anchor" href="#五-在内置数据集-ade20k-上的训练尝试"></a> 五、在内置数据集 (ADE20K) 上的训练尝试</h2>
+<p>在切入自定义数据前，我先尝试用内置的 ADE20K 数据集走了一遍完整的训练和测试流程，以熟悉框架的调用逻辑。</p>
+<ol>
+<li><strong>准备数据</strong>：按照官方文档指引，解压 ADE20K 并放至 <code>data/ade</code> 目录。</li>
+<li><strong>启动训练</strong>：尝试使用 Segformer 模型。得益于 5090 充足的显存，可以将 batch size 适当调大以加速验证。</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 覆盖默认超参数配置</span></span><br><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8</span><br></pre></td></tr></table></figure>
+<p>也可以通过修改迭代参数进行一次快速测试：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k_fast \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8 train_cfg.max_iters=40000 train_cfg.val_interval=2000</span><br></pre></td></tr></table></figure>
+<h3 id="显卡状态监控"><a class="markdownIt-Anchor" href="#显卡状态监控"></a> 显卡状态监控</h3>
+<p>为了观察高负载下的硬件表现，可以在训练期间监控显卡状态：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 方法 1：系统自带</span></span><br><span class="line">watch -n 1 nvidia-smi</span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法 2：使用第三方库 nvitop</span></span><br><span class="line">conda activate base</span><br><span class="line">pip install nvitop</span><br><span class="line">nvitop</span><br></pre></td></tr></table></figure>
+<h3 id="模型验证"><a class="markdownIt-Anchor" href="#模型验证"></a> 模型验证</h3>
+<p>训练完成后，评估精度并输出预测结果：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/test.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    work_dirs/segformer_mit-b0_ade20k/best_mIoU_iter_xxx.pth \</span><br><span class="line">    --out work_dirs/segformer_mit-b0_ade20k/results \</span><br><span class="line">    --show-dir work_dirs/segformer_mit-b0_ade20k/vis_results</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="六-跑通自定义数据集以-smokeseg-为例"><a class="markdownIt-Anchor" href="#六-跑通自定义数据集以-smokeseg-为例"></a> 六、跑通自定义数据集：以 SmokeSeg 为例</h2>
+<p>结合自己课题，这里以开源的烟雾分割数据集 <strong><a href="https://github.com/LujianYao/FoSp">SmokeSeg</a></strong> 为例，记录了如何将其接入 MMSegmentation 框架。</p>
+<p>假设数据已转为标准 VOC 格式并存放在项目目录的 <code>data/SmokeSeg</code> 中。</p>
+<h3 id="1-注册新数据集"><a class="markdownIt-Anchor" href="#1-注册新数据集"></a> 1. 注册新数据集</h3>
+<p>在 MMSegmentation 1.x 规范中，自定义数据集需继承 <code>BaseSegDataset</code>。</p>
+<ul>
+<li>在 <code>mmseg/datasets/</code> 下创建 <code>smoke_voc.py</code>，编写数据集读取逻辑。</li>
+<li>在 <code>mmseg/datasets/__init__.py</code> 中导入并暴露该模块以便系统调用。</li>
+</ul>
+<h3 id="2-编写训练配置文件"><a class="markdownIt-Anchor" href="#2-编写训练配置文件"></a> 2. 编写训练配置文件</h3>
+<p>在 <code>configs/segformer/</code> 目录下新建对应 SmokeSeg 的配置文件，例如 <code>segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</code>。<br />
+<em>(注: 可以直接利用框架的 <code>_base_</code> 机制继承官方的 SegFormer-B5 配置文件，然后在此基础上仅重写类别数、数据路径等参数。)</em></p>
+<h3 id="3-执行训练与可视化"><a class="markdownIt-Anchor" href="#3-执行训练与可视化"></a> 3. 执行训练与可视化</h3>
+<p>调用新配置开始模型训练：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</span><br></pre></td></tr></table></figure>
+<p>训练结束后进行测试并可视化：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/test.py \</span><br><span class="line">    configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py \</span><br><span class="line">    你的最优权重文件路径.pth \</span><br><span class="line">    --show-dir vis_results_smokeseg/</span><br></pre></td></tr></table></figure>
+<p>到这里，整套分割库的本地化配置和运行流程基本走通了。接下来就可以在此框架上开展进一步的调参和对比实验。</p>
+]]></content>
+      <categories>
+        <category>深度学习</category>
+      </categories>
+  </entry>
+  <entry>
     <title>RTX 5090 深度学习环境显卡掉线排查记录</title>
     <url>/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/</url>
     <content><![CDATA[<p>先交代一下这套深度学习环境的硬件配置：</p>
@@ -216,214 +416,6 @@
       </categories>
   </entry>
   <entry>
-    <title>CodeX/CC科研向使用经验</title>
-    <url>/2026/05/28/CodeX-CC%E7%A7%91%E7%A0%94%E5%90%91%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/</url>
-    <content><![CDATA[<p>结合最近一段时间的科研实践（主要是论文复现）以及 <a href="https://mp.weixin.qq.com/s/gyLbhAIIe67KhfrCqtWXmw">Datawhale 的公众号经验贴</a>，这里整理一些使用 CodeX / Claude Code 这类编程 Agent 辅助科研开发的经验。</p>
-<p>核心思路可以概括为一句话：<strong>模型能力固然重要，但上下文、长期规则和验收标准同样重要。</strong></p>
-<h2 id="总工作流"><a class="markdownIt-Anchor" href="#总工作流"></a> 总工作流</h2>
-<p>比较稳定的一套流程是：</p>
-<blockquote>
-<p>读上下文 -&gt; 写计划 -&gt; 确认范围 -&gt; 小步实现 -&gt; 跑验证 -&gt; 总结结果 -&gt; <code>/new</code> 开新对话</p>
-</blockquote>
-<p>Agent 很适合做“有明确边界的工程任务”，但不适合在上下文混乱、目标模糊、验证缺失的情况下自由发挥。因此，每次让它动手之前，都要先让它理解项目、对齐任务，并明确最后如何验收。</p>
-<span id="more"></span>
-<hr />
-<h2 id="一-先让-agent-阅读项目框架"><a class="markdownIt-Anchor" href="#一-先让-agent-阅读项目框架"></a> 一、先让 Agent 阅读项目框架</h2>
-<p>进入一个新的代码仓库后，不要一上来就让 Agent 改代码。更稳妥的方式是先让它阅读项目结构，建立最基本的上下文。</p>
-<p>可以使用类似下面的 Prompt：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">先不要修改代码。请先阅读这个项目，告诉我：</span><br><span class="line"></span><br><span class="line">1. 项目结构是什么</span><br><span class="line">2. 主要入口在哪里</span><br><span class="line">3. 训练/测试/运行命令分别是什么</span><br><span class="line">4. 哪些文件最可能和当前任务有关</span><br><span class="line">5. 你不确定的地方有哪些</span><br></pre></td></tr></table></figure>
-<p>这样做的好处是，Agent 会先主动梳理工程结构，而不是凭借文件名或局部代码直接猜测实现方式。对于论文复现类项目尤其重要，因为很多仓库的训练入口、配置文件、数据集注册逻辑并不直观。</p>
-<hr />
-<h2 id="二-在-agentsmd-中写长期规则"><a class="markdownIt-Anchor" href="#二-在-agentsmd-中写长期规则"></a> 二、在 <code>AGENTS.md</code> 中写长期规则</h2>
-<p>如果一个项目会反复使用 Agent 协助开发，建议在仓库中写一个 <code>AGENTS.md</code>，用于记录长期规则。这样每次新会话都能继承基本约束，减少重复说明。</p>
-<p>例如：</p>
-<figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line"><span class="section">## 工作规则</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 默认先阅读相关代码和文档，再开始修改。</span><br><span class="line"><span class="bullet">-</span> 修改前先说明影响范围。</span><br><span class="line"><span class="bullet">-</span> 只做和当前任务相关的最小改动。</span><br><span class="line"><span class="bullet">-</span> 提交前必须运行最小验证。</span><br><span class="line"><span class="bullet">-</span> 说明用中文，代码、命令、文件名保持英文。</span><br><span class="line"><span class="bullet">-</span> 不要修改无关文件。</span><br><span class="line"></span><br><span class="line"><span class="section">## 实验原则</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 实验必须服务于明确假设或决策。</span><br><span class="line"><span class="bullet">-</span> 不要为了补齐表格而穷举低价值 ablation。</span><br></pre></td></tr></table></figure>
-<p>这类规则的价值不在于“控制模型”，而在于给 Agent 一个稳定的工作边界。特别是在科研代码中，很多修改看似只是小改动，实际可能会影响实验公平性、配置一致性或结果可复现性。</p>
-<hr />
-<h2 id="三-先对齐-plan再开始实现"><a class="markdownIt-Anchor" href="#三-先对齐-plan再开始实现"></a> 三、先对齐 Plan，再开始实现</h2>
-<p>对于稍微复杂一点的任务，不建议直接说“帮我实现某功能”。更好的方式是先进入计划阶段，让 Agent 明确问题、影响范围和验证方式。</p>
-<p>可以使用下面的 Prompt：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">先不要写代码。请进入计划模式，帮我设计实现方案：</span><br><span class="line"></span><br><span class="line">1. 明确这次要解决的问题</span><br><span class="line">2. 列出会影响哪些模块</span><br><span class="line">3. 拆成 3-7 个步骤</span><br><span class="line">4. 每一步怎么验证</span><br><span class="line">5. 哪些地方最容易出错</span><br><span class="line"></span><br><span class="line">等我确认后再开始实现。</span><br></pre></td></tr></table></figure>
-<p>这个步骤可以有效避免 Agent 在需求还没对齐时就开始大范围修改。尤其是模型训练、数据预处理、评估指标这类任务，一旦改错位置，后面排查成本会很高。</p>
-<hr />
-<h2 id="四-复现和研究类任务要先查证"><a class="markdownIt-Anchor" href="#四-复现和研究类任务要先查证"></a> 四、复现和研究类任务要先查证</h2>
-<p>论文复现、方法解释、官方实现对照这类任务，不要直接让 Agent “按论文实现”。更稳妥的做法是先让它查证论文和官方代码，再决定是否需要实现。</p>
-<p>可以使用下面的 Prompt：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">请先阅读论文和官方 repo，不要开始写代码。</span><br><span class="line"></span><br><span class="line">先输出：</span><br><span class="line"></span><br><span class="line">1. 论文核心 idea</span><br><span class="line">2. 关键公式/模块</span><br><span class="line">3. 官方实现和论文描述是否一致</span><br><span class="line">4. 复现最小路径</span><br><span class="line">5. 可能复现不出来的风险点</span><br></pre></td></tr></table></figure>
-<p>这样可以减少“为了完成而完成”的情况。很多论文的官方代码和论文描述并不完全一致，甚至有些细节只存在于配置文件或 issue 讨论中。如果不先查证，Agent 很容易生成一个看似合理但并不忠于原实现的版本。</p>
-<hr />
-<h2 id="五-任务完成后及时开新会话"><a class="markdownIt-Anchor" href="#五-任务完成后及时开新会话"></a> 五、任务完成后及时开新会话</h2>
-<p>一个任务完成后，建议让 Agent 先总结当前状态，然后开启新会话。长上下文会提高幻觉和错误假设的概率，尤其是当中间经历过多次修改、回滚、报错和调试时。</p>
-<p>可以使用下面的 Prompt：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">请用一句话总结刚完成的任务、修改过的文件、当前状态和下一步注意事项。</span><br><span class="line"></span><br><span class="line">然后 /new，在新会话里贴这个总结，再开始下一个任务。</span><br></pre></td></tr></table></figure>
-<p>这样可以保留必要信息，同时避免旧上下文中的错误判断继续影响后续任务。</p>
-<hr />
-<h2 id="六-不要只相信已完成"><a class="markdownIt-Anchor" href="#六-不要只相信已完成"></a> 六、不要只相信“已完成”</h2>
-<p>Agent 说任务完成，并不等于任务真的完成。最后一定要让它对齐修改内容和验证结果。</p>
-<p>可以让它按下面几个问题总结：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">请总结这次任务：</span><br><span class="line"></span><br><span class="line">1. 修改了哪些文件</span><br><span class="line">2. 每个文件为什么改</span><br><span class="line">3. 运行了哪些验证</span><br><span class="line">4. 还有哪些没验证</span><br><span class="line">5. 哪些地方需要我人工确认</span><br></pre></td></tr></table></figure>
-<p>这一步很重要。它可以帮助我们区分“代码已经写了”“验证已经跑了”和“结果确实可信”这三件事。科研场景里，尤其不能把能运行等同于实验正确。</p>
-<hr />
-<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
-<p>使用 CodeX / Claude Code 这类 Agent 做科研开发时，关键不只是选择哪个模型，而是建立一套稳定的工作方式：</p>
-<ul>
-<li>先让 Agent 理解项目，而不是直接改代码。</li>
-<li>把长期偏好和约束写进 <code>AGENTS.md</code>。</li>
-<li>复杂任务先做 Plan，再确认实现。</li>
-<li>论文复现任务先查证论文和官方实现。</li>
-<li>每个任务结束后及时总结并开新会话。</li>
-<li>最后用文件、原因和验证结果来验收，而不是只听 Agent 的完成声明。</li>
-</ul>
-<p>简单来说，Agent 更像一个执行力很强的研究助理。给它清晰的上下文、边界和验收标准，它才能稳定地产出有用结果。</p>
-]]></content>
-      <categories>
-        <category>科研工具</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>2026版：Hexo + GitHub Pages 个人博客搭建全记录</title>
-    <url>/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/</url>
-    <content><![CDATA[<p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
-<span id="more"></span>
-<h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
-<p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
-🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
-<blockquote>
-<p>💡 <strong>操作记录</strong>：<br />
-虽然这篇文章的整体逻辑很清晰，但因为发布时间较早，很多细节已经发生了变化。例如 Node.js 的版本要求、Hexo 包管理的变动，以及目前 GitHub 默认主分支已经从 <code>master</code> 变成了 <code>main</code>。这些差异很容易导致按照原教程执行时出现报错。</p>
-<p>在实际操作中，如果遇到版本不兼容导致的报错，建议直接将终端报错信息交给大语言模型去分析，通常能很快定位并解决问题，能省下不少查阅旧资料的时间。</p>
-</blockquote>
-<hr />
-<h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
-<p>默认部署到 GitHub Pages 上的域名格式通常是 <code>用户名.github.io</code>。为了方便记忆和后续的扩展，我为博客绑定了一个专属的独立域名。</p>
-<p>🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
-<p><strong>核心操作步骤</strong>：</p>
-<ol>
-<li><strong>域名购买</strong>：我在阿里云购买了一个 <code>.top</code> 后缀的域名，相对来说性价比比较高。</li>
-<li><strong>DNS 解析配置</strong>：进入阿里云控制台，添加一条 <code>CNAME</code> 记录，将其解析指向自己的 GitHub Pages 地址。</li>
-<li><strong>GitHub 仓库配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚购买的域名，并勾选开启 <code>Enforce HTTPS</code> 以保证访问安全。配置完成后，稍微等待 DNS 解析生效，就可以使用独立域名访问博客了。</li>
-</ol>
-<hr />
-<h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
-<p>原生的 Hexo 界面比较基础，为了提升页面的可读性和排版效果，通常需要对主题进行一定的自定义。</p>
-<p>🔗 <strong>参考教程</strong>：<a href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
-<p><strong>我主要进行的配置和调整包括</strong>：</p>
-<ul>
-<li>更换第三方主题（这里我尝试了经典的 NexT 等几款主流主题）。</li>
-<li>配置侧边栏的个人信息、头像以及社交平台链接。</li>
-<li>微调了博客的背景和字体配色，以改善正文内容的阅读体验。</li>
-<li>补充了专属的网站标签页小图标（Favicon）。</li>
-</ul>
-<p>整个流程走下来，算是一次比较完整的前端部署实践。一个功能完善、排版清晰的博客不仅能作为知识库，也是记录学习日常的好工具。</p>
-]]></content>
-      <categories>
-        <category>建站教程</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>在 RTX 5090 上配置 MMSegmentation 并跑通自定义数据集 (OneDL 版)</title>
-    <url>/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/</url>
-    <content><![CDATA[<p>在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。</p>
-<span id="more"></span>
-<h2 id="一-基础环境配置"><a class="markdownIt-Anchor" href="#一-基础环境配置"></a> 一、基础环境配置</h2>
-<p>RTX 5090 对 CUDA 版本有一定要求，经过测试，以下版本组合运行较为稳定：</p>
-<ul>
-<li><strong>CUDA</strong>: 12.8 (5090 最低支持 12.8 版本的 CUDA)</li>
-<li><strong>PyTorch</strong>: 2.8.0</li>
-<li><strong>Python</strong>: 3.10 (建议 3.10.x 或 3.12.x)</li>
-</ul>
-<blockquote>
-<p>💡 <strong>个人习惯：建立基础克隆环境</strong><br />
-由于目前部分国内镜像源可能还没有完全同步最新的 GPU 版 PyTorch，我通常会先建一个只包含上述核心组件的“基础环境”。后续新建项目时直接克隆这个基础环境，可以避免重复下载和安装。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda create -n new_env_name --<span class="built_in">clone</span> base_5090_env</span><br></pre></td></tr></table></figure>
-</blockquote>
-<hr />
-<h2 id="二-框架选择使用-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#二-框架选择使用-onedl-mmsegmentation"></a> 二、框架选择：使用 OneDL-MMSegmentation</h2>
-<p>官方的 OpenMMLab 库 <code>mmsegmentation</code> 已经有较长一段时间未更新，最新的 1.x 版本在适配最新的硬件环境（如 CUDA 12.8）和 PyTorch 2.x 时会遇到不少兼容性问题。虽然可以通过手动修改配置、从源码编译 <code>mmcv</code> 来强行适配，但维护成本较高。</p>
-<p>在调研后，我选择了第三方维护的复刻版本：<strong><a href="https://github.com/VBTI-development/onedl-mmsegmentation">onedl-mmsegmentation</a></strong>。该库对最新的 PyTorch 2.x 提供了较好的支持。</p>
-<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/1.png" class="" title="官方说明: onedl-mmsegmentation 重要提示"></p>
-*图 1：官方主页中的相关兼容性说明。*
-<hr />
-<h2 id="三-完整的安装与配置流程"><a class="markdownIt-Anchor" href="#三-完整的安装与配置流程"></a> 三、完整的安装与配置流程</h2>
-<h3 id="1-创建环境与安装-pytorch"><a class="markdownIt-Anchor" href="#1-创建环境与安装-pytorch"></a> 1. 创建环境与安装 PyTorch</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda create -n mmseg python=3.10 -y</span><br><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 注意：需通过官方源安装指定 CUDA 12.8 版本的 PyTorch</span></span><br><span class="line">pip install torch==2.8.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128</span><br></pre></td></tr></table></figure>
-<h3 id="2-安装基础依赖包"><a class="markdownIt-Anchor" href="#2-安装基础依赖包"></a> 2. 安装基础依赖包</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install -U onedl-mim</span><br><span class="line">mim install onedl-mmengine</span><br></pre></td></tr></table></figure>
-<h3 id="3-安装-mmcv"><a class="markdownIt-Anchor" href="#3-安装-mmcv"></a> 3. 安装 MMCV</h3>
-<p>在整个配置过程中，<code>mmcv</code> 的安装是比较容易出错的一步。主要有两种方案：</p>
-<h4 id="方案-a使用预编译-wheel-包安装-推荐"><a class="markdownIt-Anchor" href="#方案-a使用预编译-wheel-包安装-推荐"></a> 方案 A：使用预编译 Wheel 包安装 (推荐)</h4>
-<p>最理想的方式是使用 <code>mim</code> 自动安装预编译包：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mim install onedl-mmcv==2.3.2</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>⚠️ <strong>编译提示</strong>：<br />
-如果在终端日志中看到 <code>Building wheel from source</code>，说明系统未能匹配到合适的预构建包，正在尝试本地编译。这种情况往往由于缺少 C++ 扩展编译环境，导致后续调用 <code>mmcv._ext</code> 时报错。</p>
-</blockquote>
-<p>为了避免编译错误，可以根据 <a href="https://onedl-mmcv.readthedocs.io/en/latest/get_started/installation.html">OneDL-MMCV 官方文档</a> 寻找对应的预编译包（如 Python 3.10 + CUDA 12.8 + PyTorch 2.8.0）。如果自动匹配失败，建议直接通过获取到的 .whl 链接进行安装：</p>
-<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/3.png" class="" title="预编译包列表"></p>
-*图 2：官方发布的预编译包列表。*
-<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/4.png" class=""></p>
-*图 3：复制对应版本的下载链接。*
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 示例：通过复制的 .whl 文件绝对链接直接安装</span></span><br><span class="line">pip install https://mmwheels-bucket.onedl.ai/cu128-torch280/onedl-mmcv/onedl_mmcv-2.3.3-cp310-cp310-manylinux_2_34_x86_64.whl</span><br></pre></td></tr></table></figure>
-<h4 id="方案-b从源代码编译"><a class="markdownIt-Anchor" href="#方案-b从源代码编译"></a> 方案 B：从源代码编译</h4>
-<p>如果无法使用预编译包，也可以从源码编译，建议将代码克隆到工程的同级目录：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/open-mmlab/mmcv.git</span><br><span class="line"><span class="built_in">cd</span> mmcv</span><br><span class="line">git checkout v2.1.0  <span class="comment"># 切换到所需的分支</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 配置环境变量以编译 C++ 算子</span></span><br><span class="line"><span class="built_in">export</span> FORCE_CUDA=1</span><br><span class="line"><span class="built_in">export</span> MMCV_WITH_OPS=1</span><br><span class="line"></span><br><span class="line">pip install -r requirements.txt</span><br><span class="line">python setup.py build_ext --inplace</span><br><span class="line">pip install -e .</span><br></pre></td></tr></table></figure>
-<h3 id="4-从源码安装-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#4-从源码安装-onedl-mmsegmentation"></a> 4. 从源码安装 OneDL-MMSegmentation</h3>
-<p>确认 <code>mmcv</code> 正确安装并能导入 <code>mmcv._ext</code> 后，即可安装主框架：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> -b main https://github.com/vbti-development/onedl-mmsegmentation.git</span><br><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line">pip install -v -e .</span><br></pre></td></tr></table></figure>
-<hr />
-<h2 id="四-测试与验证环境"><a class="markdownIt-Anchor" href="#四-测试与验证环境"></a> 四、测试与验证环境</h2>
-<p>完成上述步骤后，可以使用官方提供的 Demo 进行推理测试，以验证环境是否正常配置：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取测试用的配置和模型权重</span></span><br><span class="line">mim download mmsegmentation --config pspnet_r50-d8_4xb2-40k_cityscapes-512x1024 --dest .</span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行单张图片推理</span></span><br><span class="line">python demo/image_demo.py demo/demo.png \</span><br><span class="line">    configs/pspnet/pspnet_r50-d8_4xb2-40k_cityscapes-512x1024.py \</span><br><span class="line">    pspnet_r50-d8_512x1024_40k_cityscapes_20200605_003338-2966598c.pth \</span><br><span class="line">    --device cuda:0 --out-file result.jpg</span><br></pre></td></tr></table></figure>
-<p>如果当前目录生成了带有分割蒙版的 <code>result.jpg</code>，说明环境的安装配置已经初步完成。</p>
-<hr />
-<h2 id="五-在内置数据集-ade20k-上的训练尝试"><a class="markdownIt-Anchor" href="#五-在内置数据集-ade20k-上的训练尝试"></a> 五、在内置数据集 (ADE20K) 上的训练尝试</h2>
-<p>在切入自定义数据前，我先尝试用内置的 ADE20K 数据集走了一遍完整的训练和测试流程，以熟悉框架的调用逻辑。</p>
-<ol>
-<li><strong>准备数据</strong>：按照官方文档指引，解压 ADE20K 并放至 <code>data/ade</code> 目录。</li>
-<li><strong>启动训练</strong>：尝试使用 Segformer 模型。得益于 5090 充足的显存，可以将 batch size 适当调大以加速验证。</li>
-</ol>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 覆盖默认超参数配置</span></span><br><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8</span><br></pre></td></tr></table></figure>
-<p>也可以通过修改迭代参数进行一次快速测试：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k_fast \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8 train_cfg.max_iters=40000 train_cfg.val_interval=2000</span><br></pre></td></tr></table></figure>
-<h3 id="显卡状态监控"><a class="markdownIt-Anchor" href="#显卡状态监控"></a> 显卡状态监控</h3>
-<p>为了观察高负载下的硬件表现，可以在训练期间监控显卡状态：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 方法 1：系统自带</span></span><br><span class="line">watch -n 1 nvidia-smi</span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法 2：使用第三方库 nvitop</span></span><br><span class="line">conda activate base</span><br><span class="line">pip install nvitop</span><br><span class="line">nvitop</span><br></pre></td></tr></table></figure>
-<h3 id="模型验证"><a class="markdownIt-Anchor" href="#模型验证"></a> 模型验证</h3>
-<p>训练完成后，评估精度并输出预测结果：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/test.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    work_dirs/segformer_mit-b0_ade20k/best_mIoU_iter_xxx.pth \</span><br><span class="line">    --out work_dirs/segformer_mit-b0_ade20k/results \</span><br><span class="line">    --show-dir work_dirs/segformer_mit-b0_ade20k/vis_results</span><br></pre></td></tr></table></figure>
-<hr />
-<h2 id="六-跑通自定义数据集以-smokeseg-为例"><a class="markdownIt-Anchor" href="#六-跑通自定义数据集以-smokeseg-为例"></a> 六、跑通自定义数据集：以 SmokeSeg 为例</h2>
-<p>结合自己课题，这里以开源的烟雾分割数据集 <strong><a href="https://github.com/LujianYao/FoSp">SmokeSeg</a></strong> 为例，记录了如何将其接入 MMSegmentation 框架。</p>
-<p>假设数据已转为标准 VOC 格式并存放在项目目录的 <code>data/SmokeSeg</code> 中。</p>
-<h3 id="1-注册新数据集"><a class="markdownIt-Anchor" href="#1-注册新数据集"></a> 1. 注册新数据集</h3>
-<p>在 MMSegmentation 1.x 规范中，自定义数据集需继承 <code>BaseSegDataset</code>。</p>
-<ul>
-<li>在 <code>mmseg/datasets/</code> 下创建 <code>smoke_voc.py</code>，编写数据集读取逻辑。</li>
-<li>在 <code>mmseg/datasets/__init__.py</code> 中导入并暴露该模块以便系统调用。</li>
-</ul>
-<h3 id="2-编写训练配置文件"><a class="markdownIt-Anchor" href="#2-编写训练配置文件"></a> 2. 编写训练配置文件</h3>
-<p>在 <code>configs/segformer/</code> 目录下新建对应 SmokeSeg 的配置文件，例如 <code>segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</code>。<br />
-<em>(注: 可以直接利用框架的 <code>_base_</code> 机制继承官方的 SegFormer-B5 配置文件，然后在此基础上仅重写类别数、数据路径等参数。)</em></p>
-<h3 id="3-执行训练与可视化"><a class="markdownIt-Anchor" href="#3-执行训练与可视化"></a> 3. 执行训练与可视化</h3>
-<p>调用新配置开始模型训练：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</span><br></pre></td></tr></table></figure>
-<p>训练结束后进行测试并可视化：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/test.py \</span><br><span class="line">    configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py \</span><br><span class="line">    你的最优权重文件路径.pth \</span><br><span class="line">    --show-dir vis_results_smokeseg/</span><br></pre></td></tr></table></figure>
-<p>到这里，整套分割库的本地化配置和运行流程基本走通了。接下来就可以在此框架上开展进一步的调参和对比实验。</p>
-]]></content>
-      <categories>
-        <category>深度学习</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>发挥AI+MMSegmentation的快速验证想法的优势</title>
-    <url>/2026/05/25/%E5%8F%91%E6%8C%A5AI-MMSegmentation%E7%9A%84%E5%BF%AB%E9%80%9F%E9%AA%8C%E8%AF%81%E6%83%B3%E6%B3%95%E7%9A%84%E4%BC%98%E5%8A%BF/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>深度学习</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Git 核心操作记录：面向日常开发的实践总结</title>
     <url>/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/</url>
     <content><![CDATA[<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
@@ -536,6 +528,215 @@
 ]]></content>
       <categories>
         <category>工具教程</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>发挥AI+MMSegmentation的快速验证想法的优势</title>
+    <url>/2026/05/25/%E5%8F%91%E6%8C%A5AI-MMSegmentation%E7%9A%84%E5%BF%AB%E9%80%9F%E9%AA%8C%E8%AF%81%E6%83%B3%E6%B3%95%E7%9A%84%E4%BC%98%E5%8A%BF/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>深度学习</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>在VsCode的CC插件以及终端CC中接入Deepseek-V4-pro</title>
+    <url>/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/</url>
+    <content><![CDATA[<span id="more"></span>
+]]></content>
+      <categories>
+        <category>工具教程</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>实验管理与评测脚本说明（mmseg 自定义工具链）</title>
+    <url>/2026/06/01/%E5%AE%9E%E9%AA%8C%E7%AE%A1%E7%90%86%E4%B8%8E%E8%AF%84%E6%B5%8B%E8%84%9A%E6%9C%AC%E8%AF%B4%E6%98%8E%EF%BC%88mmseg-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B7%A5%E5%85%B7%E9%93%BE%EF%BC%89/</url>
+    <content><![CDATA[<h1 id="实验管理与评测脚本说明mmseg-自定义工具链"><a class="markdownIt-Anchor" href="#实验管理与评测脚本说明mmseg-自定义工具链"></a> 实验管理与评测脚本说明（mmseg 自定义工具链）</h1>
+<blockquote>
+<p>本文介绍在本项目（基于 MMSegmentation 1.x）里自建的一套<strong>实验管理 + 评测</strong>工具，<br />
+用于解决&quot;多次跑同一模型不同超参会互相覆盖&quot;“结果难以横向对比”“评测要分尺寸/分子集”<br />
+等问题。全部改动只在 <code>my_configs/paths.py</code> 与 <code>tools/*.py</code>，<strong>不触碰 mmseg 内核</strong>，<br />
+训练/评测的数值与官方 <code>tools/train.py</code> / <code>tools/test.py</code> 完全一致。</p>
+</blockquote>
+<p>涉及文件：</p>
+<ul>
+<li><code>my_configs/paths.py</code>：路径与台账核心逻辑（<code>tools/experiment_paths.py</code> 转出供脚本用）</li>
+<li><code>tools/train.py</code>：训练（带运行隔离 + 台账）</li>
+<li><code>tools/smoke_test.py</code>：单次测试（指标 + 可视化 + 台账）</li>
+<li><code>tools/smoke_test_multiscale.py</code>：分划分一键测试（自动发现，数据集无关）</li>
+</ul>
+<span id="more"></span>
+<hr />
+<h2 id="一-实验管理机制时间戳运行目录-csv-台账"><a class="markdownIt-Anchor" href="#一-实验管理机制时间戳运行目录-csv-台账"></a> 一、实验管理机制：时间戳运行目录 + CSV 台账</h2>
+<h3 id="11-目录规则"><a class="markdownIt-Anchor" href="#11-目录规则"></a> 1.1 目录规则</h3>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">work_dirs/</span><br><span class="line">  &#123;dataset&#125;/                         # 数据集，对应 cfg.dataset_name</span><br><span class="line">    &#123;exp_name&#125;/                      # 模型/实验标识，对应 cfg.exp_name</span><br><span class="line">      &#123;tag&#125;__&#123;timestamp&#125;/           # 单次运行：永不覆盖</span><br><span class="line">        *.pth                       # 权重（CheckpointHook）</span><br><span class="line">        &#123;config&#125;.py                 # 配置快照（mmengine 自动）</span><br><span class="line">        &#123;timestamp&#125;/                # 训练日志、vis_data（mmengine 自动）</span><br><span class="line">        eval/&#123;ckpt&#125;/                # 该权重的评测结果（见第二、三节）</span><br><span class="line">  experiments.csv                    # 全局实验台账：每次 train/test 追加一行</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>每次训练自动生成 <code>{tag}__{时间戳}</code> 子目录</strong>，因此&quot;同模型不同超参/重训&quot;互不覆盖。</li>
+<li><code>tag</code> 是人可读的变体标签（如 <code>c768</code>、<code>lr6e-5</code>、<code>ablation_c256</code>），用 <code>--tag</code> 传入，<br />
+缺省 <code>run</code>。</li>
+<li>时间戳保证唯一，无需哈希。</li>
+</ul>
+<h3 id="12-三个开关toolstrainpy"><a class="markdownIt-Anchor" href="#12-三个开关toolstrainpy"></a> 1.2 三个开关（<code>tools/train.py</code>）</h3>
+<table>
+<thead>
+<tr>
+<th>开关</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--tag XXX</code></td>
+<td>设运行标签；目录变成 <code>{exp_name}/XXX__{时间戳}/</code></td>
+</tr>
+<tr>
+<td><code>--resume-into DIR</code></td>
+<td><strong>复用某个已有运行目录</strong>（不加新时间戳），用于续训/有意覆盖该次运行</td>
+</tr>
+<tr>
+<td><code>--resume</code></td>
+<td>从 work_dir 最新 checkpoint 续训（官方原生，常与 <code>--resume-into</code> 合用）</td>
+</tr>
+<tr>
+<td><code>--work-dir DIR</code></td>
+<td>显式指定目录（不加时间戳，兼容老用法）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13-实验台账-work_dirsexperimentscsv"><a class="markdownIt-Anchor" href="#13-实验台账-work_dirsexperimentscsv"></a> 1.3 实验台账 <code>work_dirs/experiments.csv</code></h3>
+<p>每次 train / test 自动追加一行，列：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">timestamp, kind(train/test), dataset, exp_name, tag, run_dir,</span><br><span class="line">config, git_commit, lr, batch_size, accum, channels,</span><br><span class="line">max_epochs_iters, loss, metrics</span><br></pre></td></tr></table></figure>
+<ul>
+<li>train 行记录超参 + 配置 + git 提交 + 运行目录；test 行额外记录 <code>metrics</code>（指标 JSON）。</li>
+<li>查看：<code>column -s, -t work_dirs/experiments.csv | less -S</code>，或用 Excel / pandas 打开做<br />
+排序、筛选、画图，调参与消融对比一目了然。</li>
+</ul>
+<hr />
+<h2 id="二-单次测试脚本-toolssmoke_testpy"><a class="markdownIt-Anchor" href="#二-单次测试脚本-toolssmoke_testpy"></a> 二、单次测试脚本 <code>tools/smoke_test.py</code></h2>
+<p>在官方 test 流程之上，增加<strong>清晰的输出目录 + 指标 JSON + 多种可视化 + 台账登记</strong>。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/smoke_test.py CONFIG CKPT</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>指标</strong>：跑官方 <code>runner.test()</code>，把指标存为 <code>metrics.json</code>。</li>
+<li><strong>输出目录</strong>：默认 <code>{权重所在运行目录}/eval/{权重名}/</code>，与该次运行绑定，互不覆盖。</li>
+<li><strong>可视化</strong>（默认开启，<code>--no-save-vis</code> 关闭）：在 <code>eval/{ckpt}/visualizations/</code> 下生成
+<ul>
+<li><code>gt_overlay/</code>：原图 + GT 叠加</li>
+<li><code>pred_overlay/</code>：原图 + 预测叠加</li>
+<li><code>pred_mask/</code>：纯预测 mask（VOC 调色盘）</li>
+<li><code>overlay_compare/</code>：GT 叠加 | 预测叠加（左右拼接）</li>
+<li><code>mask_compare/</code>：GT mask | 预测 mask（左右拼接）</li>
+</ul>
+</li>
+<li>其它：<code>--tta</code> 测试时增强、<code>--cfg-options k=v</code> 覆盖配置。</li>
+<li>测试完成后自动往 <code>experiments.csv</code> 写一行（含指标）。</li>
+</ul>
+<hr />
+<h2 id="三-分划分测试脚本-toolssmoke_test_multiscalepy数据集无关"><a class="markdownIt-Anchor" href="#三-分划分测试脚本-toolssmoke_test_multiscalepy数据集无关"></a> 三、分划分测试脚本 <code>tools/smoke_test_multiscale.py</code>（数据集无关）</h2>
+<p>一次性在 <strong>全量(all) + 各子划分</strong> 上用同一权重评测，汇总成表 + JSON，并登记台账。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/smoke_test_multiscale.py CONFIG CKPT</span><br><span class="line">python tools/smoke_test_multiscale.py CONFIG CKPT --splits small large   <span class="comment"># 只跑指定划分</span></span><br></pre></td></tr></table></figure>
+<h3 id="31-自动发现规则关键"><a class="markdownIt-Anchor" href="#31-自动发现规则关键"></a> 3.1 自动发现规则（关键）</h3>
+<p>以 config 的 <code>test_dataloader.dataset.ann_file</code>（如 <code>ImageSets/Segmentation/test.txt</code>）<br />
+为基准，取主干 <code>test</code>，在<strong>同目录</strong>查找所有 <code>test_*.txt</code> 兄弟文件，后缀即划分名：</p>
+<table>
+<thead>
+<tr>
+<th>数据集</th>
+<th>同目录下的兄弟文件</th>
+<th>自动得到的划分</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MultiNatSmoke</td>
+<td><code>test_small/medium/large.txt</code></td>
+<td>all, small, medium, large</td>
+</tr>
+<tr>
+<td>SmokeSeg（<code>Segmentation_origin</code>）</td>
+<td><code>test_small/medium/large.txt</code></td>
+<td>all, small, medium, large</td>
+</tr>
+<tr>
+<td>SYN70K</td>
+<td><code>test_DS03/SD01/SD02.txt</code></td>
+<td>all, DS03, SD01, SD02</td>
+</tr>
+<tr>
+<td>SMOKE5K</td>
+<td>无</td>
+<td>仅 all</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>即&quot;只要数据集准备了相应划分文件就能用&quot;，<strong>不限定数据集、不写死划分名</strong>。<br />
+因此 SmokeSeg 想做分尺寸评测，只要 config 的 <code>ann_file</code> 指向<br />
+<code>ImageSets/Segmentation_origin/test.txt</code> 即可自动跑出 small/medium/large。</p>
+</blockquote>
+<h3 id="32-输出"><a class="markdownIt-Anchor" href="#32-输出"></a> 3.2 输出</h3>
+<ul>
+<li>每个划分单独评测，结果汇总到 <code>{eval_dir}/stratified_metrics.json</code> + 终端 PrettyTable。</li>
+<li>自动关闭可视化 hook，避免重复出图。</li>
+<li>末尾登记台账。</li>
+</ul>
+<blockquote>
+<p>注意：若用 batch-averaged 口径（<code>MultiNatSmokeMetric(aggregate='batch')</code>），评测须<br />
+<strong>单卡</strong>且保持 <code>test_dataloader.batch_size</code> 与对齐目标一致，否则数值会变。</p>
+</blockquote>
+<hr />
+<h2 id="四-配置文件里要写什么来配合这套机制"><a class="markdownIt-Anchor" href="#四-配置文件里要写什么来配合这套机制"></a> 四、配置文件里要写什么来配合这套机制</h2>
+<p>在你的 config 里提供以下字段即可（其余照常）：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># —— 实验管理相关 ——</span></span><br><span class="line">dataset_name = <span class="string">&#x27;MultiNatSmoke&#x27;</span>        <span class="comment"># → work_dirs 第一级；也写进台账</span></span><br><span class="line">exp_name = <span class="string">&#x27;segformer_mit_b2_align&#x27;</span>   <span class="comment"># → work_dirs 第二级（模型/实验标识）</span></span><br><span class="line"><span class="comment"># tag = &#x27;c768&#x27;                        # 可选：默认标签；一般用命令行 --tag 覆盖</span></span><br><span class="line"><span class="comment"># work_dir 可不写：会自动推断为 work_dirs/&#123;dataset_name&#125;/&#123;exp_name&#125;（作为基础目录）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># —— 分划分评测相关 ——</span></span><br><span class="line">test_dataloader = <span class="built_in">dict</span>(</span><br><span class="line">    batch_size=<span class="number">32</span>,                    <span class="comment"># 对齐 batch-averaged 口径时需要</span></span><br><span class="line">    num_workers=<span class="number">2</span>,                    <span class="comment"># batch 大时防 /dev/shm 撑爆</span></span><br><span class="line">    dataset=<span class="built_in">dict</span>(</span><br><span class="line">        <span class="built_in">type</span>=<span class="string">&#x27;SmokeDataset&#x27;</span>,</span><br><span class="line">        data_root=<span class="string">&#x27;data/MultiNatSmokeDataset_VOC&#x27;</span>,</span><br><span class="line">        ann_file=<span class="string">&#x27;ImageSets/Segmentation/test.txt&#x27;</span>,  <span class="comment"># ← 分划分发现的基准</span></span><br><span class="line">        <span class="comment"># 若数据集划分在别的子目录（如 SmokeSeg），改成对应路径：</span></span><br><span class="line">        <span class="comment"># ann_file=&#x27;ImageSets/Segmentation_origin/test.txt&#x27;,</span></span><br><span class="line">        ...))</span><br><span class="line"></span><br><span class="line"><span class="comment"># —— 评测指标 ——（二选一）</span></span><br><span class="line">test_evaluator = <span class="built_in">dict</span>(<span class="built_in">type</span>=<span class="string">&#x27;MultiNatSmokeMetric&#x27;</span>, aggregate=<span class="string">&#x27;batch&#x27;</span>, ...)  <span class="comment"># 对齐论文口径</span></span><br><span class="line"><span class="comment"># 或 test_evaluator = dict(type=&#x27;SmokeSegMetric&#x27;, ...)                      # 通用烟雾指标</span></span><br></pre></td></tr></table></figure>
+<p>要点：</p>
+<ol>
+<li><code>dataset_name</code> + <code>exp_name</code> 决定 work_dirs 的前两级；运行子目录由脚本自动加时间戳。</li>
+<li>分划分脚本只依赖 <code>test_dataloader.dataset.ann_file</code> 的命名与同目录兄弟文件，<strong>无需在<br />
+config 里列出各划分</strong>。</li>
+<li><code>data_root</code> 用于校验划分文件是否真实存在（不存在的划分自动跳过）。</li>
+</ol>
+<hr />
+<h2 id="五-对-mmsegmentation-的影响"><a class="markdownIt-Anchor" href="#五-对-mmsegmentation-的影响"></a> 五、对 MMSegmentation 的影响</h2>
+<p><strong>零侵入。</strong> 所有逻辑都在 <code>my_configs/paths.py</code> 和你自定义的 <code>tools/*.py</code> 里：脚本仍调用<br />
+官方的 <code>Runner.from_cfg(cfg)</code> → <code>runner.train()/test()</code>，我们只是在建 Runner 前算好<br />
+<code>cfg.work_dir</code>（官方也用的标准字段），并在结束后写一个外部 CSV。<strong>训练/评测数值与直接用<br />
+官方脚本逐字节一致</strong>，唯一区别是输出落点更规整 + 多一份台账。</p>
+<hr />
+<h2 id="六-旧结果迁移情况"><a class="markdownIt-Anchor" href="#六-旧结果迁移情况"></a> 六、旧结果迁移情况</h2>
+<p>为统一风格，已把历史松散结果归档为 <code>legacy__{原时间戳}/</code> 运行目录（内容完整保留）：</p>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>归档为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>work_dirs/MultiNatSmoke/segformer_mit_b2_align/</code></td>
+<td><code>legacy_c256__20260531_164823/</code></td>
+</tr>
+<tr>
+<td><code>work_dirs/SMOKE5K/segformer_mit_b3_batch=6/</code></td>
+<td><code>legacy__20260516_224135/</code></td>
+</tr>
+<tr>
+<td><code>work_dirs/SMOKE5K/segformer_mit_b3_batch=12/</code></td>
+<td><code>legacy__20260521_132042/</code></td>
+</tr>
+<tr>
+<td><code>work_dirs/SmokeSeg/segformer_mit_b3/</code></td>
+<td><code>legacy__20260517_102843/</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>注：旧结果是在引入台账之前产生的，因此 <code>experiments.csv</code> 不含它们；新跑的实验会自动登记。</p>
+</blockquote>
+<hr />
+<h2 id="七-常用命令速查"><a class="markdownIt-Anchor" href="#七-常用命令速查"></a> 七、常用命令速查</h2>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 训练（自动 run__时间戳）</span></span><br><span class="line">python tools/train.py CONFIG</span><br><span class="line"></span><br><span class="line"><span class="comment"># 调参/消融：用 --tag 命名变体（互不覆盖）</span></span><br><span class="line">python tools/train.py CONFIG --tag c768</span><br><span class="line">python tools/train.py CONFIG --tag c256 --cfg-options model.decode_head.channels=256</span><br><span class="line"></span><br><span class="line"><span class="comment"># 续训/覆盖某次已有运行</span></span><br><span class="line">python tools/train.py CONFIG --resume-into work_dirs/.../&#123;exp&#125;/&#123;tag&#125;__&#123;ts&#125; --resume</span><br><span class="line"></span><br><span class="line"><span class="comment"># 单次测试（指标 + 可视化）</span></span><br><span class="line">python tools/smoke_test.py CONFIG work_dirs/.../&#123;tag&#125;__&#123;ts&#125;/best_*.pth</span><br><span class="line"></span><br><span class="line"><span class="comment"># 分划分测试（自动发现 small/medium/large 或子集）</span></span><br><span class="line">python tools/smoke_test_multiscale.py CONFIG work_dirs/.../&#123;tag&#125;__&#123;ts&#125;/best_*.pth</span><br><span class="line"></span><br><span class="line"><span class="comment"># 看台账</span></span><br><span class="line">column -s, -t work_dirs/experiments.csv | less -S</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>深度学习</category>
       </categories>
   </entry>
   <entry>
@@ -798,198 +999,6 @@
 ]]></content>
       <categories>
         <category>科研方法</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>实验管理与评测脚本说明（mmseg 自定义工具链）</title>
-    <url>/2026/06/01/%E5%AE%9E%E9%AA%8C%E7%AE%A1%E7%90%86%E4%B8%8E%E8%AF%84%E6%B5%8B%E8%84%9A%E6%9C%AC%E8%AF%B4%E6%98%8E%EF%BC%88mmseg-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B7%A5%E5%85%B7%E9%93%BE%EF%BC%89/</url>
-    <content><![CDATA[<h1 id="实验管理与评测脚本说明mmseg-自定义工具链"><a class="markdownIt-Anchor" href="#实验管理与评测脚本说明mmseg-自定义工具链"></a> 实验管理与评测脚本说明（mmseg 自定义工具链）</h1>
-<blockquote>
-<p>本文介绍在本项目（基于 MMSegmentation 1.x）里自建的一套<strong>实验管理 + 评测</strong>工具，<br />
-用于解决&quot;多次跑同一模型不同超参会互相覆盖&quot;“结果难以横向对比”“评测要分尺寸/分子集”<br />
-等问题。全部改动只在 <code>my_configs/paths.py</code> 与 <code>tools/*.py</code>，<strong>不触碰 mmseg 内核</strong>，<br />
-训练/评测的数值与官方 <code>tools/train.py</code> / <code>tools/test.py</code> 完全一致。</p>
-</blockquote>
-<p>涉及文件：</p>
-<ul>
-<li><code>my_configs/paths.py</code>：路径与台账核心逻辑（<code>tools/experiment_paths.py</code> 转出供脚本用）</li>
-<li><code>tools/train.py</code>：训练（带运行隔离 + 台账）</li>
-<li><code>tools/smoke_test.py</code>：单次测试（指标 + 可视化 + 台账）</li>
-<li><code>tools/smoke_test_multiscale.py</code>：分划分一键测试（自动发现，数据集无关）</li>
-</ul>
-<span id="more"></span>
-<hr />
-<h2 id="一-实验管理机制时间戳运行目录-csv-台账"><a class="markdownIt-Anchor" href="#一-实验管理机制时间戳运行目录-csv-台账"></a> 一、实验管理机制：时间戳运行目录 + CSV 台账</h2>
-<h3 id="11-目录规则"><a class="markdownIt-Anchor" href="#11-目录规则"></a> 1.1 目录规则</h3>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">work_dirs/</span><br><span class="line">  &#123;dataset&#125;/                         # 数据集，对应 cfg.dataset_name</span><br><span class="line">    &#123;exp_name&#125;/                      # 模型/实验标识，对应 cfg.exp_name</span><br><span class="line">      &#123;tag&#125;__&#123;timestamp&#125;/           # 单次运行：永不覆盖</span><br><span class="line">        *.pth                       # 权重（CheckpointHook）</span><br><span class="line">        &#123;config&#125;.py                 # 配置快照（mmengine 自动）</span><br><span class="line">        &#123;timestamp&#125;/                # 训练日志、vis_data（mmengine 自动）</span><br><span class="line">        eval/&#123;ckpt&#125;/                # 该权重的评测结果（见第二、三节）</span><br><span class="line">  experiments.csv                    # 全局实验台账：每次 train/test 追加一行</span><br></pre></td></tr></table></figure>
-<ul>
-<li><strong>每次训练自动生成 <code>{tag}__{时间戳}</code> 子目录</strong>，因此&quot;同模型不同超参/重训&quot;互不覆盖。</li>
-<li><code>tag</code> 是人可读的变体标签（如 <code>c768</code>、<code>lr6e-5</code>、<code>ablation_c256</code>），用 <code>--tag</code> 传入，<br />
-缺省 <code>run</code>。</li>
-<li>时间戳保证唯一，无需哈希。</li>
-</ul>
-<h3 id="12-三个开关toolstrainpy"><a class="markdownIt-Anchor" href="#12-三个开关toolstrainpy"></a> 1.2 三个开关（<code>tools/train.py</code>）</h3>
-<table>
-<thead>
-<tr>
-<th>开关</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>--tag XXX</code></td>
-<td>设运行标签；目录变成 <code>{exp_name}/XXX__{时间戳}/</code></td>
-</tr>
-<tr>
-<td><code>--resume-into DIR</code></td>
-<td><strong>复用某个已有运行目录</strong>（不加新时间戳），用于续训/有意覆盖该次运行</td>
-</tr>
-<tr>
-<td><code>--resume</code></td>
-<td>从 work_dir 最新 checkpoint 续训（官方原生，常与 <code>--resume-into</code> 合用）</td>
-</tr>
-<tr>
-<td><code>--work-dir DIR</code></td>
-<td>显式指定目录（不加时间戳，兼容老用法）</td>
-</tr>
-</tbody>
-</table>
-<h3 id="13-实验台账-work_dirsexperimentscsv"><a class="markdownIt-Anchor" href="#13-实验台账-work_dirsexperimentscsv"></a> 1.3 实验台账 <code>work_dirs/experiments.csv</code></h3>
-<p>每次 train / test 自动追加一行，列：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">timestamp, kind(train/test), dataset, exp_name, tag, run_dir,</span><br><span class="line">config, git_commit, lr, batch_size, accum, channels,</span><br><span class="line">max_epochs_iters, loss, metrics</span><br></pre></td></tr></table></figure>
-<ul>
-<li>train 行记录超参 + 配置 + git 提交 + 运行目录；test 行额外记录 <code>metrics</code>（指标 JSON）。</li>
-<li>查看：<code>column -s, -t work_dirs/experiments.csv | less -S</code>，或用 Excel / pandas 打开做<br />
-排序、筛选、画图，调参与消融对比一目了然。</li>
-</ul>
-<hr />
-<h2 id="二-单次测试脚本-toolssmoke_testpy"><a class="markdownIt-Anchor" href="#二-单次测试脚本-toolssmoke_testpy"></a> 二、单次测试脚本 <code>tools/smoke_test.py</code></h2>
-<p>在官方 test 流程之上，增加<strong>清晰的输出目录 + 指标 JSON + 多种可视化 + 台账登记</strong>。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/smoke_test.py CONFIG CKPT</span><br></pre></td></tr></table></figure>
-<ul>
-<li><strong>指标</strong>：跑官方 <code>runner.test()</code>，把指标存为 <code>metrics.json</code>。</li>
-<li><strong>输出目录</strong>：默认 <code>{权重所在运行目录}/eval/{权重名}/</code>，与该次运行绑定，互不覆盖。</li>
-<li><strong>可视化</strong>（默认开启，<code>--no-save-vis</code> 关闭）：在 <code>eval/{ckpt}/visualizations/</code> 下生成
-<ul>
-<li><code>gt_overlay/</code>：原图 + GT 叠加</li>
-<li><code>pred_overlay/</code>：原图 + 预测叠加</li>
-<li><code>pred_mask/</code>：纯预测 mask（VOC 调色盘）</li>
-<li><code>overlay_compare/</code>：GT 叠加 | 预测叠加（左右拼接）</li>
-<li><code>mask_compare/</code>：GT mask | 预测 mask（左右拼接）</li>
-</ul>
-</li>
-<li>其它：<code>--tta</code> 测试时增强、<code>--cfg-options k=v</code> 覆盖配置。</li>
-<li>测试完成后自动往 <code>experiments.csv</code> 写一行（含指标）。</li>
-</ul>
-<hr />
-<h2 id="三-分划分测试脚本-toolssmoke_test_multiscalepy数据集无关"><a class="markdownIt-Anchor" href="#三-分划分测试脚本-toolssmoke_test_multiscalepy数据集无关"></a> 三、分划分测试脚本 <code>tools/smoke_test_multiscale.py</code>（数据集无关）</h2>
-<p>一次性在 <strong>全量(all) + 各子划分</strong> 上用同一权重评测，汇总成表 + JSON，并登记台账。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/smoke_test_multiscale.py CONFIG CKPT</span><br><span class="line">python tools/smoke_test_multiscale.py CONFIG CKPT --splits small large   <span class="comment"># 只跑指定划分</span></span><br></pre></td></tr></table></figure>
-<h3 id="31-自动发现规则关键"><a class="markdownIt-Anchor" href="#31-自动发现规则关键"></a> 3.1 自动发现规则（关键）</h3>
-<p>以 config 的 <code>test_dataloader.dataset.ann_file</code>（如 <code>ImageSets/Segmentation/test.txt</code>）<br />
-为基准，取主干 <code>test</code>，在<strong>同目录</strong>查找所有 <code>test_*.txt</code> 兄弟文件，后缀即划分名：</p>
-<table>
-<thead>
-<tr>
-<th>数据集</th>
-<th>同目录下的兄弟文件</th>
-<th>自动得到的划分</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>MultiNatSmoke</td>
-<td><code>test_small/medium/large.txt</code></td>
-<td>all, small, medium, large</td>
-</tr>
-<tr>
-<td>SmokeSeg（<code>Segmentation_origin</code>）</td>
-<td><code>test_small/medium/large.txt</code></td>
-<td>all, small, medium, large</td>
-</tr>
-<tr>
-<td>SYN70K</td>
-<td><code>test_DS03/SD01/SD02.txt</code></td>
-<td>all, DS03, SD01, SD02</td>
-</tr>
-<tr>
-<td>SMOKE5K</td>
-<td>无</td>
-<td>仅 all</td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<p>即&quot;只要数据集准备了相应划分文件就能用&quot;，<strong>不限定数据集、不写死划分名</strong>。<br />
-因此 SmokeSeg 想做分尺寸评测，只要 config 的 <code>ann_file</code> 指向<br />
-<code>ImageSets/Segmentation_origin/test.txt</code> 即可自动跑出 small/medium/large。</p>
-</blockquote>
-<h3 id="32-输出"><a class="markdownIt-Anchor" href="#32-输出"></a> 3.2 输出</h3>
-<ul>
-<li>每个划分单独评测，结果汇总到 <code>{eval_dir}/stratified_metrics.json</code> + 终端 PrettyTable。</li>
-<li>自动关闭可视化 hook，避免重复出图。</li>
-<li>末尾登记台账。</li>
-</ul>
-<blockquote>
-<p>注意：若用 batch-averaged 口径（<code>MultiNatSmokeMetric(aggregate='batch')</code>），评测须<br />
-<strong>单卡</strong>且保持 <code>test_dataloader.batch_size</code> 与对齐目标一致，否则数值会变。</p>
-</blockquote>
-<hr />
-<h2 id="四-配置文件里要写什么来配合这套机制"><a class="markdownIt-Anchor" href="#四-配置文件里要写什么来配合这套机制"></a> 四、配置文件里要写什么来配合这套机制</h2>
-<p>在你的 config 里提供以下字段即可（其余照常）：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># —— 实验管理相关 ——</span></span><br><span class="line">dataset_name = <span class="string">&#x27;MultiNatSmoke&#x27;</span>        <span class="comment"># → work_dirs 第一级；也写进台账</span></span><br><span class="line">exp_name = <span class="string">&#x27;segformer_mit_b2_align&#x27;</span>   <span class="comment"># → work_dirs 第二级（模型/实验标识）</span></span><br><span class="line"><span class="comment"># tag = &#x27;c768&#x27;                        # 可选：默认标签；一般用命令行 --tag 覆盖</span></span><br><span class="line"><span class="comment"># work_dir 可不写：会自动推断为 work_dirs/&#123;dataset_name&#125;/&#123;exp_name&#125;（作为基础目录）</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># —— 分划分评测相关 ——</span></span><br><span class="line">test_dataloader = <span class="built_in">dict</span>(</span><br><span class="line">    batch_size=<span class="number">32</span>,                    <span class="comment"># 对齐 batch-averaged 口径时需要</span></span><br><span class="line">    num_workers=<span class="number">2</span>,                    <span class="comment"># batch 大时防 /dev/shm 撑爆</span></span><br><span class="line">    dataset=<span class="built_in">dict</span>(</span><br><span class="line">        <span class="built_in">type</span>=<span class="string">&#x27;SmokeDataset&#x27;</span>,</span><br><span class="line">        data_root=<span class="string">&#x27;data/MultiNatSmokeDataset_VOC&#x27;</span>,</span><br><span class="line">        ann_file=<span class="string">&#x27;ImageSets/Segmentation/test.txt&#x27;</span>,  <span class="comment"># ← 分划分发现的基准</span></span><br><span class="line">        <span class="comment"># 若数据集划分在别的子目录（如 SmokeSeg），改成对应路径：</span></span><br><span class="line">        <span class="comment"># ann_file=&#x27;ImageSets/Segmentation_origin/test.txt&#x27;,</span></span><br><span class="line">        ...))</span><br><span class="line"></span><br><span class="line"><span class="comment"># —— 评测指标 ——（二选一）</span></span><br><span class="line">test_evaluator = <span class="built_in">dict</span>(<span class="built_in">type</span>=<span class="string">&#x27;MultiNatSmokeMetric&#x27;</span>, aggregate=<span class="string">&#x27;batch&#x27;</span>, ...)  <span class="comment"># 对齐论文口径</span></span><br><span class="line"><span class="comment"># 或 test_evaluator = dict(type=&#x27;SmokeSegMetric&#x27;, ...)                      # 通用烟雾指标</span></span><br></pre></td></tr></table></figure>
-<p>要点：</p>
-<ol>
-<li><code>dataset_name</code> + <code>exp_name</code> 决定 work_dirs 的前两级；运行子目录由脚本自动加时间戳。</li>
-<li>分划分脚本只依赖 <code>test_dataloader.dataset.ann_file</code> 的命名与同目录兄弟文件，<strong>无需在<br />
-config 里列出各划分</strong>。</li>
-<li><code>data_root</code> 用于校验划分文件是否真实存在（不存在的划分自动跳过）。</li>
-</ol>
-<hr />
-<h2 id="五-对-mmsegmentation-的影响"><a class="markdownIt-Anchor" href="#五-对-mmsegmentation-的影响"></a> 五、对 MMSegmentation 的影响</h2>
-<p><strong>零侵入。</strong> 所有逻辑都在 <code>my_configs/paths.py</code> 和你自定义的 <code>tools/*.py</code> 里：脚本仍调用<br />
-官方的 <code>Runner.from_cfg(cfg)</code> → <code>runner.train()/test()</code>，我们只是在建 Runner 前算好<br />
-<code>cfg.work_dir</code>（官方也用的标准字段），并在结束后写一个外部 CSV。<strong>训练/评测数值与直接用<br />
-官方脚本逐字节一致</strong>，唯一区别是输出落点更规整 + 多一份台账。</p>
-<hr />
-<h2 id="六-旧结果迁移情况"><a class="markdownIt-Anchor" href="#六-旧结果迁移情况"></a> 六、旧结果迁移情况</h2>
-<p>为统一风格，已把历史松散结果归档为 <code>legacy__{原时间戳}/</code> 运行目录（内容完整保留）：</p>
-<table>
-<thead>
-<tr>
-<th>路径</th>
-<th>归档为</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>work_dirs/MultiNatSmoke/segformer_mit_b2_align/</code></td>
-<td><code>legacy_c256__20260531_164823/</code></td>
-</tr>
-<tr>
-<td><code>work_dirs/SMOKE5K/segformer_mit_b3_batch=6/</code></td>
-<td><code>legacy__20260516_224135/</code></td>
-</tr>
-<tr>
-<td><code>work_dirs/SMOKE5K/segformer_mit_b3_batch=12/</code></td>
-<td><code>legacy__20260521_132042/</code></td>
-</tr>
-<tr>
-<td><code>work_dirs/SmokeSeg/segformer_mit_b3/</code></td>
-<td><code>legacy__20260517_102843/</code></td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<p>注：旧结果是在引入台账之前产生的，因此 <code>experiments.csv</code> 不含它们；新跑的实验会自动登记。</p>
-</blockquote>
-<hr />
-<h2 id="七-常用命令速查"><a class="markdownIt-Anchor" href="#七-常用命令速查"></a> 七、常用命令速查</h2>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 训练（自动 run__时间戳）</span></span><br><span class="line">python tools/train.py CONFIG</span><br><span class="line"></span><br><span class="line"><span class="comment"># 调参/消融：用 --tag 命名变体（互不覆盖）</span></span><br><span class="line">python tools/train.py CONFIG --tag c768</span><br><span class="line">python tools/train.py CONFIG --tag c256 --cfg-options model.decode_head.channels=256</span><br><span class="line"></span><br><span class="line"><span class="comment"># 续训/覆盖某次已有运行</span></span><br><span class="line">python tools/train.py CONFIG --resume-into work_dirs/.../&#123;exp&#125;/&#123;tag&#125;__&#123;ts&#125; --resume</span><br><span class="line"></span><br><span class="line"><span class="comment"># 单次测试（指标 + 可视化）</span></span><br><span class="line">python tools/smoke_test.py CONFIG work_dirs/.../&#123;tag&#125;__&#123;ts&#125;/best_*.pth</span><br><span class="line"></span><br><span class="line"><span class="comment"># 分划分测试（自动发现 small/medium/large 或子集）</span></span><br><span class="line">python tools/smoke_test_multiscale.py CONFIG work_dirs/.../&#123;tag&#125;__&#123;ts&#125;/best_*.pth</span><br><span class="line"></span><br><span class="line"><span class="comment"># 看台账</span></span><br><span class="line">column -s, -t work_dirs/experiments.csv | less -S</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>深度学习</category>
       </categories>
   </entry>
   <entry>
