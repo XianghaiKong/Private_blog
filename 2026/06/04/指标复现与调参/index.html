@@ -28,7 +28,7 @@
 <meta property="og:description" content="最近花了将近一周的时间，把一篇 WACV 2026 论文（AusSmoke meets MultiNatSmoke）中基于 HuggingFace 的 SegFormer 基线，完整迁移到了 MMSegmentation 1.x 框架上，并试图逐项对齐其训练与评估口径。这个过程踩了不少坑——论文和代码不一致、框架默认值陷阱、评测口径分歧……这里把全流程记录下来，方便日后回顾，也希望能帮到有类似需求">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-06-04T07:30:00.000Z">
-<meta property="article:modified_time" content="2026-06-04T09:09:10.090Z">
+<meta property="article:modified_time" content="2026-06-09T13:28:43.203Z">
 <meta property="article:author" content="KK">
 <meta property="article:tag" content="工程工具">
 <meta property="article:tag" content="深度学习">
@@ -169,7 +169,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#tldr%E7%BB%93%E8%AE%BA%E5%85%88%E8%A1%8C"><span class="nav-number">1.</span> <span class="nav-text"> TL;DR（结论先行）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E8%83%8C%E6%99%AF"><span class="nav-number">2.</span> <span class="nav-text"> 1. 背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E8%AE%BA%E6%96%87-vs-%E5%AE%98%E6%96%B9%E4%BB%A3%E7%A0%81%E5%85%B3%E9%94%AE%E4%B8%8D%E4%B8%80%E8%87%B4"><span class="nav-number">3.</span> <span class="nav-text"> 2. 论文 vs 官方代码：关键不一致</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E8%AE%AD%E7%BB%83%E7%AD%96%E7%95%A5%E5%AF%B9%E9%BD%90%E9%80%90%E9%A1%B9"><span class="nav-number">4.</span> <span class="nav-text"> 3. 训练策略对齐（逐项）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87%E8%AE%BA%E6%96%87%E5%85%AC%E5%BC%8F-vs-%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="nav-number">5.</span> <span class="nav-text"> 4. 评价指标：论文公式 vs 代码实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E6%9C%80%E5%A4%A7%E7%9A%84%E5%9D%91mmseg-%E8%A7%A3%E7%A0%81%E5%99%A8%E9%80%9A%E9%81%93-256-vs-%E5%AE%98%E6%96%B9-768"><span class="nav-number">6.</span> <span class="nav-text"> 5. 最大的坑：mmseg 解码器通道 256 vs 官方 768</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E9%A2%84%E8%AE%AD%E7%BB%83%E6%9D%83%E9%87%8D%E5%90%8C%E6%BA%90%E7%AD%89%E4%BB%B7%E4%B8%8D%E6%98%AF%E8%AF%AF%E5%B7%AE%E6%9D%A5%E6%BA%90"><span class="nav-number">7.</span> <span class="nav-text"> 6. 预训练权重：同源等价，不是误差来源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-%E9%AA%8C%E8%AF%81%E9%9B%86%E4%B8%8E%E9%80%89%E6%A8%A1%E5%9E%8Bval-test-batch-averaged"><span class="nav-number">8.</span> <span class="nav-text"> 7. 验证集与选模型：val &#x3D; test + batch-averaged</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-%E5%8D%95%E5%8D%A1%E5%A4%8D%E7%8E%B0%E7%9A%84%E4%B8%A4%E4%B8%AA%E5%B7%A5%E7%A8%8B%E9%97%AE%E9%A2%98%E7%AE%80%E8%AE%B0"><span class="nav-number">9.</span> <span class="nav-text"> 8. 单卡复现的两个工程问题（简记）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#81-%E8%AE%AD%E7%BB%83%E5%8D%B3%E6%95%B4%E6%9C%BA%E9%BB%91%E5%B1%8F-%E6%8E%89%E6%80%BB%E7%BA%BF"><span class="nav-number">9.1.</span> <span class="nav-text"> 8.1 训练即整机黑屏 &#x2F; 掉总线</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#82-%E6%B5%8B%E8%AF%95-dataloader-%E6%8A%A5-bus-error-no-space-left"><span class="nav-number">9.2.</span> <span class="nav-text"> 8.2 测试 DataLoader 报 Bus error &#x2F; No space left</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-%E5%A4%8D%E7%8E%B0%E5%AE%9E%E6%B5%8B%E7%BB%93%E6%9E%9C%E4%B8%8E%E8%BF%AD%E4%BB%A3"><span class="nav-number">10.</span> <span class="nav-text"> 9. 复现实测结果与迭代</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#91-%E5%88%86%E8%BD%AE%E6%AC%A1%E5%AF%B9%E6%AF%94batch-averaged-%E5%8F%A3%E5%BE%84iou"><span class="nav-number">10.1.</span> <span class="nav-text"> 9.1 分轮次对比（batch-averaged 口径，IoU）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#92-%E4%B8%89%E8%BD%AE%E8%BF%AD%E4%BB%A3%E6%80%BB%E7%BB%93"><span class="nav-number">10.2.</span> <span class="nav-text"> 9.2 三轮迭代总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#93-%E7%AC%AC%E4%B8%89%E8%BD%AE%E4%BF%AE%E6%AD%A3%E5%B7%B2%E5%AE%8C%E6%88%90"><span class="nav-number">10.3.</span> <span class="nav-text"> 9.3 第三轮修正（已完成）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-%E5%A4%8D%E7%8E%B0%E5%91%BD%E4%BB%A4"><span class="nav-number">11.</span> <span class="nav-text"> 10. 复现命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-%E8%83%BD%E5%90%A6%E4%B8%8E%E8%AE%BA%E6%96%87%E7%9B%B4%E6%8E%A5%E5%AF%B9%E6%AF%94"><span class="nav-number">12.</span> <span class="nav-text"> 11. 能否与论文直接对比？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84-a%E5%AE%9E%E9%AA%8C%E7%8E%AF%E5%A2%83"><span class="nav-number">13.</span> <span class="nav-text"> 附 A：实验环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84-b%E5%A4%8D%E7%8E%B0-segformer-on-mmseg-%E7%9A%84%E9%81%BF%E5%9D%91%E6%B8%85%E5%8D%95"><span class="nav-number">14.</span> <span class="nav-text"> 附 B：复现 SegFormer-on-mmseg 的避坑清单</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86psl-prototype-based-scatter-learning-%E5%A4%8D%E7%8E%B0%E5%AF%B9%E9%BD%90"><span class="nav-number">15.</span> <span class="nav-text"> 第二部分：PSL (Prototype-based Scatter Learning) 复现对齐</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#tldr"><span class="nav-number">15.1.</span> <span class="nav-text"> TL;DR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%96%B0%E5%A2%9E%E4%B8%8E%E4%BF%AE%E6%94%B9%E7%9A%84%E6%96%87%E4%BB%B6%E6%B8%85%E5%8D%95"><span class="nav-number">15.2.</span> <span class="nav-text"> 1. 新增与修改的文件清单</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B0%E5%A2%9E%E6%96%87%E4%BB%B6"><span class="nav-number">15.2.1.</span> <span class="nav-text"> 新增文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E6%96%87%E4%BB%B6"><span class="nav-number">15.2.2.</span> <span class="nav-text"> 修改文件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-api-%E9%80%82%E9%85%8D%E8%AF%A6%E8%A7%A30x-1x"><span class="nav-number">15.3.</span> <span class="nav-text"> 2. API 适配详解（0.x → 1.x）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#21-%E6%B3%A8%E5%86%8C%E6%9C%BA%E5%88%B6"><span class="nav-number">15.3.1.</span> <span class="nav-text"> 2.1 注册机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#22-%E5%9F%BA%E7%B1%BB%E4%B8%8E%E8%AE%AD%E7%BB%83%E6%8E%A8%E7%90%86%E6%8E%A5%E5%8F%A3"><span class="nav-number">15.3.2.</span> <span class="nav-text"> 2.2 基类与训练&#x2F;推理接口</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#23-%E5%85%B6%E4%BB%96%E4%BE%9D%E8%B5%96%E6%9B%BF%E6%8D%A2"><span class="nav-number">15.3.3.</span> <span class="nav-text"> 2.3 其他依赖替换</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#24-%E6%97%A0%E9%9C%80%E8%BF%81%E7%A7%BB%E7%9A%84%E7%BB%84%E4%BB%B6"><span class="nav-number">15.3.4.</span> <span class="nav-text"> 2.4 无需迁移的组件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%A8%A1%E5%9E%8B%E6%9E%B6%E6%9E%84%E5%AF%B9%E9%BD%90"><span class="nav-number">15.4.</span> <span class="nav-text"> 3. 模型架构对齐</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#31-%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="nav-number">15.4.1.</span> <span class="nav-text"> 3.1 总体架构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#32-bes-loss-%E7%AE%97%E6%B3%95"><span class="nav-number">15.4.2.</span> <span class="nav-text"> 3.2 BES Loss 算法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#33-puo-prototype-uncorrelated-optimisation"><span class="nav-number">15.4.3.</span> <span class="nav-text"> 3.3 PUO (Prototype Uncorrelated Optimisation)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#34-%E5%85%B3%E9%94%AE%E8%B6%85%E5%8F%82"><span class="nav-number">15.4.4.</span> <span class="nav-text"> 3.4 关键超参</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E8%AE%AD%E7%BB%83%E9%85%8D%E6%96%B9%E5%AF%B9%E9%BD%90"><span class="nav-number">15.5.</span> <span class="nav-text"> 4. 训练配方对齐</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#41-%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0%E5%85%B3%E9%94%AE%E4%BF%AE%E5%A4%8D"><span class="nav-number">15.5.1.</span> <span class="nav-text"> 4.1 损失函数（关键修复）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#42-%E6%95%B0%E6%8D%AE%E5%A2%9E%E5%BC%BA%E5%85%B3%E9%94%AE%E4%BF%AE%E5%A4%8D"><span class="nav-number">15.5.2.</span> <span class="nav-text"> 4.2 数据增强（关键修复）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#43-%E6%95%B0%E6%8D%AE%E5%88%92%E5%88%86%E5%B7%B2%E4%BF%AE%E5%A4%8D"><span class="nav-number">15.5.3.</span> <span class="nav-text"> 4.3 数据划分（已修复）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#44-%E4%BC%98%E5%8C%96%E5%99%A8%E5%92%8C%E5%AD%A6%E4%B9%A0%E7%8E%87%E6%97%A0%E9%9C%80%E4%BF%AE%E6%94%B9%E5%B7%B2%E5%AF%B9%E9%BD%90"><span class="nav-number">15.5.4.</span> <span class="nav-text"> 4.4 优化器和学习率（无需修改，已对齐）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#45-%E8%AF%84%E6%B5%8B%E6%8C%87%E6%A0%87"><span class="nav-number">15.5.5.</span> <span class="nav-text"> 4.5 评测指标</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E5%8F%AF%E6%8E%A5%E5%8F%97%E7%9A%84%E5%89%A9%E4%BD%99%E5%B7%AE%E5%BC%82"><span class="nav-number">15.6.</span> <span class="nav-text"> 5. 可接受的剩余差异</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E9%AA%8C%E8%AF%81%E7%BB%93%E6%9E%9C"><span class="nav-number">15.7.</span> <span class="nav-text"> 6. 验证结果</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#61-%E5%AF%BC%E5%85%A5%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%AA%8C%E8%AF%81"><span class="nav-number">15.7.1.</span> <span class="nav-text"> 6.1 导入与构建验证</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#62-%E5%B0%8F%E8%A7%84%E6%A8%A1%E8%AE%AD%E7%BB%83%E9%AA%8C%E8%AF%8150-iterations"><span class="nav-number">15.7.2.</span> <span class="nav-text"> 6.2 小规模训练验证（50 iterations）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-%E5%AE%8C%E6%95%B4%E8%AE%AD%E7%BB%83%E5%91%BD%E4%BB%A4"><span class="nav-number">15.8.</span> <span class="nav-text"> 7. 完整训练命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-%E5%B0%8F%E7%BB%93"><span class="nav-number">15.9.</span> <span class="nav-text"> 8. 小结</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#tldr%E7%BB%93%E8%AE%BA%E5%85%88%E8%A1%8C"><span class="nav-number">1.</span> <span class="nav-text"> TL;DR（结论先行）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E8%83%8C%E6%99%AF"><span class="nav-number">2.</span> <span class="nav-text"> 1. 背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E8%AE%BA%E6%96%87-vs-%E5%AE%98%E6%96%B9%E4%BB%A3%E7%A0%81%E5%85%B3%E9%94%AE%E4%B8%8D%E4%B8%80%E8%87%B4"><span class="nav-number">3.</span> <span class="nav-text"> 2. 论文 vs 官方代码：关键不一致</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E8%AE%AD%E7%BB%83%E7%AD%96%E7%95%A5%E5%AF%B9%E9%BD%90%E9%80%90%E9%A1%B9"><span class="nav-number">4.</span> <span class="nav-text"> 3. 训练策略对齐（逐项）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87%E8%AE%BA%E6%96%87%E5%85%AC%E5%BC%8F-vs-%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="nav-number">5.</span> <span class="nav-text"> 4. 评价指标：论文公式 vs 代码实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E6%9C%80%E5%A4%A7%E7%9A%84%E5%9D%91mmseg-%E8%A7%A3%E7%A0%81%E5%99%A8%E9%80%9A%E9%81%93-256-vs-%E5%AE%98%E6%96%B9-768"><span class="nav-number">6.</span> <span class="nav-text"> 5. 最大的坑：mmseg 解码器通道 256 vs 官方 768</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E9%A2%84%E8%AE%AD%E7%BB%83%E6%9D%83%E9%87%8D%E5%90%8C%E6%BA%90%E7%AD%89%E4%BB%B7%E4%B8%8D%E6%98%AF%E8%AF%AF%E5%B7%AE%E6%9D%A5%E6%BA%90"><span class="nav-number">7.</span> <span class="nav-text"> 6. 预训练权重：同源等价，不是误差来源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-%E9%AA%8C%E8%AF%81%E9%9B%86%E4%B8%8E%E9%80%89%E6%A8%A1%E5%9E%8Bval-test-batch-averaged"><span class="nav-number">8.</span> <span class="nav-text"> 7. 验证集与选模型：val &#x3D; test + batch-averaged</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-%E5%8D%95%E5%8D%A1%E5%A4%8D%E7%8E%B0%E7%9A%84%E4%B8%A4%E4%B8%AA%E5%B7%A5%E7%A8%8B%E9%97%AE%E9%A2%98%E7%AE%80%E8%AE%B0"><span class="nav-number">9.</span> <span class="nav-text"> 8. 单卡复现的两个工程问题（简记）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#81-%E8%AE%AD%E7%BB%83%E5%8D%B3%E6%95%B4%E6%9C%BA%E9%BB%91%E5%B1%8F-%E6%8E%89%E6%80%BB%E7%BA%BF"><span class="nav-number">9.1.</span> <span class="nav-text"> 8.1 训练即整机黑屏 &#x2F; 掉总线</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#82-%E6%B5%8B%E8%AF%95-dataloader-%E6%8A%A5-bus-error-no-space-left"><span class="nav-number">9.2.</span> <span class="nav-text"> 8.2 测试 DataLoader 报 Bus error &#x2F; No space left</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-%E5%A4%8D%E7%8E%B0%E5%AE%9E%E6%B5%8B%E7%BB%93%E6%9E%9C%E4%B8%8E%E8%BF%AD%E4%BB%A3"><span class="nav-number">10.</span> <span class="nav-text"> 9. 复现实测结果与迭代</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#91-%E5%88%86%E8%BD%AE%E6%AC%A1%E5%AF%B9%E6%AF%94batch-averaged-%E5%8F%A3%E5%BE%84iou"><span class="nav-number">10.1.</span> <span class="nav-text"> 9.1 分轮次对比（batch-averaged 口径，IoU）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#92-%E4%B8%89%E8%BD%AE%E8%BF%AD%E4%BB%A3%E6%80%BB%E7%BB%93"><span class="nav-number">10.2.</span> <span class="nav-text"> 9.2 三轮迭代总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#93-%E7%AC%AC%E4%B8%89%E8%BD%AE%E4%BF%AE%E6%AD%A3%E5%B7%B2%E5%AE%8C%E6%88%90"><span class="nav-number">10.3.</span> <span class="nav-text"> 9.3 第三轮修正（已完成）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-%E5%A4%8D%E7%8E%B0%E5%91%BD%E4%BB%A4"><span class="nav-number">11.</span> <span class="nav-text"> 10. 复现命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-%E8%83%BD%E5%90%A6%E4%B8%8E%E8%AE%BA%E6%96%87%E7%9B%B4%E6%8E%A5%E5%AF%B9%E6%AF%94"><span class="nav-number">12.</span> <span class="nav-text"> 11. 能否与论文直接对比？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84-a%E5%AE%9E%E9%AA%8C%E7%8E%AF%E5%A2%83"><span class="nav-number">13.</span> <span class="nav-text"> 附 A：实验环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84-b%E5%A4%8D%E7%8E%B0-segformer-on-mmseg-%E7%9A%84%E9%81%BF%E5%9D%91%E6%B8%85%E5%8D%95"><span class="nav-number">14.</span> <span class="nav-text"> 附 B：复现 SegFormer-on-mmseg 的避坑清单</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86psl-prototype-based-scatter-learning-%E5%A4%8D%E7%8E%B0%E5%AF%B9%E9%BD%90"><span class="nav-number">15.</span> <span class="nav-text"> 第二部分：PSL (Prototype-based Scatter Learning) 复现对齐</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#tldr"><span class="nav-number">15.1.</span> <span class="nav-text"> TL;DR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%96%B0%E5%A2%9E%E4%B8%8E%E4%BF%AE%E6%94%B9%E7%9A%84%E6%96%87%E4%BB%B6%E6%B8%85%E5%8D%95"><span class="nav-number">15.2.</span> <span class="nav-text"> 1. 新增与修改的文件清单</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B0%E5%A2%9E%E6%96%87%E4%BB%B6"><span class="nav-number">15.2.1.</span> <span class="nav-text"> 新增文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E6%96%87%E4%BB%B6"><span class="nav-number">15.2.2.</span> <span class="nav-text"> 修改文件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-api-%E9%80%82%E9%85%8D%E8%AF%A6%E8%A7%A30x-1x"><span class="nav-number">15.3.</span> <span class="nav-text"> 2. API 适配详解（0.x → 1.x）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#21-%E6%B3%A8%E5%86%8C%E6%9C%BA%E5%88%B6"><span class="nav-number">15.3.1.</span> <span class="nav-text"> 2.1 注册机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#22-%E5%9F%BA%E7%B1%BB%E4%B8%8E%E8%AE%AD%E7%BB%83%E6%8E%A8%E7%90%86%E6%8E%A5%E5%8F%A3"><span class="nav-number">15.3.2.</span> <span class="nav-text"> 2.2 基类与训练&#x2F;推理接口</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#23-%E5%85%B6%E4%BB%96%E4%BE%9D%E8%B5%96%E6%9B%BF%E6%8D%A2"><span class="nav-number">15.3.3.</span> <span class="nav-text"> 2.3 其他依赖替换</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#24-%E6%97%A0%E9%9C%80%E8%BF%81%E7%A7%BB%E7%9A%84%E7%BB%84%E4%BB%B6"><span class="nav-number">15.3.4.</span> <span class="nav-text"> 2.4 无需迁移的组件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%A8%A1%E5%9E%8B%E6%9E%B6%E6%9E%84%E5%AF%B9%E9%BD%90"><span class="nav-number">15.4.</span> <span class="nav-text"> 3. 模型架构对齐</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#31-%E6%80%BB%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="nav-number">15.4.1.</span> <span class="nav-text"> 3.1 总体架构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#32-bes-loss-%E7%AE%97%E6%B3%95"><span class="nav-number">15.4.2.</span> <span class="nav-text"> 3.2 BES Loss 算法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#33-puo-prototype-uncorrelated-optimisation"><span class="nav-number">15.4.3.</span> <span class="nav-text"> 3.3 PUO (Prototype Uncorrelated Optimisation)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#34-%E5%85%B3%E9%94%AE%E8%B6%85%E5%8F%82"><span class="nav-number">15.4.4.</span> <span class="nav-text"> 3.4 关键超参</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E8%AE%AD%E7%BB%83%E9%85%8D%E6%96%B9%E5%AF%B9%E9%BD%90"><span class="nav-number">15.5.</span> <span class="nav-text"> 4. 训练配方对齐</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#41-%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0%E5%85%B3%E9%94%AE%E4%BF%AE%E5%A4%8D"><span class="nav-number">15.5.1.</span> <span class="nav-text"> 4.1 损失函数（关键修复）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#42-%E6%95%B0%E6%8D%AE%E5%A2%9E%E5%BC%BA%E5%85%B3%E9%94%AE%E4%BF%AE%E5%A4%8D"><span class="nav-number">15.5.2.</span> <span class="nav-text"> 4.2 数据增强（关键修复）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#43-%E6%95%B0%E6%8D%AE%E5%88%92%E5%88%86%E5%B7%B2%E4%BF%AE%E5%A4%8D"><span class="nav-number">15.5.3.</span> <span class="nav-text"> 4.3 数据划分（已修复）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#44-%E4%BC%98%E5%8C%96%E5%99%A8%E5%92%8C%E5%AD%A6%E4%B9%A0%E7%8E%87%E6%97%A0%E9%9C%80%E4%BF%AE%E6%94%B9%E5%B7%B2%E5%AF%B9%E9%BD%90"><span class="nav-number">15.5.4.</span> <span class="nav-text"> 4.4 优化器和学习率（无需修改，已对齐）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#45-%E8%AF%84%E6%B5%8B%E6%8C%87%E6%A0%87"><span class="nav-number">15.5.5.</span> <span class="nav-text"> 4.5 评测指标</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E5%8F%AF%E6%8E%A5%E5%8F%97%E7%9A%84%E5%89%A9%E4%BD%99%E5%B7%AE%E5%BC%82"><span class="nav-number">15.6.</span> <span class="nav-text"> 5. 可接受的剩余差异</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E9%AA%8C%E8%AF%81%E7%BB%93%E6%9E%9C"><span class="nav-number">15.7.</span> <span class="nav-text"> 6. 验证结果</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#61-%E5%AF%BC%E5%85%A5%E4%B8%8E%E6%9E%84%E5%BB%BA%E9%AA%8C%E8%AF%81"><span class="nav-number">15.7.1.</span> <span class="nav-text"> 6.1 导入与构建验证</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#62-%E5%B0%8F%E8%A7%84%E6%A8%A1%E8%AE%AD%E7%BB%83%E9%AA%8C%E8%AF%8150-iterations"><span class="nav-number">15.7.2.</span> <span class="nav-text"> 6.2 小规模训练验证（50 iterations）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-%E5%AE%8C%E6%95%B4%E8%AE%AD%E7%BB%83%E5%91%BD%E4%BB%A4"><span class="nav-number">15.8.</span> <span class="nav-text"> 7. 完整训练命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-%E5%B0%8F%E7%BB%93"><span class="nav-number">15.9.</span> <span class="nav-text"> 8. 小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E9%83%A8%E5%88%86hss-mss-segformer-mit-b0-%E5%A4%8D%E7%8E%B0%E5%AF%B9%E9%BD%90"><span class="nav-number">16.</span> <span class="nav-text"> 第三部分：HSS &#x2F; MSS + SegFormer-MiT-B0 复现对齐</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#tldr-2"><span class="nav-number">16.1.</span> <span class="nav-text"> TL;DR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E8%AE%BA%E6%96%87%E7%9B%AE%E6%A0%87%E6%95%B0%E5%80%BCsegformer-mit-b0-real-time"><span class="nav-number">16.2.</span> <span class="nav-text"> 1. 论文目标数值（SegFormer MiT-B0, Real-Time）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#hssdatasettable-4"><span class="nav-number">16.2.1.</span> <span class="nav-text"> HSSDataset（Table 4）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#mssdatasettable-5"><span class="nav-number">16.2.2.</span> <span class="nav-text"> MSSDataset（Table 5）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%BD%93%E5%89%8D%E5%AE%9E%E7%8E%B0%E5%AF%B9%E9%BD%90%E9%A1%B9"><span class="nav-number">16.3.</span> <span class="nav-text"> 2. 当前实现对齐项</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#21-%E6%A8%A1%E5%9E%8B%E7%BB%93%E6%9E%84"><span class="nav-number">16.3.1.</span> <span class="nav-text"> 2.1 模型结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#22-%E8%AE%AD%E7%BB%83%E8%B6%85%E5%8F%82%E5%AF%B9%E9%BD%90%E8%AE%BA%E6%96%87-table-2"><span class="nav-number">16.3.2.</span> <span class="nav-text"> 2.2 训练超参（对齐论文 Table 2）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#23-%E6%95%B0%E6%8D%AE%E7%AE%A1%E9%81%93"><span class="nav-number">16.3.3.</span> <span class="nav-text"> 2.3 数据管道</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#24-%E8%AF%84%E4%BC%B0"><span class="nav-number">16.3.4.</span> <span class="nav-text"> 2.4 评估</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#25-%E5%83%8F%E7%B4%A0%E7%BA%A7-vs-%E5%9B%BE%E5%83%8F%E7%BA%A7%E6%8C%87%E6%A0%87-gap%EF%B8%8F-%E5%B7%B2%E9%AA%8C%E8%AF%81%E9%9D%9E-bug"><span class="nav-number">16.3.5.</span> <span class="nav-text"> 2.5 像素级 vs 图像级指标 gap（⚠️ 已验证非 bug）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#26-%E9%A6%96%E6%AC%A1-hss-%E8%AE%AD%E7%BB%83%E7%BB%93%E6%9E%9C%EF%B8%8F-%E6%95%B0%E5%80%BC%E5%81%8F%E9%AB%98%E5%88%92%E5%88%86%E5%BE%85%E5%AF%B9%E9%BD%90"><span class="nav-number">16.3.6.</span> <span class="nav-text"> 2.6 首次 HSS 训练结果（⚠️ 数值偏高，划分待对齐）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%95%B0%E6%8D%AE%E5%88%92%E5%88%86%E5%BE%85%E4%B8%8E%E5%B8%88%E5%85%84%E6%9C%80%E7%BB%88%E7%A1%AE%E8%AE%A4"><span class="nav-number">16.4.</span> <span class="nav-text"> 3. 数据划分（待与师兄最终确认）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#31-hssdatahss_voc%E5%85%B1-1007-%E5%BC%A0-npy"><span class="nav-number">16.4.1.</span> <span class="nav-text"> 3.1 HSS（data&#x2F;HSS_VOC&#x2F;，共 1007 张 npy）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#32-mssdatamss_voc%E5%85%B1-200-%E5%BC%A0"><span class="nav-number">16.4.2.</span> <span class="nav-text"> 3.2 MSS（data&#x2F;MSS_VOC&#x2F;，共 200 张）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E4%B8%8E%E5%B8%88%E5%85%84-%E8%AE%BA%E6%96%87%E4%BB%8D%E5%AD%98%E5%9C%A8%E7%9A%84%E5%B7%AE%E5%BC%82%E6%91%98%E8%A6%81"><span class="nav-number">16.5.</span> <span class="nav-text"> 4. 与师兄 &#x2F; 论文仍存在的差异摘要</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E8%AE%AD%E7%BB%83%E4%B8%8E%E6%B5%8B%E8%AF%95%E5%91%BD%E4%BB%A4"><span class="nav-number">16.6.</span> <span class="nav-text"> 5. 训练与测试命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E7%9B%B8%E5%85%B3%E6%96%87%E4%BB%B6%E6%B8%85%E5%8D%95"><span class="nav-number">16.7.</span> <span class="nav-text"> 6. 相关文件清单</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-%E5%B0%8F%E7%BB%93%E4%B8%8E%E5%BE%85%E5%8A%9E"><span class="nav-number">16.8.</span> <span class="nav-text"> 7. 小结与待办</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -248,9 +248,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2026-06-04 15:30:00 / 修改时间：17:09:10" itemprop="dateCreated datePublished" datetime="2026-06-04T15:30:00+08:00">2026-06-04</time>
+      <time title="创建时间：2026-06-04 15:30:00" itemprop="dateCreated datePublished" datetime="2026-06-04T15:30:00+08:00">2026-06-04</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-06-09 21:28:43" itemprop="dateModified" datetime="2026-06-09T21:28:43+08:00">2026-06-09</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -1326,6 +1332,506 @@
 <li>✅ <strong>依赖适配</strong>：PyTorch 2.8 原生 API，无需 timm/POT 等额外依赖</li>
 </ul>
 <p>可以预期在 SmokeSeg 数据集上得到与原论文相近的结果。</p>
+<hr />
+<h2 id="第三部分hss-mss-segformer-mit-b0-复现对齐"><a class="markdownIt-Anchor" href="#第三部分hss-mss-segformer-mit-b0-复现对齐"></a> 第三部分：HSS / MSS + SegFormer-MiT-B0 复现对齐</h2>
+<p>最近又接了另一个任务：在 OneDL-MMSegmentation 框架下复现 MoP 论文（Yao et al., 2026, <em>Hyperspectral Smoke Segmentation via Mixture of Prototypes</em>）Table 4 / Table 5 中 <strong>SegFormer-MiT-B0（Real-Time）</strong> 基线结果。这次涉及两个数据集——HSS（高光谱 25 通道）和 MSS（多光谱 4 通道），模型虽小但定制点多，踩的坑和前两部分很不一样。</p>
+<h3 id="tldr-2"><a class="markdownIt-Anchor" href="#tldr-2"></a> TL;DR</h3>
+<ul>
+<li>复现目标：HSS total mIoU <strong>46.84</strong> / F1 <strong>62.87</strong>；MSS total mIoU <strong>72.87</strong> / F1 <strong>82.67</strong></li>
+<li><strong>首次训练结果偏高</strong>（HSS smoke IoU 68.38 vs 论文 46.84），主因是数据划分不一致（trainval 782 vs 论文 ~604）和评估分辨率差异</li>
+<li>师兄代码中有多处与论文不一致的地方（<code>MixVisionTransformerHSS2</code> 双分支架构、SGD vs AdamW、TTA flip 等），逐项判断后<strong>以论文为准</strong></li>
+<li>数据划分和尺度划分文件需向师兄确认后替换</li>
+</ul>
+<hr />
+<h3 id="1-论文目标数值segformer-mit-b0-real-time"><a class="markdownIt-Anchor" href="#1-论文目标数值segformer-mit-b0-real-time"></a> 1. 论文目标数值（SegFormer MiT-B0, Real-Time）</h3>
+<h4 id="hssdatasettable-4"><a class="markdownIt-Anchor" href="#hssdatasettable-4"></a> HSSDataset（Table 4）</h4>
+<table>
+<thead>
+<tr>
+<th>尺度</th>
+<th>F1 (%)</th>
+<th>mIoU (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Small</td>
+<td>53.48</td>
+<td>37.78</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>65.63</td>
+<td>49.21</td>
+</tr>
+<tr>
+<td>Large</td>
+<td>70.17</td>
+<td>54.33</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>62.87</strong></td>
+<td><strong>46.84</strong></td>
+</tr>
+</tbody>
+</table>
+<h4 id="mssdatasettable-5"><a class="markdownIt-Anchor" href="#mssdatasettable-5"></a> MSSDataset（Table 5）</h4>
+<table>
+<thead>
+<tr>
+<th>尺度</th>
+<th>F1 (%)</th>
+<th>mIoU (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Medium</td>
+<td>83.37</td>
+<td>74.05</td>
+</tr>
+<tr>
+<td>Large</td>
+<td>92.06</td>
+<td>86.36</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>82.67</strong></td>
+<td><strong>72.87</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ 论文 Table 5 中 SegFormer MSS Params=<strong>13.6M</strong>。标准 MiT-B0（embed_dims=32）仅 ~3.7M 参数，13.6M 更接近 MiT-B1（embed_dims=64）。师兄 FLAME2 原始配置使用 <code>embed_dims=32</code>（MiT-B0），当前实现与师兄一致。若论文 MSS 基线实际使用了更大的 backbone，我们的 MiT-B0 结果将偏低。</p>
+</blockquote>
+<hr />
+<h3 id="2-当前实现对齐项"><a class="markdownIt-Anchor" href="#2-当前实现对齐项"></a> 2. 当前实现对齐项</h3>
+<h4 id="21-模型结构"><a class="markdownIt-Anchor" href="#21-模型结构"></a> 2.1 模型结构</h4>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>HSS</th>
+<th>MSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Segmentor</td>
+<td><code>EncoderDecoder</code></td>
+<td>同左</td>
+</tr>
+<tr>
+<td>Backbone</td>
+<td><code>MixVisionTransformer</code></td>
+<td>同左</td>
+</tr>
+<tr>
+<td><code>in_channels</code></td>
+<td>25</td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>embed_dims</code></td>
+<td><strong>25</strong>（stage → [25,50,125,200]）</td>
+<td>32（标准 MiT-B0）</td>
+</tr>
+<tr>
+<td><code>num_layers</code></td>
+<td>[2,2,2,2]</td>
+<td>[2,2,2,2]</td>
+</tr>
+<tr>
+<td>Decode head</td>
+<td><code>SegformerHead</code></td>
+<td>同左</td>
+</tr>
+<tr>
+<td><code>channels</code></td>
+<td>250</td>
+<td>256</td>
+</tr>
+<tr>
+<td><code>out_channels</code></td>
+<td>1 + sigmoid</td>
+<td>同左</td>
+</tr>
+<tr>
+<td><code>threshold</code></td>
+<td>0.5</td>
+<td>0.4</td>
+</tr>
+<tr>
+<td>Loss</td>
+<td>BCE <code>loss_weight=2.0</code>, <code>class_weight=[5.0]</code></td>
+<td>同左</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 <strong>关于 <code>MixVisionTransformerHSS2</code></strong>：师兄配置文件中写了 <code>MixVisionTransformerHSS2</code>，该 backbone 实际运行<strong>两条并行前向路径</strong>（标准路径 + Indi 分组路径），本质上是 MoP Band Split 思想的前身，<strong>不是</strong>纯 SegFormer 基线。本实现采用论文描述的标准 <code>MixVisionTransformer</code> + <code>embed_dims=25</code>，<strong>未移植 HSS2</strong>。</p>
+</blockquote>
+<h4 id="22-训练超参对齐论文-table-2"><a class="markdownIt-Anchor" href="#22-训练超参对齐论文-table-2"></a> 2.2 训练超参（对齐论文 Table 2）</h4>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>论文</th>
+<th>当前配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Optimizer</td>
+<td>AdamW</td>
+<td>AdamW</td>
+</tr>
+<tr>
+<td>LR</td>
+<td>6e-5</td>
+<td>6e-5</td>
+</tr>
+<tr>
+<td>Weight decay</td>
+<td>0.01</td>
+<td>0.01</td>
+</tr>
+<tr>
+<td>Batch size</td>
+<td>4</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Iterations</td>
+<td>40,000</td>
+<td>40,000</td>
+</tr>
+<tr>
+<td>LR schedule</td>
+<td>Poly, power=0.9</td>
+<td>Linear warmup 1500 + Poly 0.9</td>
+</tr>
+<tr>
+<td><code>head</code> LR</td>
+<td>—</td>
+<td>10×（<code>paramwise_cfg</code>）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 <strong>关于 SGD vs AdamW</strong>：师兄 <code>HSS_dev_config</code> 中的 <code>schedule_40k.py</code> 实际配置的是 <strong>SGD lr=0.01, momentum=0.9, weight_decay=0.0005</strong>——与论文 Table 2（AdamW lr=6e-5, wd=0.01）完全不同。SGD 很可能是师兄早期实验的遗留，论文正式实验使用的是 AdamW。当前实现选择 AdamW <strong>正确对齐论文</strong>。</p>
+</blockquote>
+<h4 id="23-数据管道"><a class="markdownIt-Anchor" href="#23-数据管道"></a> 2.3 数据管道</h4>
+<p><strong>HSS 训练 Pipeline</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">LoadImageFromNpyFile → LoadAnnotations → ResizeSegToMatchImage</span><br><span class="line">→ RandomResize(0.5~2.0) / Resize(512) → RandomCrop / — → RandomFlip(0.5)</span><br><span class="line">→ HSSNormalize → PackSegInputs</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>HSSNormalize</code>：25 通道 mean/std 在 pipeline 中完成（<code>SegDataPreProcessor</code> 不支持 &gt;3 通道）</li>
+<li><code>ResizeSegToMatchImage</code>：对齐 npy 与 PNG mask 的空间分辨率（HSS 中 npy ~217×409 vs PNG ~1088×2048，5× 关系）</li>
+</ul>
+<p><strong>HSS 测试 Pipeline（⚠️ 与师兄有实质性差异）</strong></p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>师兄原始 (mmseg 0.x)</th>
+<th>当前实现 (mmseg 1.x)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>评估框架</td>
+<td><code>MultiScaleFlipAug</code>（TTA 容器）</td>
+<td>直接 pipeline</td>
+</tr>
+<tr>
+<td>Test-time flip</td>
+<td><strong>启用</strong>（<code>RandomFlip</code>）</td>
+<td><strong>无</strong></td>
+</tr>
+<tr>
+<td>评估分辨率</td>
+<td>Resize 后的 ~512²</td>
+<td><strong>npy 原生分辨率</strong>（~217×409）</td>
+</tr>
+<tr>
+<td>GT 分辨率</td>
+<td>PNG 原始分辨率（~1088×2048）</td>
+<td><code>ResizeSegToOriShape</code> 降采样到 npy 分辨率</td>
+</tr>
+</tbody>
+</table>
+<p>师兄在<strong>更高分辨率</strong>（PNG mask ~1088×2048）上计算指标，当前在更低的 npy 分辨率（~217×409）上计算。低分辨率下边缘像素占比更高，可能导致 <strong>~1-3% mIoU 差异</strong>。此外，师兄启用了 <strong>test-time flip TTA</strong>，通常带来 &lt;1% 的提升。</p>
+<p><strong>MSS Pipeline</strong>（训练和测试均无需 <code>ResizeSegToMatchImage</code>，npy 与 PNG mask 分辨率一致 ✅）</p>
+<h4 id="24-评估"><a class="markdownIt-Anchor" href="#24-评估"></a> 2.4 评估</h4>
+<ul>
+<li>指标：<code>SmokeSegMetric</code>（pixel-level <code>mmIoU</code> / <code>mmFscore</code> + image-level <code>smoke.Img_IoU</code> 等）</li>
+<li>Checkpoint：按 <code>smoke.Img_IoU</code> 保存 best</li>
+<li>论文使用 pixel-level F1 / mIoU</li>
+</ul>
+<h4 id="25-像素级-vs-图像级指标-gap️-已验证非-bug"><a class="markdownIt-Anchor" href="#25-像素级-vs-图像级指标-gap️-已验证非-bug"></a> 2.5 像素级 vs 图像级指标 gap（⚠️ 已验证非 bug）</h4>
+<p>首次 HSS 验证时观察到 <strong>smoke 类 image-level IoU (60.78) &gt; pixel-level IoU (49.41)</strong>，与 SmokeSeg 上 image-level &lt; pixel-level 的模式相反，已确认<strong>不是计算错误</strong>。</p>
+<p>原因：两种聚合方式对不同大小烟雾的<strong>权重分配</strong>不同——pixel-level 每个像素等权（大烟雾图主导），image-level 每张图等权（小烟雾图同等重要）。HSS 数据集中大烟雾图逐图 IoU 较低但像素多，拉低了 pixel-level。</p>
+<p>实际诊断数据确认：<strong><code>union-weighted image IoU (0.6838)</code> = <code>pixel-level IoU (0.6838)</code></strong>，证明计算无 bug。<strong>与论文对比时以 pixel-level 为准</strong>（论文 Table 4/5 的 mIoU/F1 是 pixel-level 全局累积）。</p>
+<h4 id="26-首次-hss-训练结果️-数值偏高划分待对齐"><a class="markdownIt-Anchor" href="#26-首次-hss-训练结果️-数值偏高划分待对齐"></a> 2.6 首次 HSS 训练结果（⚠️ 数值偏高，划分待对齐）</h4>
+<p><strong>best checkpoint: iter_33500</strong></p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>pixel-level</th>
+<th>image-level</th>
+<th>论文 Table 4 Total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>smoke IoU</td>
+<td><strong>68.38</strong></td>
+<td>71.57</td>
+<td>46.84</td>
+</tr>
+<tr>
+<td>smoke Fscore</td>
+<td><strong>81.22</strong></td>
+<td>83.11</td>
+<td>62.87</td>
+</tr>
+<tr>
+<td>smoke Precision</td>
+<td>77.77</td>
+<td>79.31</td>
+<td>—</td>
+</tr>
+<tr>
+<td>smoke Recall</td>
+<td>84.99</td>
+<td>89.04</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ <strong>当前数值远超论文 baseline</strong>，原因：</p>
+<ol>
+<li><strong>数据划分不一致</strong>：当前使用 <code>trainval.txt</code>（782 张）训练，论文 ≈604 张（6:2:2 划分）；且 <code>test.txt</code>（225 张）的划分文件来自师兄仓库根目录而非论文官方</li>
+<li><strong>评估分辨率差异</strong>：当前在 npy 原生分辨率（~217×409）评估，师兄在 PNG 分辨率（~1088×2048）评估</li>
+<li><strong>后续需向师兄索取官方 train/val/test 划分，替换后重新训练对比</strong></li>
+</ol>
+</blockquote>
+<hr />
+<h3 id="3-数据划分待与师兄最终确认"><a class="markdownIt-Anchor" href="#3-数据划分待与师兄最终确认"></a> 3. 数据划分（待与师兄最终确认）</h3>
+<h4 id="31-hssdatahss_voc共-1007-张-npy"><a class="markdownIt-Anchor" href="#31-hssdatahss_voc共-1007-张-npy"></a> 3.1 HSS（<code>data/HSS_VOC/</code>，共 1007 张 npy）</h4>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>行数</th>
+<th>用途</th>
+<th>来源说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>train.txt</code></td>
+<td>685</td>
+<td>子集</td>
+<td><code>HSS/train.txt</code>（师兄仓库根目录）</td>
+</tr>
+<tr>
+<td><code>val.txt</code></td>
+<td>97</td>
+<td>子集</td>
+<td><code>HSS/val.txt</code>（已修复末行缺换行）</td>
+</tr>
+<tr>
+<td><code>trainval.txt</code></td>
+<td>782</td>
+<td><strong>训练</strong></td>
+<td>train + val 合并</td>
+</tr>
+<tr>
+<td><code>test.txt</code></td>
+<td>225</td>
+<td><strong>验证 + 测试</strong></td>
+<td><code>HSS/test.txt</code></td>
+</tr>
+<tr>
+<td><code>test_small.txt</code></td>
+<td>99</td>
+<td>分层评测</td>
+<td><code>HSS/test_small.txt</code></td>
+</tr>
+<tr>
+<td><code>test_medium.txt</code></td>
+<td>84</td>
+<td>分层评测</td>
+<td><code>HSS/test_medium.txt</code></td>
+</tr>
+<tr>
+<td><code>test_large.txt</code></td>
+<td>42</td>
+<td>分层评测</td>
+<td><code>HSS/test_large.txt</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>师兄正式配置写的是 <code>ImageSets/Segmentation/train.txt</code>，该路径<strong>不存在</strong>；实际可用的是 <code>HSS/</code> 根目录下的 txt</li>
+<li>训练策略：<strong>trainval 训练，test 验证/测试</strong>（与师兄配置&quot;val=test&quot;思路一致，但训练集更大）</li>
+<li>HSS 的 <code>test_small</code>（99 张）与 <strong>FoSp 协议 δ&lt;0.5%</strong> 完全一致；<code>test_medium</code> / <code>test_large</code> 与纯 FoSp 固定阈值<strong>不完全一致</strong></li>
+</ul>
+<h4 id="32-mssdatamss_voc共-200-张"><a class="markdownIt-Anchor" href="#32-mssdatamss_voc共-200-张"></a> 3.2 MSS（<code>data/MSS_VOC/</code>，共 200 张）</h4>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>行数</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>train.txt</code></td>
+<td>180</td>
+<td>训练</td>
+</tr>
+<tr>
+<td><code>test.txt</code></td>
+<td>20</td>
+<td>验证 + 测试</td>
+</tr>
+<tr>
+<td><code>test_small/medium/large.txt</code></td>
+<td>7 / 6 / 7</td>
+<td>分层评测（<strong>临时生成，待确认</strong>）</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>MSS 与师兄 <code>FLAME2_VOC</code> 的 <code>FLAME_test_*.txt</code>（40 张）<strong>ID 无重叠</strong>；师兄仓库<strong>未提供</strong>针对 <code>MSS_VOC</code> 这 20 张 test 的官方尺度划分</li>
+<li>当前 <code>test_*.txt</code> 按<strong>三分位</strong>生成，<strong>不是</strong> FoSp 式协议（按 FoSp，20 张 test 烟雾占比均 &gt;2.5%，应全为 Large）</li>
+<li>若要对齐 Table 5 的 Medium/Large 列，需向师兄索取官方划分</li>
+</ul>
+<hr />
+<h3 id="4-与师兄-论文仍存在的差异摘要"><a class="markdownIt-Anchor" href="#4-与师兄-论文仍存在的差异摘要"></a> 4. 与师兄 / 论文仍存在的差异摘要</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>论文</th>
+<th>师兄代码</th>
+<th>当前实现</th>
+<th>影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HSS backbone</td>
+<td>定制 MiT-B0, embed=25</td>
+<td><code>MixVisionTransformerHSS2</code>（双分支 + 分组 attention）</td>
+<td>标准 MiT, embed=25 ✓</td>
+<td>🟢 对齐论文</td>
+</tr>
+<tr>
+<td>HSS 优化器</td>
+<td><strong>AdamW</strong> lr=6e-5</td>
+<td><strong>SGD</strong> lr=0.01, momentum=0.9</td>
+<td>AdamW lr=6e-5 ✓</td>
+<td>🟢 对齐论文</td>
+</tr>
+<tr>
+<td>HSS LR schedule</td>
+<td>Poly power=0.9</td>
+<td>Poly power=1.0, min_lr=1e-4</td>
+<td>Poly power=0.9, min_lr=0.0</td>
+<td>🟡 min_lr 微小差异</td>
+</tr>
+<tr>
+<td>HSS warmup</td>
+<td>—</td>
+<td>无</td>
+<td>LinearLR 1500 iters</td>
+<td>🟢 改善训练</td>
+</tr>
+<tr>
+<td>HSS batch size</td>
+<td>4</td>
+<td><strong>6</strong></td>
+<td><strong>4</strong></td>
+<td>🟡 较小 batch 可能影响稳定性</td>
+</tr>
+<tr>
+<td>HSS 训练集</td>
+<td>~604 (6:2:2)</td>
+<td>仅 train (685)</td>
+<td><strong>trainval (782)</strong></td>
+<td>🟡 更多数据，结果不可直接比</td>
+</tr>
+<tr>
+<td>HSS 测试 TTA</td>
+<td>—</td>
+<td><strong>启用</strong> flip TTA</td>
+<td><strong>无</strong></td>
+<td>🟡 师兄评估有利 ~0.5-1%</td>
+</tr>
+<tr>
+<td>HSS 评估分辨率</td>
+<td>512²</td>
+<td>512² → 上采样到 PNG 分辨率</td>
+<td>ori_shape（npy 分辨率）</td>
+<td>🟡 <strong>~1-3% mIoU 差异</strong></td>
+</tr>
+<tr>
+<td>MSS 迭代</td>
+<td>40k</td>
+<td>师兄 MSS 入口 10k</td>
+<td>40k ✓</td>
+<td>🟢 对齐论文</td>
+</tr>
+<tr>
+<td>MSS 模型规模</td>
+<td>Params=13.6M（疑似 MiT-B1）</td>
+<td>MiT-B0 (embed=32)</td>
+<td>MiT-B0 (embed=32)</td>
+<td>🟡 若论文用 MiT-B1 则结果偏低</td>
+</tr>
+<tr>
+<td>MSS 尺度划分</td>
+<td>FoSp 协议</td>
+<td>FLAME 另一套（非 MSS_VOC）</td>
+<td>三分位（临时）</td>
+<td>🔴 需向师兄确认</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="5-训练与测试命令"><a class="markdownIt-Anchor" href="#5-训练与测试命令"></a> 5. 训练与测试命令</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># HSS 训练</span></span><br><span class="line">python tools/train.py my_configs/segformer/segformer_mit-b0_hss_40k.py</span><br><span class="line"></span><br><span class="line"><span class="comment"># MSS 训练</span></span><br><span class="line">python tools/train.py my_configs/segformer/segformer_mit-b0_mss_40k.py</span><br><span class="line"></span><br><span class="line"><span class="comment"># 测试（单 checkpoint）</span></span><br><span class="line">python tools/smoke_test.py \</span><br><span class="line">  my_configs/segformer/segformer_mit-b0_hss_40k.py \</span><br><span class="line">  work_dirs/HSS/segformer_mit_b0/run__TIMESTAMP/best_smoke.Img_IoU_iter_XXXXX.pth</span><br><span class="line"></span><br><span class="line"><span class="comment"># 分层评测（small / medium / large / total）</span></span><br><span class="line">python tools/smoke_test_multiscale.py \</span><br><span class="line">  my_configs/segformer/segformer_mit-b0_hss_40k.py \</span><br><span class="line">  CKPT --splits small medium large --launcher none</span><br><span class="line"></span><br><span class="line"><span class="comment"># 续训</span></span><br><span class="line">python tools/train.py my_configs/segformer/segformer_mit-b0_hss_40k.py \</span><br><span class="line">  --resume-into work_dirs/HSS/segformer_mit_b0/run__TIMESTAMP --resume</span><br></pre></td></tr></table></figure>
+<hr />
+<h3 id="6-相关文件清单"><a class="markdownIt-Anchor" href="#6-相关文件清单"></a> 6. 相关文件清单</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">my_configs/segformer/</span><br><span class="line">├── segformer_mit-b0_hss_40k.py      # HSS 训练配置</span><br><span class="line">├── segformer_mit-b0_mss_40k.py      # MSS 训练配置</span><br><span class="line">└── REPRODUCTION_ALIGN_mit-b0_hss_mss.md</span><br><span class="line"></span><br><span class="line">mmseg/datasets/</span><br><span class="line">├── hss_voc.py                       # HSSDataset</span><br><span class="line">├── mss_voc.py                       # MSSDataset</span><br><span class="line">└── transforms/transforms.py         # HSSNormalize, MSSNormalize, ResizeSegToMatchImage</span><br><span class="line"></span><br><span class="line">data/HSS_VOC/ImageSets/              # 划分 txt（待师兄确认）</span><br><span class="line">data/MSS_VOC/ImageSets/</span><br><span class="line"></span><br><span class="line">tools/</span><br><span class="line">├── train.py</span><br><span class="line">├── smoke_test.py</span><br><span class="line">├── smoke_test_multiscale.py</span><br><span class="line">└── generate_smoke_scale_splits.py</span><br></pre></td></tr></table></figure>
+<hr />
+<h3 id="7-小结与待办"><a class="markdownIt-Anchor" href="#7-小结与待办"></a> 7. 小结与待办</h3>
+<p><strong>已对齐项：</strong></p>
+<ul>
+<li>✅ 模型架构：标准 MiT + <code>embed_dims=25</code>（HSS）/ 32（MSS），以论文为准</li>
+<li>✅ 优化器：AdamW lr=6e-5（纠正师兄 SGD 遗留）</li>
+<li>✅ 训练配方：40k iter、batch=4、Poly power=0.9</li>
+<li>✅ 损失函数：BCE + sigmoid，<code>class_weight=[5.0]</code></li>
+<li>✅ 数据管道：<code>HSSNormalize</code> / <code>MSSNormalize</code>、<code>ResizeSegToMatchImage</code></li>
+<li>✅ 像素级 vs 图像级指标 gap 已确认非 bug</li>
+</ul>
+<p><strong>待确认 / 待解决：</strong></p>
+<ul>
+<li>🔴 向师兄索取 HSS/MSS 官方 train/val/test 划分</li>
+<li>🔴 确认 MSS 尺度划分协议（FoSp / 三分位 / 其他）</li>
+<li>🔴 论文 MSS 是否确实使用 MiT-B1（13.6M）而非 MiT-B0（3.7M）</li>
+<li>🟡 HSS 评估分辨率对齐（npy vs PNG）</li>
+<li>🟡 HSS 测试 TTA 对齐（当前无 flip，师兄有）</li>
+</ul>
+<p>建议流程：与师兄核对划分文件 → 替换后重训 → 对比论文 Table 4/5 → 记录结果。</p>
 
     </div>
 

@@ -424,6 +424,197 @@
       </categories>
   </entry>
   <entry>
+    <title>在VS Code的CC插件以及终端CC中接入DeepSeek-V4-Pro</title>
+    <url>/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/</url>
+    <content><![CDATA[<p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，且在中国大陆充值需要耗费一些精力（后续会出充值教程），而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
+参考链接：<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">Deepseek接入CC的官方文档</a><br />
+<a href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
+<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
+<span id="more"></span>
+<hr />
+<h2 id="前置准备"><a class="markdownIt-Anchor" href="#前置准备"></a> 前置准备</h2>
+<p>开始之前，需要准备好以下内容：</p>
+<ul>
+<li><strong>DeepSeek API Key</strong>：在 <a href="https://platform.deepseek.com/">DeepSeek 开放平台</a> 注册并获取，可以先充值10元试一试，目前是2.5折优惠。</li>
+<li><strong>Claude Code 已安装</strong>：终端CC和VSCode CC插件安装，此处不进行过多介绍。</li>
+</ul>
+<hr />
+<h2 id="一终端-cc-接入"><a class="markdownIt-Anchor" href="#一终端-cc-接入"></a> 一：终端 CC 接入</h2>
+<p>终端 CC 通过读取 shell 环境变量来决定使用哪个模型后端。直接在你的shell配置文件中添加以下环境变量即可。</p>
+<p>对于 macOS / zsh 用户，编辑 <code>~/.zshrc</code>：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">export</span> ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_AUTH_TOKEN=&lt;你的 DeepSeek API Key&gt;</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_OPUS_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_SONNET_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_SUBAGENT_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_EFFORT_LEVEL=max</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>💡 <strong>说明</strong>：CC 内部会根据任务复杂度自动选择 Opus/Sonnet/Haiku 级别的模型。通过 <code>ANTHROPIC_DEFAULT_*</code> 变量可以将这些级别分别映射到 DeepSeek 的不同模型。如果你希望所有任务都走同一个模型，全部填 <code>deepseek-v4-pro</code> 即可。</p>
+</blockquote>
+<p>配置完成后，重新加载 shell 配置：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
+<h2 id="随后在终端中启动-claudecc-便会通过-deepseek-api-运行"><a class="markdownIt-Anchor" href="#随后在终端中启动-claudecc-便会通过-deepseek-api-运行"></a> 随后在终端中启动 <code>claude</code>，CC 便会通过 DeepSeek API 运行。</h2>
+<h2 id="二vscode-cc-插件接入"><a class="markdownIt-Anchor" href="#二vscode-cc-插件接入"></a> 二：VSCode CC 插件接入</h2>
+<p>VSCode 的CC插件同样依赖环境变量，但需要通过VSCode的终端环境变量设置来注入。</p>
+<p>打开 VS Code 设置（<code>Cmd + ,</code>），搜索 <code>terminal.integrated.env.osx</code>（Windows 用户搜索 <code>terminal.integrated.env.windows</code>），点击 <strong>Edit in settings.json</strong>，添加以下内容：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;terminal.integrated.env.osx&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_BASE_URL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://api.deepseek.com/anthropic&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_AUTH_TOKEN&quot;</span><span class="punctuation">:</span> <span class="string">&quot;sk-your-deepseek-api-key&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_OPUS_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_SONNET_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_HAIKU_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-flash&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;CLAUDE_CODE_SUBAGENT_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>配置完成后，<strong>完全退出并重启 VS Code</strong>，再打开集成的 CC 插件，环境变量便会生效。</p>
+<hr />
+<h2 id="推荐的额外配置"><a class="markdownIt-Anchor" href="#推荐的额外配置"></a> 推荐的额外配置</h2>
+<p>为了获得更好的使用体验，建议一并配置以下变量：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 超时时长（ms）：max effort 推理耗时较长，建议设长一些</span></span><br><span class="line"><span class="built_in">export</span> API_TIMEOUT_MS=<span class="string">&quot;600000&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭非必要流量（遥测、成本警告等）</span></span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_COST_WARNINGS=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_TELEMETRY=1</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="模型映射关系"><a class="markdownIt-Anchor" href="#模型映射关系"></a> 模型映射关系</h2>
+<p>配置生效后，CC 内部分配的 Claude 模型会被自动映射到 DeepSeek 模型：</p>
+<table>
+<thead>
+<tr>
+<th>Claude 原生模型</th>
+<th>映射到的 DeepSeek 模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>claude-opus-*</code></td>
+<td><code>deepseek-v4-pro</code></td>
+</tr>
+<tr>
+<td><code>claude-sonnet-*</code></td>
+<td><code>deepseek-v4-pro</code>（或 <code>deepseek-v4-flash</code>）</td>
+</tr>
+<tr>
+<td><code>claude-haiku-*</code></td>
+<td><code>deepseek-v4-flash</code></td>
+</tr>
+</tbody>
+</table>
+<p>V4-Pro 拥有 <strong>1M token 上下文窗口</strong>，足以塞入整个代码仓库，配合 CC 的代码搜索和多文件编辑能力，体验相当顺畅。</p>
+<hr />
+<h2 id="功能兼容性一览"><a class="markdownIt-Anchor" href="#功能兼容性一览"></a> 功能兼容性一览</h2>
+<p>DeepSeek 的 Anthropic 兼容端点是目前第三方供应商中<strong>支持最完整</strong>的，但仍有几个重要差距需要了解：</p>
+<h3 id="完全支持"><a class="markdownIt-Anchor" href="#完全支持"></a> ✅ 完全支持</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文本对话与流式输出</td>
+<td>日常编码问答完全正常</td>
+</tr>
+<tr>
+<td>Tool Use / 函数调用</td>
+<td>文件读写、命令执行、工具链调用均稳定</td>
+</tr>
+<tr>
+<td><strong>Subagent（子代理）</strong></td>
+<td>✅ DeepSeek 原生支持，Agent 级任务可正常调度</td>
+</tr>
+<tr>
+<td>System Prompt</td>
+<td>系统指令完全兼容</td>
+</tr>
+<tr>
+<td>128K～1M 上下文</td>
+<td>V4-Pro 支持 1M tokens，远超 Claude 的 200K</td>
+</tr>
+</tbody>
+</table>
+<h3 id="️-部分支持-被忽略"><a class="markdownIt-Anchor" href="#️-部分支持-被忽略"></a> ⚠️ 部分支持 / 被忽略</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>thinking</code>（推理模式）</td>
+<td>V4-Pro 自身具备推理能力，但 Anthropic API 的 <code>budget_tokens</code> 参数会被忽略</td>
+</tr>
+<tr>
+<td><code>disable_parallel_tool_use</code></td>
+<td>被忽略，DeepSeek 的并行工具调用策略与 Claude 不同</td>
+</tr>
+<tr>
+<td><code>cache_control</code></td>
+<td>不支持 Anthropic 的 prompt caching 机制</td>
+</tr>
+</tbody>
+</table>
+<h3 id="不支持"><a class="markdownIt-Anchor" href="#不支持"></a> ❌ 不支持</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>图片 / 多模态</strong></td>
+<td><strong>最大短板</strong>。V4-Pro 当前是纯文本模型，截图、UI 设计稿、终端截图等无法被识别——只会收到占位符 <code>[Image #1]</code></td>
+</tr>
+<tr>
+<td>文档上传</td>
+<td>不支持直接上传 PDF、图片等文件作为输入</td>
+</tr>
+<tr>
+<td>MCP 工具类型</td>
+<td>不支持 <code>server_tool_use</code>、<code>mcp_tool_result</code> 等 MCP 原生工具调用类型</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="实际使用中需要注意的问题"><a class="markdownIt-Anchor" href="#实际使用中需要注意的问题"></a> 实际使用中需要注意的问题</h2>
+<h3 id="1-图片不可用是硬伤"><a class="markdownIt-Anchor" href="#1-图片不可用是硬伤"></a> 1. 图片不可用是硬伤</h3>
+<p>虽然 V4-Pro 有 1M 上下文——&quot;能塞进去整个代码仓库，但塞不进去一张 PNG。&quot;遇到以下场景时需要<strong>临时切回 Anthropic 原生 API</strong>：</p>
+<ul>
+<li>CC 自动截取终端截图进行 debug</li>
+<li>需要基于 UI 设计稿生成前端代码</li>
+<li>分析报错截图或日志截屏</li>
+</ul>
+<p><strong>切换方法</strong>：在终端中取消 <code>ANTHROPIC_BASE_URL</code> 环境变量即可回退：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">unset</span> ANTHROPIC_BASE_URL</span><br><span class="line"><span class="comment"># 或者重新打开一个未配置 ANTHROPIC_BASE_URL 的终端窗口</span></span><br></pre></td></tr></table></figure>
+<h3 id="2-速度与成本的权衡"><a class="markdownIt-Anchor" href="#2-速度与成本的权衡"></a> 2. 速度与成本的权衡</h3>
+<p>DeepSeek V4-Pro 在 max effort 模式下推理时间较长（可能超过 1 分钟），这也是建议将 <code>API_TIMEOUT_MS</code> 设为 600000 的原因。但相比原生 Claude API <strong>约 90%+ 的成本节省</strong>，这点等待完全值得。</p>
+<h3 id="3-不同订阅方案的区别"><a class="markdownIt-Anchor" href="#3-不同订阅方案的区别"></a> 3. 不同订阅方案的区别</h3>
+<p>如果同时持有 Anthropic 的付费订阅（Max 计划），注意环境变量的配置会覆盖订阅的原生模型路由。建议为 DeepSeek 接入专门准备一个终端配置别名，方便在不同后端之间快速切换。</p>
+<hr />
+<h2 id="个人使用体验"><a class="markdownIt-Anchor" href="#个人使用体验"></a> 个人使用体验</h2>
+<h3 id="成本真的便宜"><a class="markdownIt-Anchor" href="#成本真的便宜"></a> 成本：真的便宜</h3>
+<p>最近 DeepSeek 的 Token 价格打 <strong>2.5 折</strong>，我往账户里充了 10 块钱。到目前为止，用它完成了：</p>
+<ul>
+<li><strong>两个深度学习论文的复现工作</strong>（涉及大量代码编写和调试）</li>
+<li><strong>几篇博客文章</strong>（包括本文）的撰写与 Hexo 自动部署脚本调试</li>
+</ul>
+<p>总共花掉了大约 <strong>3.5 元</strong>。也就是说 10 块钱的额度还剩下近三分之二。这个价格放在任何同类工具面前都是降维打击。</p>
+<h3 id="与-cursor-pro-的对比"><a class="markdownIt-Anchor" href="#与-cursor-pro-的对比"></a> 与 Cursor Pro 的对比</h3>
+<p>在此之前，我一直在用 Cursor 的 Pro 订阅，20 美元一个月。说实话，体验算不上差，但有一个致命问题——<strong>Opus 的额度太少</strong>，高强度用不了几天就没了。额度耗尽之后只能降级用 Cursor 自研的 Composer 2.5（底层其实是 Kimi 2.5 套壳），虽然也不至于难用，但模型能力明显掉了一个档次。GPT 的额度同样少得可怜。</p>
+<p>20 美元一个月，大部分时间用的只是一个二线模型——性价比实在太低了。</p>
+<p>相比之下，DeepSeek V4-Pro 按量计费、单价极低，而且<strong>不限制调用频率</strong>，不用担心&quot;额度用完&quot;这件事。花多少钱用多少量，完全在自己掌控范围内。</p>
+<h3 id="实际能力感受"><a class="markdownIt-Anchor" href="#实际能力感受"></a> 实际能力感受</h3>
+<p>讲实话，DeepSeek V4-Pro 的<strong>代码能力和中文能力都不错</strong>。代码方面，在两个复现项目中处理了训练脚本、数据预处理、配置文件的编写和调试，基本没有遇到模型能力不足导致的阻塞性问题。中文方面，写博客、整理技术文档时的语言表达自然流畅，比大多数纯英文训练的模型接地气得多。</p>
+<p>当然，前面提到的图片不支持确实时有碰到——比如想让 CC 看看终端报错截图或者模型输出的可视化结果，这时候只能临时切回原生 API。但纯文本场景下，V4-Pro 完全够用。</p>
+<hr />
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>DeepSeek V4-Pro + Claude Code 的组合在<strong>纯文本编码场景</strong>下体验几乎无差异——Tool Use 和 Subagent 均原生可用，配合极低的 API 成本和 1M 超长上下文，是日常开发中极具性价比的选择。唯一的软肋是图片/多模态不支持，遇到需要视觉理解的场景时需要切回 Anthropic 原生 API。</p>
+<blockquote>
+<p>📌 <strong>适用场景</strong>：后端开发、脚本编写、代码重构、项目搭建、文档生成</p>
+<p>📌 <strong>不适用场景</strong>：前端 UI 开发（需要看图）、截图 Debug、多模态分析</p>
+</blockquote>
+<hr />
+<h2 id="参考资料"><a class="markdownIt-Anchor" href="#参考资料"></a> 参考资料</h2>
+<ul>
+<li><a href="https://api-docs.deepseek.com/guides/anthropic_api">DeepSeek 官方 Anthropic API 文档</a></li>
+<li><a href="https://code.claude.com/docs/en/vs-code">Claude Code VS Code Extension 官方文档</a></li>
+<li><a href="https://blog.techfetch.dev/blog/2025/09/17/claude-code-third-party-vendor-usage-guide-in-depth-analysis-best-practices/">Claude Code Third-party Vendor Usage Guide</a></li>
+</ul>
+]]></content>
+      <categories>
+        <category>工具教程</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Git 核心操作记录：面向日常开发的实践总结</title>
     <url>/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/</url>
     <content><![CDATA[<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
@@ -728,197 +919,6 @@ config 里列出各划分</strong>。</li>
 ]]></content>
       <categories>
         <category>深度学习</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>在VS Code的CC插件以及终端CC中接入DeepSeek-V4-Pro</title>
-    <url>/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/</url>
-    <content><![CDATA[<p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，且在中国大陆充值需要耗费一些精力（后续会出充值教程），而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
-参考链接：<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">Deepseek接入CC的官方文档</a><br />
-<a href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
-<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
-<span id="more"></span>
-<hr />
-<h2 id="前置准备"><a class="markdownIt-Anchor" href="#前置准备"></a> 前置准备</h2>
-<p>开始之前，需要准备好以下内容：</p>
-<ul>
-<li><strong>DeepSeek API Key</strong>：在 <a href="https://platform.deepseek.com/">DeepSeek 开放平台</a> 注册并获取，可以先充值10元试一试，目前是2.5折优惠。</li>
-<li><strong>Claude Code 已安装</strong>：终端CC和VSCode CC插件安装，此处不进行过多介绍。</li>
-</ul>
-<hr />
-<h2 id="一终端-cc-接入"><a class="markdownIt-Anchor" href="#一终端-cc-接入"></a> 一：终端 CC 接入</h2>
-<p>终端 CC 通过读取 shell 环境变量来决定使用哪个模型后端。直接在你的shell配置文件中添加以下环境变量即可。</p>
-<p>对于 macOS / zsh 用户，编辑 <code>~/.zshrc</code>：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">export</span> ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_AUTH_TOKEN=&lt;你的 DeepSeek API Key&gt;</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_OPUS_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_SONNET_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_SUBAGENT_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_EFFORT_LEVEL=max</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>💡 <strong>说明</strong>：CC 内部会根据任务复杂度自动选择 Opus/Sonnet/Haiku 级别的模型。通过 <code>ANTHROPIC_DEFAULT_*</code> 变量可以将这些级别分别映射到 DeepSeek 的不同模型。如果你希望所有任务都走同一个模型，全部填 <code>deepseek-v4-pro</code> 即可。</p>
-</blockquote>
-<p>配置完成后，重新加载 shell 配置：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
-<h2 id="随后在终端中启动-claudecc-便会通过-deepseek-api-运行"><a class="markdownIt-Anchor" href="#随后在终端中启动-claudecc-便会通过-deepseek-api-运行"></a> 随后在终端中启动 <code>claude</code>，CC 便会通过 DeepSeek API 运行。</h2>
-<h2 id="二vscode-cc-插件接入"><a class="markdownIt-Anchor" href="#二vscode-cc-插件接入"></a> 二：VSCode CC 插件接入</h2>
-<p>VSCode 的CC插件同样依赖环境变量，但需要通过VSCode的终端环境变量设置来注入。</p>
-<p>打开 VS Code 设置（<code>Cmd + ,</code>），搜索 <code>terminal.integrated.env.osx</code>（Windows 用户搜索 <code>terminal.integrated.env.windows</code>），点击 <strong>Edit in settings.json</strong>，添加以下内容：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;terminal.integrated.env.osx&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_BASE_URL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://api.deepseek.com/anthropic&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_AUTH_TOKEN&quot;</span><span class="punctuation">:</span> <span class="string">&quot;sk-your-deepseek-api-key&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_OPUS_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_SONNET_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_HAIKU_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-flash&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;CLAUDE_CODE_SUBAGENT_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-<p>配置完成后，<strong>完全退出并重启 VS Code</strong>，再打开集成的 CC 插件，环境变量便会生效。</p>
-<hr />
-<h2 id="推荐的额外配置"><a class="markdownIt-Anchor" href="#推荐的额外配置"></a> 推荐的额外配置</h2>
-<p>为了获得更好的使用体验，建议一并配置以下变量：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 超时时长（ms）：max effort 推理耗时较长，建议设长一些</span></span><br><span class="line"><span class="built_in">export</span> API_TIMEOUT_MS=<span class="string">&quot;600000&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭非必要流量（遥测、成本警告等）</span></span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_COST_WARNINGS=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_TELEMETRY=1</span><br></pre></td></tr></table></figure>
-<hr />
-<h2 id="模型映射关系"><a class="markdownIt-Anchor" href="#模型映射关系"></a> 模型映射关系</h2>
-<p>配置生效后，CC 内部分配的 Claude 模型会被自动映射到 DeepSeek 模型：</p>
-<table>
-<thead>
-<tr>
-<th>Claude 原生模型</th>
-<th>映射到的 DeepSeek 模型</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>claude-opus-*</code></td>
-<td><code>deepseek-v4-pro</code></td>
-</tr>
-<tr>
-<td><code>claude-sonnet-*</code></td>
-<td><code>deepseek-v4-pro</code>（或 <code>deepseek-v4-flash</code>）</td>
-</tr>
-<tr>
-<td><code>claude-haiku-*</code></td>
-<td><code>deepseek-v4-flash</code></td>
-</tr>
-</tbody>
-</table>
-<p>V4-Pro 拥有 <strong>1M token 上下文窗口</strong>，足以塞入整个代码仓库，配合 CC 的代码搜索和多文件编辑能力，体验相当顺畅。</p>
-<hr />
-<h2 id="功能兼容性一览"><a class="markdownIt-Anchor" href="#功能兼容性一览"></a> 功能兼容性一览</h2>
-<p>DeepSeek 的 Anthropic 兼容端点是目前第三方供应商中<strong>支持最完整</strong>的，但仍有几个重要差距需要了解：</p>
-<h3 id="完全支持"><a class="markdownIt-Anchor" href="#完全支持"></a> ✅ 完全支持</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>文本对话与流式输出</td>
-<td>日常编码问答完全正常</td>
-</tr>
-<tr>
-<td>Tool Use / 函数调用</td>
-<td>文件读写、命令执行、工具链调用均稳定</td>
-</tr>
-<tr>
-<td><strong>Subagent（子代理）</strong></td>
-<td>✅ DeepSeek 原生支持，Agent 级任务可正常调度</td>
-</tr>
-<tr>
-<td>System Prompt</td>
-<td>系统指令完全兼容</td>
-</tr>
-<tr>
-<td>128K～1M 上下文</td>
-<td>V4-Pro 支持 1M tokens，远超 Claude 的 200K</td>
-</tr>
-</tbody>
-</table>
-<h3 id="️-部分支持-被忽略"><a class="markdownIt-Anchor" href="#️-部分支持-被忽略"></a> ⚠️ 部分支持 / 被忽略</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>thinking</code>（推理模式）</td>
-<td>V4-Pro 自身具备推理能力，但 Anthropic API 的 <code>budget_tokens</code> 参数会被忽略</td>
-</tr>
-<tr>
-<td><code>disable_parallel_tool_use</code></td>
-<td>被忽略，DeepSeek 的并行工具调用策略与 Claude 不同</td>
-</tr>
-<tr>
-<td><code>cache_control</code></td>
-<td>不支持 Anthropic 的 prompt caching 机制</td>
-</tr>
-</tbody>
-</table>
-<h3 id="不支持"><a class="markdownIt-Anchor" href="#不支持"></a> ❌ 不支持</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>图片 / 多模态</strong></td>
-<td><strong>最大短板</strong>。V4-Pro 当前是纯文本模型，截图、UI 设计稿、终端截图等无法被识别——只会收到占位符 <code>[Image #1]</code></td>
-</tr>
-<tr>
-<td>文档上传</td>
-<td>不支持直接上传 PDF、图片等文件作为输入</td>
-</tr>
-<tr>
-<td>MCP 工具类型</td>
-<td>不支持 <code>server_tool_use</code>、<code>mcp_tool_result</code> 等 MCP 原生工具调用类型</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="实际使用中需要注意的问题"><a class="markdownIt-Anchor" href="#实际使用中需要注意的问题"></a> 实际使用中需要注意的问题</h2>
-<h3 id="1-图片不可用是硬伤"><a class="markdownIt-Anchor" href="#1-图片不可用是硬伤"></a> 1. 图片不可用是硬伤</h3>
-<p>虽然 V4-Pro 有 1M 上下文——&quot;能塞进去整个代码仓库，但塞不进去一张 PNG。&quot;遇到以下场景时需要<strong>临时切回 Anthropic 原生 API</strong>：</p>
-<ul>
-<li>CC 自动截取终端截图进行 debug</li>
-<li>需要基于 UI 设计稿生成前端代码</li>
-<li>分析报错截图或日志截屏</li>
-</ul>
-<p><strong>切换方法</strong>：在终端中取消 <code>ANTHROPIC_BASE_URL</code> 环境变量即可回退：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">unset</span> ANTHROPIC_BASE_URL</span><br><span class="line"><span class="comment"># 或者重新打开一个未配置 ANTHROPIC_BASE_URL 的终端窗口</span></span><br></pre></td></tr></table></figure>
-<h3 id="2-速度与成本的权衡"><a class="markdownIt-Anchor" href="#2-速度与成本的权衡"></a> 2. 速度与成本的权衡</h3>
-<p>DeepSeek V4-Pro 在 max effort 模式下推理时间较长（可能超过 1 分钟），这也是建议将 <code>API_TIMEOUT_MS</code> 设为 600000 的原因。但相比原生 Claude API <strong>约 90%+ 的成本节省</strong>，这点等待完全值得。</p>
-<h3 id="3-不同订阅方案的区别"><a class="markdownIt-Anchor" href="#3-不同订阅方案的区别"></a> 3. 不同订阅方案的区别</h3>
-<p>如果同时持有 Anthropic 的付费订阅（Max 计划），注意环境变量的配置会覆盖订阅的原生模型路由。建议为 DeepSeek 接入专门准备一个终端配置别名，方便在不同后端之间快速切换。</p>
-<hr />
-<h2 id="个人使用体验"><a class="markdownIt-Anchor" href="#个人使用体验"></a> 个人使用体验</h2>
-<h3 id="成本真的便宜"><a class="markdownIt-Anchor" href="#成本真的便宜"></a> 成本：真的便宜</h3>
-<p>最近 DeepSeek 的 Token 价格打 <strong>2.5 折</strong>，我往账户里充了 10 块钱。到目前为止，用它完成了：</p>
-<ul>
-<li><strong>两个深度学习论文的复现工作</strong>（涉及大量代码编写和调试）</li>
-<li><strong>几篇博客文章</strong>（包括本文）的撰写与 Hexo 自动部署脚本调试</li>
-</ul>
-<p>总共花掉了大约 <strong>3.5 元</strong>。也就是说 10 块钱的额度还剩下近三分之二。这个价格放在任何同类工具面前都是降维打击。</p>
-<h3 id="与-cursor-pro-的对比"><a class="markdownIt-Anchor" href="#与-cursor-pro-的对比"></a> 与 Cursor Pro 的对比</h3>
-<p>在此之前，我一直在用 Cursor 的 Pro 订阅，20 美元一个月。说实话，体验算不上差，但有一个致命问题——<strong>Opus 的额度太少</strong>，高强度用不了几天就没了。额度耗尽之后只能降级用 Cursor 自研的 Composer 2.5（底层其实是 Kimi 2.5 套壳），虽然也不至于难用，但模型能力明显掉了一个档次。GPT 的额度同样少得可怜。</p>
-<p>20 美元一个月，大部分时间用的只是一个二线模型——性价比实在太低了。</p>
-<p>相比之下，DeepSeek V4-Pro 按量计费、单价极低，而且<strong>不限制调用频率</strong>，不用担心&quot;额度用完&quot;这件事。花多少钱用多少量，完全在自己掌控范围内。</p>
-<h3 id="实际能力感受"><a class="markdownIt-Anchor" href="#实际能力感受"></a> 实际能力感受</h3>
-<p>讲实话，DeepSeek V4-Pro 的<strong>代码能力和中文能力都不错</strong>。代码方面，在两个复现项目中处理了训练脚本、数据预处理、配置文件的编写和调试，基本没有遇到模型能力不足导致的阻塞性问题。中文方面，写博客、整理技术文档时的语言表达自然流畅，比大多数纯英文训练的模型接地气得多。</p>
-<p>当然，前面提到的图片不支持确实时有碰到——比如想让 CC 看看终端报错截图或者模型输出的可视化结果，这时候只能临时切回原生 API。但纯文本场景下，V4-Pro 完全够用。</p>
-<hr />
-<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
-<p>DeepSeek V4-Pro + Claude Code 的组合在<strong>纯文本编码场景</strong>下体验几乎无差异——Tool Use 和 Subagent 均原生可用，配合极低的 API 成本和 1M 超长上下文，是日常开发中极具性价比的选择。唯一的软肋是图片/多模态不支持，遇到需要视觉理解的场景时需要切回 Anthropic 原生 API。</p>
-<blockquote>
-<p>📌 <strong>适用场景</strong>：后端开发、脚本编写、代码重构、项目搭建、文档生成</p>
-<p>📌 <strong>不适用场景</strong>：前端 UI 开发（需要看图）、截图 Debug、多模态分析</p>
-</blockquote>
-<hr />
-<h2 id="参考资料"><a class="markdownIt-Anchor" href="#参考资料"></a> 参考资料</h2>
-<ul>
-<li><a href="https://api-docs.deepseek.com/guides/anthropic_api">DeepSeek 官方 Anthropic API 文档</a></li>
-<li><a href="https://code.claude.com/docs/en/vs-code">Claude Code VS Code Extension 官方文档</a></li>
-<li><a href="https://blog.techfetch.dev/blog/2025/09/17/claude-code-third-party-vendor-usage-guide-in-depth-analysis-best-practices/">Claude Code Third-party Vendor Usage Guide</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>工具教程</category>
       </categories>
   </entry>
   <entry>
@@ -2241,6 +2241,506 @@ config 里列出各划分</strong>。</li>
 <li>✅ <strong>依赖适配</strong>：PyTorch 2.8 原生 API，无需 timm/POT 等额外依赖</li>
 </ul>
 <p>可以预期在 SmokeSeg 数据集上得到与原论文相近的结果。</p>
+<hr />
+<h2 id="第三部分hss-mss-segformer-mit-b0-复现对齐"><a class="markdownIt-Anchor" href="#第三部分hss-mss-segformer-mit-b0-复现对齐"></a> 第三部分：HSS / MSS + SegFormer-MiT-B0 复现对齐</h2>
+<p>最近又接了另一个任务：在 OneDL-MMSegmentation 框架下复现 MoP 论文（Yao et al., 2026, <em>Hyperspectral Smoke Segmentation via Mixture of Prototypes</em>）Table 4 / Table 5 中 <strong>SegFormer-MiT-B0（Real-Time）</strong> 基线结果。这次涉及两个数据集——HSS（高光谱 25 通道）和 MSS（多光谱 4 通道），模型虽小但定制点多，踩的坑和前两部分很不一样。</p>
+<h3 id="tldr-2"><a class="markdownIt-Anchor" href="#tldr-2"></a> TL;DR</h3>
+<ul>
+<li>复现目标：HSS total mIoU <strong>46.84</strong> / F1 <strong>62.87</strong>；MSS total mIoU <strong>72.87</strong> / F1 <strong>82.67</strong></li>
+<li><strong>首次训练结果偏高</strong>（HSS smoke IoU 68.38 vs 论文 46.84），主因是数据划分不一致（trainval 782 vs 论文 ~604）和评估分辨率差异</li>
+<li>师兄代码中有多处与论文不一致的地方（<code>MixVisionTransformerHSS2</code> 双分支架构、SGD vs AdamW、TTA flip 等），逐项判断后<strong>以论文为准</strong></li>
+<li>数据划分和尺度划分文件需向师兄确认后替换</li>
+</ul>
+<hr />
+<h3 id="1-论文目标数值segformer-mit-b0-real-time"><a class="markdownIt-Anchor" href="#1-论文目标数值segformer-mit-b0-real-time"></a> 1. 论文目标数值（SegFormer MiT-B0, Real-Time）</h3>
+<h4 id="hssdatasettable-4"><a class="markdownIt-Anchor" href="#hssdatasettable-4"></a> HSSDataset（Table 4）</h4>
+<table>
+<thead>
+<tr>
+<th>尺度</th>
+<th>F1 (%)</th>
+<th>mIoU (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Small</td>
+<td>53.48</td>
+<td>37.78</td>
+</tr>
+<tr>
+<td>Medium</td>
+<td>65.63</td>
+<td>49.21</td>
+</tr>
+<tr>
+<td>Large</td>
+<td>70.17</td>
+<td>54.33</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>62.87</strong></td>
+<td><strong>46.84</strong></td>
+</tr>
+</tbody>
+</table>
+<h4 id="mssdatasettable-5"><a class="markdownIt-Anchor" href="#mssdatasettable-5"></a> MSSDataset（Table 5）</h4>
+<table>
+<thead>
+<tr>
+<th>尺度</th>
+<th>F1 (%)</th>
+<th>mIoU (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Medium</td>
+<td>83.37</td>
+<td>74.05</td>
+</tr>
+<tr>
+<td>Large</td>
+<td>92.06</td>
+<td>86.36</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>82.67</strong></td>
+<td><strong>72.87</strong></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ 论文 Table 5 中 SegFormer MSS Params=<strong>13.6M</strong>。标准 MiT-B0（embed_dims=32）仅 ~3.7M 参数，13.6M 更接近 MiT-B1（embed_dims=64）。师兄 FLAME2 原始配置使用 <code>embed_dims=32</code>（MiT-B0），当前实现与师兄一致。若论文 MSS 基线实际使用了更大的 backbone，我们的 MiT-B0 结果将偏低。</p>
+</blockquote>
+<hr />
+<h3 id="2-当前实现对齐项"><a class="markdownIt-Anchor" href="#2-当前实现对齐项"></a> 2. 当前实现对齐项</h3>
+<h4 id="21-模型结构"><a class="markdownIt-Anchor" href="#21-模型结构"></a> 2.1 模型结构</h4>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>HSS</th>
+<th>MSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Segmentor</td>
+<td><code>EncoderDecoder</code></td>
+<td>同左</td>
+</tr>
+<tr>
+<td>Backbone</td>
+<td><code>MixVisionTransformer</code></td>
+<td>同左</td>
+</tr>
+<tr>
+<td><code>in_channels</code></td>
+<td>25</td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>embed_dims</code></td>
+<td><strong>25</strong>（stage → [25,50,125,200]）</td>
+<td>32（标准 MiT-B0）</td>
+</tr>
+<tr>
+<td><code>num_layers</code></td>
+<td>[2,2,2,2]</td>
+<td>[2,2,2,2]</td>
+</tr>
+<tr>
+<td>Decode head</td>
+<td><code>SegformerHead</code></td>
+<td>同左</td>
+</tr>
+<tr>
+<td><code>channels</code></td>
+<td>250</td>
+<td>256</td>
+</tr>
+<tr>
+<td><code>out_channels</code></td>
+<td>1 + sigmoid</td>
+<td>同左</td>
+</tr>
+<tr>
+<td><code>threshold</code></td>
+<td>0.5</td>
+<td>0.4</td>
+</tr>
+<tr>
+<td>Loss</td>
+<td>BCE <code>loss_weight=2.0</code>, <code>class_weight=[5.0]</code></td>
+<td>同左</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 <strong>关于 <code>MixVisionTransformerHSS2</code></strong>：师兄配置文件中写了 <code>MixVisionTransformerHSS2</code>，该 backbone 实际运行<strong>两条并行前向路径</strong>（标准路径 + Indi 分组路径），本质上是 MoP Band Split 思想的前身，<strong>不是</strong>纯 SegFormer 基线。本实现采用论文描述的标准 <code>MixVisionTransformer</code> + <code>embed_dims=25</code>，<strong>未移植 HSS2</strong>。</p>
+</blockquote>
+<h4 id="22-训练超参对齐论文-table-2"><a class="markdownIt-Anchor" href="#22-训练超参对齐论文-table-2"></a> 2.2 训练超参（对齐论文 Table 2）</h4>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>论文</th>
+<th>当前配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Optimizer</td>
+<td>AdamW</td>
+<td>AdamW</td>
+</tr>
+<tr>
+<td>LR</td>
+<td>6e-5</td>
+<td>6e-5</td>
+</tr>
+<tr>
+<td>Weight decay</td>
+<td>0.01</td>
+<td>0.01</td>
+</tr>
+<tr>
+<td>Batch size</td>
+<td>4</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Iterations</td>
+<td>40,000</td>
+<td>40,000</td>
+</tr>
+<tr>
+<td>LR schedule</td>
+<td>Poly, power=0.9</td>
+<td>Linear warmup 1500 + Poly 0.9</td>
+</tr>
+<tr>
+<td><code>head</code> LR</td>
+<td>—</td>
+<td>10×（<code>paramwise_cfg</code>）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 <strong>关于 SGD vs AdamW</strong>：师兄 <code>HSS_dev_config</code> 中的 <code>schedule_40k.py</code> 实际配置的是 <strong>SGD lr=0.01, momentum=0.9, weight_decay=0.0005</strong>——与论文 Table 2（AdamW lr=6e-5, wd=0.01）完全不同。SGD 很可能是师兄早期实验的遗留，论文正式实验使用的是 AdamW。当前实现选择 AdamW <strong>正确对齐论文</strong>。</p>
+</blockquote>
+<h4 id="23-数据管道"><a class="markdownIt-Anchor" href="#23-数据管道"></a> 2.3 数据管道</h4>
+<p><strong>HSS 训练 Pipeline</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">LoadImageFromNpyFile → LoadAnnotations → ResizeSegToMatchImage</span><br><span class="line">→ RandomResize(0.5~2.0) / Resize(512) → RandomCrop / — → RandomFlip(0.5)</span><br><span class="line">→ HSSNormalize → PackSegInputs</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>HSSNormalize</code>：25 通道 mean/std 在 pipeline 中完成（<code>SegDataPreProcessor</code> 不支持 &gt;3 通道）</li>
+<li><code>ResizeSegToMatchImage</code>：对齐 npy 与 PNG mask 的空间分辨率（HSS 中 npy ~217×409 vs PNG ~1088×2048，5× 关系）</li>
+</ul>
+<p><strong>HSS 测试 Pipeline（⚠️ 与师兄有实质性差异）</strong></p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>师兄原始 (mmseg 0.x)</th>
+<th>当前实现 (mmseg 1.x)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>评估框架</td>
+<td><code>MultiScaleFlipAug</code>（TTA 容器）</td>
+<td>直接 pipeline</td>
+</tr>
+<tr>
+<td>Test-time flip</td>
+<td><strong>启用</strong>（<code>RandomFlip</code>）</td>
+<td><strong>无</strong></td>
+</tr>
+<tr>
+<td>评估分辨率</td>
+<td>Resize 后的 ~512²</td>
+<td><strong>npy 原生分辨率</strong>（~217×409）</td>
+</tr>
+<tr>
+<td>GT 分辨率</td>
+<td>PNG 原始分辨率（~1088×2048）</td>
+<td><code>ResizeSegToOriShape</code> 降采样到 npy 分辨率</td>
+</tr>
+</tbody>
+</table>
+<p>师兄在<strong>更高分辨率</strong>（PNG mask ~1088×2048）上计算指标，当前在更低的 npy 分辨率（~217×409）上计算。低分辨率下边缘像素占比更高，可能导致 <strong>~1-3% mIoU 差异</strong>。此外，师兄启用了 <strong>test-time flip TTA</strong>，通常带来 &lt;1% 的提升。</p>
+<p><strong>MSS Pipeline</strong>（训练和测试均无需 <code>ResizeSegToMatchImage</code>，npy 与 PNG mask 分辨率一致 ✅）</p>
+<h4 id="24-评估"><a class="markdownIt-Anchor" href="#24-评估"></a> 2.4 评估</h4>
+<ul>
+<li>指标：<code>SmokeSegMetric</code>（pixel-level <code>mmIoU</code> / <code>mmFscore</code> + image-level <code>smoke.Img_IoU</code> 等）</li>
+<li>Checkpoint：按 <code>smoke.Img_IoU</code> 保存 best</li>
+<li>论文使用 pixel-level F1 / mIoU</li>
+</ul>
+<h4 id="25-像素级-vs-图像级指标-gap️-已验证非-bug"><a class="markdownIt-Anchor" href="#25-像素级-vs-图像级指标-gap️-已验证非-bug"></a> 2.5 像素级 vs 图像级指标 gap（⚠️ 已验证非 bug）</h4>
+<p>首次 HSS 验证时观察到 <strong>smoke 类 image-level IoU (60.78) &gt; pixel-level IoU (49.41)</strong>，与 SmokeSeg 上 image-level &lt; pixel-level 的模式相反，已确认<strong>不是计算错误</strong>。</p>
+<p>原因：两种聚合方式对不同大小烟雾的<strong>权重分配</strong>不同——pixel-level 每个像素等权（大烟雾图主导），image-level 每张图等权（小烟雾图同等重要）。HSS 数据集中大烟雾图逐图 IoU 较低但像素多，拉低了 pixel-level。</p>
+<p>实际诊断数据确认：<strong><code>union-weighted image IoU (0.6838)</code> = <code>pixel-level IoU (0.6838)</code></strong>，证明计算无 bug。<strong>与论文对比时以 pixel-level 为准</strong>（论文 Table 4/5 的 mIoU/F1 是 pixel-level 全局累积）。</p>
+<h4 id="26-首次-hss-训练结果️-数值偏高划分待对齐"><a class="markdownIt-Anchor" href="#26-首次-hss-训练结果️-数值偏高划分待对齐"></a> 2.6 首次 HSS 训练结果（⚠️ 数值偏高，划分待对齐）</h4>
+<p><strong>best checkpoint: iter_33500</strong></p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>pixel-level</th>
+<th>image-level</th>
+<th>论文 Table 4 Total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>smoke IoU</td>
+<td><strong>68.38</strong></td>
+<td>71.57</td>
+<td>46.84</td>
+</tr>
+<tr>
+<td>smoke Fscore</td>
+<td><strong>81.22</strong></td>
+<td>83.11</td>
+<td>62.87</td>
+</tr>
+<tr>
+<td>smoke Precision</td>
+<td>77.77</td>
+<td>79.31</td>
+<td>—</td>
+</tr>
+<tr>
+<td>smoke Recall</td>
+<td>84.99</td>
+<td>89.04</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ <strong>当前数值远超论文 baseline</strong>，原因：</p>
+<ol>
+<li><strong>数据划分不一致</strong>：当前使用 <code>trainval.txt</code>（782 张）训练，论文 ≈604 张（6:2:2 划分）；且 <code>test.txt</code>（225 张）的划分文件来自师兄仓库根目录而非论文官方</li>
+<li><strong>评估分辨率差异</strong>：当前在 npy 原生分辨率（~217×409）评估，师兄在 PNG 分辨率（~1088×2048）评估</li>
+<li><strong>后续需向师兄索取官方 train/val/test 划分，替换后重新训练对比</strong></li>
+</ol>
+</blockquote>
+<hr />
+<h3 id="3-数据划分待与师兄最终确认"><a class="markdownIt-Anchor" href="#3-数据划分待与师兄最终确认"></a> 3. 数据划分（待与师兄最终确认）</h3>
+<h4 id="31-hssdatahss_voc共-1007-张-npy"><a class="markdownIt-Anchor" href="#31-hssdatahss_voc共-1007-张-npy"></a> 3.1 HSS（<code>data/HSS_VOC/</code>，共 1007 张 npy）</h4>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>行数</th>
+<th>用途</th>
+<th>来源说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>train.txt</code></td>
+<td>685</td>
+<td>子集</td>
+<td><code>HSS/train.txt</code>（师兄仓库根目录）</td>
+</tr>
+<tr>
+<td><code>val.txt</code></td>
+<td>97</td>
+<td>子集</td>
+<td><code>HSS/val.txt</code>（已修复末行缺换行）</td>
+</tr>
+<tr>
+<td><code>trainval.txt</code></td>
+<td>782</td>
+<td><strong>训练</strong></td>
+<td>train + val 合并</td>
+</tr>
+<tr>
+<td><code>test.txt</code></td>
+<td>225</td>
+<td><strong>验证 + 测试</strong></td>
+<td><code>HSS/test.txt</code></td>
+</tr>
+<tr>
+<td><code>test_small.txt</code></td>
+<td>99</td>
+<td>分层评测</td>
+<td><code>HSS/test_small.txt</code></td>
+</tr>
+<tr>
+<td><code>test_medium.txt</code></td>
+<td>84</td>
+<td>分层评测</td>
+<td><code>HSS/test_medium.txt</code></td>
+</tr>
+<tr>
+<td><code>test_large.txt</code></td>
+<td>42</td>
+<td>分层评测</td>
+<td><code>HSS/test_large.txt</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>师兄正式配置写的是 <code>ImageSets/Segmentation/train.txt</code>，该路径<strong>不存在</strong>；实际可用的是 <code>HSS/</code> 根目录下的 txt</li>
+<li>训练策略：<strong>trainval 训练，test 验证/测试</strong>（与师兄配置&quot;val=test&quot;思路一致，但训练集更大）</li>
+<li>HSS 的 <code>test_small</code>（99 张）与 <strong>FoSp 协议 δ&lt;0.5%</strong> 完全一致；<code>test_medium</code> / <code>test_large</code> 与纯 FoSp 固定阈值<strong>不完全一致</strong></li>
+</ul>
+<h4 id="32-mssdatamss_voc共-200-张"><a class="markdownIt-Anchor" href="#32-mssdatamss_voc共-200-张"></a> 3.2 MSS（<code>data/MSS_VOC/</code>，共 200 张）</h4>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>行数</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>train.txt</code></td>
+<td>180</td>
+<td>训练</td>
+</tr>
+<tr>
+<td><code>test.txt</code></td>
+<td>20</td>
+<td>验证 + 测试</td>
+</tr>
+<tr>
+<td><code>test_small/medium/large.txt</code></td>
+<td>7 / 6 / 7</td>
+<td>分层评测（<strong>临时生成，待确认</strong>）</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>MSS 与师兄 <code>FLAME2_VOC</code> 的 <code>FLAME_test_*.txt</code>（40 张）<strong>ID 无重叠</strong>；师兄仓库<strong>未提供</strong>针对 <code>MSS_VOC</code> 这 20 张 test 的官方尺度划分</li>
+<li>当前 <code>test_*.txt</code> 按<strong>三分位</strong>生成，<strong>不是</strong> FoSp 式协议（按 FoSp，20 张 test 烟雾占比均 &gt;2.5%，应全为 Large）</li>
+<li>若要对齐 Table 5 的 Medium/Large 列，需向师兄索取官方划分</li>
+</ul>
+<hr />
+<h3 id="4-与师兄-论文仍存在的差异摘要"><a class="markdownIt-Anchor" href="#4-与师兄-论文仍存在的差异摘要"></a> 4. 与师兄 / 论文仍存在的差异摘要</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>论文</th>
+<th>师兄代码</th>
+<th>当前实现</th>
+<th>影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HSS backbone</td>
+<td>定制 MiT-B0, embed=25</td>
+<td><code>MixVisionTransformerHSS2</code>（双分支 + 分组 attention）</td>
+<td>标准 MiT, embed=25 ✓</td>
+<td>🟢 对齐论文</td>
+</tr>
+<tr>
+<td>HSS 优化器</td>
+<td><strong>AdamW</strong> lr=6e-5</td>
+<td><strong>SGD</strong> lr=0.01, momentum=0.9</td>
+<td>AdamW lr=6e-5 ✓</td>
+<td>🟢 对齐论文</td>
+</tr>
+<tr>
+<td>HSS LR schedule</td>
+<td>Poly power=0.9</td>
+<td>Poly power=1.0, min_lr=1e-4</td>
+<td>Poly power=0.9, min_lr=0.0</td>
+<td>🟡 min_lr 微小差异</td>
+</tr>
+<tr>
+<td>HSS warmup</td>
+<td>—</td>
+<td>无</td>
+<td>LinearLR 1500 iters</td>
+<td>🟢 改善训练</td>
+</tr>
+<tr>
+<td>HSS batch size</td>
+<td>4</td>
+<td><strong>6</strong></td>
+<td><strong>4</strong></td>
+<td>🟡 较小 batch 可能影响稳定性</td>
+</tr>
+<tr>
+<td>HSS 训练集</td>
+<td>~604 (6:2:2)</td>
+<td>仅 train (685)</td>
+<td><strong>trainval (782)</strong></td>
+<td>🟡 更多数据，结果不可直接比</td>
+</tr>
+<tr>
+<td>HSS 测试 TTA</td>
+<td>—</td>
+<td><strong>启用</strong> flip TTA</td>
+<td><strong>无</strong></td>
+<td>🟡 师兄评估有利 ~0.5-1%</td>
+</tr>
+<tr>
+<td>HSS 评估分辨率</td>
+<td>512²</td>
+<td>512² → 上采样到 PNG 分辨率</td>
+<td>ori_shape（npy 分辨率）</td>
+<td>🟡 <strong>~1-3% mIoU 差异</strong></td>
+</tr>
+<tr>
+<td>MSS 迭代</td>
+<td>40k</td>
+<td>师兄 MSS 入口 10k</td>
+<td>40k ✓</td>
+<td>🟢 对齐论文</td>
+</tr>
+<tr>
+<td>MSS 模型规模</td>
+<td>Params=13.6M（疑似 MiT-B1）</td>
+<td>MiT-B0 (embed=32)</td>
+<td>MiT-B0 (embed=32)</td>
+<td>🟡 若论文用 MiT-B1 则结果偏低</td>
+</tr>
+<tr>
+<td>MSS 尺度划分</td>
+<td>FoSp 协议</td>
+<td>FLAME 另一套（非 MSS_VOC）</td>
+<td>三分位（临时）</td>
+<td>🔴 需向师兄确认</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="5-训练与测试命令"><a class="markdownIt-Anchor" href="#5-训练与测试命令"></a> 5. 训练与测试命令</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># HSS 训练</span></span><br><span class="line">python tools/train.py my_configs/segformer/segformer_mit-b0_hss_40k.py</span><br><span class="line"></span><br><span class="line"><span class="comment"># MSS 训练</span></span><br><span class="line">python tools/train.py my_configs/segformer/segformer_mit-b0_mss_40k.py</span><br><span class="line"></span><br><span class="line"><span class="comment"># 测试（单 checkpoint）</span></span><br><span class="line">python tools/smoke_test.py \</span><br><span class="line">  my_configs/segformer/segformer_mit-b0_hss_40k.py \</span><br><span class="line">  work_dirs/HSS/segformer_mit_b0/run__TIMESTAMP/best_smoke.Img_IoU_iter_XXXXX.pth</span><br><span class="line"></span><br><span class="line"><span class="comment"># 分层评测（small / medium / large / total）</span></span><br><span class="line">python tools/smoke_test_multiscale.py \</span><br><span class="line">  my_configs/segformer/segformer_mit-b0_hss_40k.py \</span><br><span class="line">  CKPT --splits small medium large --launcher none</span><br><span class="line"></span><br><span class="line"><span class="comment"># 续训</span></span><br><span class="line">python tools/train.py my_configs/segformer/segformer_mit-b0_hss_40k.py \</span><br><span class="line">  --resume-into work_dirs/HSS/segformer_mit_b0/run__TIMESTAMP --resume</span><br></pre></td></tr></table></figure>
+<hr />
+<h3 id="6-相关文件清单"><a class="markdownIt-Anchor" href="#6-相关文件清单"></a> 6. 相关文件清单</h3>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">my_configs/segformer/</span><br><span class="line">├── segformer_mit-b0_hss_40k.py      # HSS 训练配置</span><br><span class="line">├── segformer_mit-b0_mss_40k.py      # MSS 训练配置</span><br><span class="line">└── REPRODUCTION_ALIGN_mit-b0_hss_mss.md</span><br><span class="line"></span><br><span class="line">mmseg/datasets/</span><br><span class="line">├── hss_voc.py                       # HSSDataset</span><br><span class="line">├── mss_voc.py                       # MSSDataset</span><br><span class="line">└── transforms/transforms.py         # HSSNormalize, MSSNormalize, ResizeSegToMatchImage</span><br><span class="line"></span><br><span class="line">data/HSS_VOC/ImageSets/              # 划分 txt（待师兄确认）</span><br><span class="line">data/MSS_VOC/ImageSets/</span><br><span class="line"></span><br><span class="line">tools/</span><br><span class="line">├── train.py</span><br><span class="line">├── smoke_test.py</span><br><span class="line">├── smoke_test_multiscale.py</span><br><span class="line">└── generate_smoke_scale_splits.py</span><br></pre></td></tr></table></figure>
+<hr />
+<h3 id="7-小结与待办"><a class="markdownIt-Anchor" href="#7-小结与待办"></a> 7. 小结与待办</h3>
+<p><strong>已对齐项：</strong></p>
+<ul>
+<li>✅ 模型架构：标准 MiT + <code>embed_dims=25</code>（HSS）/ 32（MSS），以论文为准</li>
+<li>✅ 优化器：AdamW lr=6e-5（纠正师兄 SGD 遗留）</li>
+<li>✅ 训练配方：40k iter、batch=4、Poly power=0.9</li>
+<li>✅ 损失函数：BCE + sigmoid，<code>class_weight=[5.0]</code></li>
+<li>✅ 数据管道：<code>HSSNormalize</code> / <code>MSSNormalize</code>、<code>ResizeSegToMatchImage</code></li>
+<li>✅ 像素级 vs 图像级指标 gap 已确认非 bug</li>
+</ul>
+<p><strong>待确认 / 待解决：</strong></p>
+<ul>
+<li>🔴 向师兄索取 HSS/MSS 官方 train/val/test 划分</li>
+<li>🔴 确认 MSS 尺度划分协议（FoSp / 三分位 / 其他）</li>
+<li>🔴 论文 MSS 是否确实使用 MiT-B1（13.6M）而非 MiT-B0（3.7M）</li>
+<li>🟡 HSS 评估分辨率对齐（npy vs PNG）</li>
+<li>🟡 HSS 测试 TTA 对齐（当前无 flip，师兄有）</li>
+</ul>
+<p>建议流程：与师兄核对划分文件 → 替换后重训 → 对比论文 Table 4/5 → 记录结果。</p>
 ]]></content>
       <categories>
         <category>深度学习</category>
