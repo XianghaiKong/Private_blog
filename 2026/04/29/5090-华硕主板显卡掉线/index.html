@@ -20,15 +20,15 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"3hree5ive.top","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-dark","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":2,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="先交代一下这套深度学习环境的硬件配置：  显卡：技嘉 RTX 5090 纯血版（国外背回来的） CPU：AMD 9950X 主板：华硕 X870E-PLUS WIFI7 固态：三星 990 Pro 2TB 机械硬盘：西部数据紫盘 2TB 机箱：安钛克 FLUX SE 电源：安钛克 NE 1300 金牌（1300W，ATX 3.0，原生 12V-2x6） 风冷散热：九州风神 阿萨辛4 内存：美商海盗">
+    <meta name="description" content="先交代一下硬件配置：  显卡：技嘉 RTX 5090 纯血版 CPU：AMD 9950X 主板：华硕 X870E-PLUS WIFI7 固态：三星 990 Pro 2TB 机械硬盘：西部数据紫盘 2TB 机箱：安钛克 FLUX SE 电源：安钛克 NE 1300 金牌（1300W，ATX 3.0，原生 12V-2x6） 风冷散热：九州风神 阿萨辛4 内存：美商海盗船 DDR5 5200 32G×2">
 <meta property="og:type" content="article">
 <meta property="og:title" content="RTX 5090 深度学习环境显卡掉线排查记录">
 <meta property="og:url" content="https://3hree5ive.top/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/index.html">
 <meta property="og:site_name" content="3hree5ive - 个人树洞，欢迎探访">
-<meta property="og:description" content="先交代一下这套深度学习环境的硬件配置：  显卡：技嘉 RTX 5090 纯血版（国外背回来的） CPU：AMD 9950X 主板：华硕 X870E-PLUS WIFI7 固态：三星 990 Pro 2TB 机械硬盘：西部数据紫盘 2TB 机箱：安钛克 FLUX SE 电源：安钛克 NE 1300 金牌（1300W，ATX 3.0，原生 12V-2x6） 风冷散热：九州风神 阿萨辛4 内存：美商海盗">
+<meta property="og:description" content="先交代一下硬件配置：  显卡：技嘉 RTX 5090 纯血版 CPU：AMD 9950X 主板：华硕 X870E-PLUS WIFI7 固态：三星 990 Pro 2TB 机械硬盘：西部数据紫盘 2TB 机箱：安钛克 FLUX SE 电源：安钛克 NE 1300 金牌（1300W，ATX 3.0，原生 12V-2x6） 风冷散热：九州风神 阿萨辛4 内存：美商海盗船 DDR5 5200 32G×2">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-04-29T06:47:49.000Z">
-<meta property="article:modified_time" content="2026-05-31T11:10:14.381Z">
+<meta property="article:modified_time" content="2026-06-28T02:41:42.261Z">
 <meta property="article:author" content="KK">
 <meta property="article:tag" content="工程工具">
 <meta property="article:tag" content="深度学习">
@@ -118,7 +118,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-folder-open fa-fw"></i>分类<span class="badge">5</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">11</span></a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-folder-open fa-fw"></i>分类<span class="badge">4</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">8</span></a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
         </a>
@@ -169,7 +169,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80-%E6%9C%80%E5%88%9D%E9%81%87%E5%88%B0%E7%9A%84%E4%B8%89%E7%B1%BB%E7%8E%B0%E8%B1%A1"><span class="nav-number">1.</span> <span class="nav-text"> 一、最初遇到的三类现象</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%85%E5%86%B5%E4%B8%80%E7%9B%B4%E6%8E%A5%E6%8E%89%E7%9B%98%E6%89%BE%E4%B8%8D%E5%88%B0-gpu-%E8%8A%82%E7%82%B9"><span class="nav-number">1.1.</span> <span class="nav-text"> 情况一：直接掉盘，找不到 GPU 节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%85%E5%86%B5%E4%BA%8C%E8%83%BD%E8%AF%86%E5%88%AB%E6%98%BE%E5%8D%A1%E4%BD%86%E6%97%A0%E4%BF%A1%E5%8F%B7%E8%BE%93%E5%85%A5%E4%B8%94%E6%97%A0%E6%A1%8C%E9%9D%A2"><span class="nav-number">1.2.</span> <span class="nav-text"> 情况二：能识别显卡，但无信号输入且无桌面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%85%E5%86%B5%E4%B8%89%E8%BF%9C%E7%A8%8B%E6%9C%89%E6%A1%8C%E9%9D%A2%E4%BD%86%E6%9C%AC%E5%9C%B0%E6%98%BE%E7%A4%BA%E5%99%A8%E9%BB%91%E5%B1%8F"><span class="nav-number">1.3.</span> <span class="nav-text"> 情况三：远程有桌面，但本地显示器黑屏</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C-%E5%86%8D%E6%AC%A1%E5%A4%8D%E7%8E%B0batch-%E5%A2%9E%E5%A4%A7%E5%90%8E%E9%A2%91%E7%B9%81%E6%8E%89%E7%9B%98"><span class="nav-number">2.</span> <span class="nav-text"> 二、再次复现：batch 增大后频繁掉盘</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89-%E5%85%B3%E9%94%AE%E5%A4%8D%E7%8E%B0%E5%BC%80%E8%AE%AD-14-%E7%A7%92%E5%B0%B1%E5%B4%A9%E6%BA%83"><span class="nav-number">3.</span> <span class="nav-text"> 三、关键复现：开训 14 秒就崩溃</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B-%E6%8E%92%E9%99%A4%E9%A1%B9%E4%B8%8E%E6%A0%B9%E5%9B%A0%E5%88%A4%E6%96%AD"><span class="nav-number">4.</span> <span class="nav-text"> 四、排除项与根因判断</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%8E%92%E9%99%A4%E6%98%BE%E5%AD%98%E4%B8%8D%E8%B6%B3"><span class="nav-number">4.1.</span> <span class="nav-text"> 1. 排除显存不足</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%8E%92%E9%99%A4%E5%8D%95%E7%BA%AF%E8%BF%87%E7%83%AD"><span class="nav-number">4.2.</span> <span class="nav-text"> 2. 排除单纯过热</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%8E%92%E9%99%A4%E7%94%B5%E6%BA%90%E5%AE%B9%E9%87%8F%E4%B8%8D%E8%B6%B3%E4%BD%86%E4%BF%9D%E7%95%99%E7%9E%AC%E6%97%B6%E5%B0%96%E5%B3%B0%E5%88%A4%E6%96%AD"><span class="nav-number">4.3.</span> <span class="nav-text"> 3. 排除电源容量不足，但保留瞬时尖峰判断</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-pcie-gen5-%E9%93%BE%E8%B7%AF%E4%B9%9F%E6%9B%BE%E8%A2%AB%E6%80%80%E7%96%91"><span class="nav-number">4.4.</span> <span class="nav-text"> 4. PCIe Gen5 链路也曾被怀疑</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94-%E5%86%B3%E5%AE%9A%E6%80%A7%E9%AA%8C%E8%AF%81%E9%99%90%E5%88%B6%E5%8A%9F%E8%80%97%E5%88%B0-400w-%E5%90%8E%E7%A8%B3%E5%AE%9A%E8%AE%AD%E7%BB%83"><span class="nav-number">5.</span> <span class="nav-text"> 五、决定性验证：限制功耗到 400W 后稳定训练</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD-%E7%9F%AD%E6%9C%9F%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E5%85%88%E7%A8%B3%E5%AE%9A%E8%AE%AD%E7%BB%83"><span class="nav-number">6.</span> <span class="nav-text"> 六、短期解决方案：先稳定训练</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E4%B8%B4%E6%97%B6%E8%AE%BE%E7%BD%AE"><span class="nav-number">6.1.</span> <span class="nav-text"> 1. 临时设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%BC%80%E6%9C%BA%E8%87%AA%E5%8A%A8%E7%94%9F%E6%95%88"><span class="nav-number">6.2.</span> <span class="nav-text"> 2. 开机自动生效</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83-%E5%9C%A8%E7%A8%B3%E5%AE%9A%E5%89%8D%E6%8F%90%E4%B8%8B%E5%85%BC%E9%A1%BE%E9%80%9F%E5%BA%A6"><span class="nav-number">7.</span> <span class="nav-text"> 七、在稳定前提下兼顾速度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB-%E9%95%BF%E6%9C%9F%E6%B2%BB%E6%9C%AC%E6%96%B9%E6%A1%88"><span class="nav-number">8.</span> <span class="nav-text"> 八、长期治本方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-bios-%E4%B8%AD%E5%B0%86%E6%98%BE%E5%8D%A1%E6%A7%BD%E9%99%8D%E5%88%B0-pcie-gen4"><span class="nav-number">8.1.</span> <span class="nav-text"> 1. BIOS 中将显卡槽降到 PCIe Gen4</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%9B%B4%E6%96%B0%E4%B8%BB%E6%9D%BF-bios"><span class="nav-number">8.2.</span> <span class="nav-text"> 2. 更新主板 BIOS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%85%B3%E9%97%AD-aspm"><span class="nav-number">8.3.</span> <span class="nav-text"> 3. 关闭 ASPM</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E9%80%90%E6%AD%A5%E8%A7%A3%E5%BC%80%E5%8A%9F%E8%80%97%E4%B8%8A%E9%99%90"><span class="nav-number">8.4.</span> <span class="nav-text"> 4. 逐步解开功耗上限</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B9%9D-%E6%98%AF%E5%90%A6%E9%9C%80%E8%A6%81%E8%81%94%E7%B3%BB%E5%94%AE%E5%90%8E"><span class="nav-number">9.</span> <span class="nav-text"> 九、是否需要联系售后</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81-%E8%AE%AD%E7%BB%83%E5%92%8C%E6%B5%8B%E8%AF%95%E5%91%BD%E4%BB%A4"><span class="nav-number">10.</span> <span class="nav-text"> 十、训练和测试命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E4%B8%80-%E6%9C%AA%E6%9D%A5%E5%86%8D%E6%AC%A1%E5%B4%A9%E6%BA%83%E6%97%B6%E7%9A%84%E5%BF%AB%E9%80%9F%E8%87%AA%E6%9F%A5%E5%91%BD%E4%BB%A4"><span class="nav-number">11.</span> <span class="nav-text"> 十一、未来再次崩溃时的快速自查命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%81%E4%BA%8C-%E7%8A%B6%E6%80%81%E6%80%BB%E8%A7%88"><span class="nav-number">12.</span> <span class="nav-text"> 十二、状态总览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">13.</span> <span class="nav-text"> 总结</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80-%E6%9C%80%E5%88%9D%E9%81%87%E5%88%B0%E7%9A%84%E4%B8%89%E7%B1%BB%E7%8E%B0%E8%B1%A1"><span class="nav-number">1.</span> <span class="nav-text"> 一、最初遇到的三类现象</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%85%E5%86%B5%E4%B8%80%E7%9B%B4%E6%8E%A5%E6%8E%89%E7%9B%98%E6%89%BE%E4%B8%8D%E5%88%B0-gpu-%E8%8A%82%E7%82%B9"><span class="nav-number">1.1.</span> <span class="nav-text"> 情况一：直接掉盘，找不到 GPU 节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%85%E5%86%B5%E4%BA%8C%E8%83%BD%E8%AF%86%E5%88%AB%E6%98%BE%E5%8D%A1%E4%BD%86%E6%97%A0%E4%BF%A1%E5%8F%B7%E8%BE%93%E5%85%A5%E4%B8%94%E6%97%A0%E6%A1%8C%E9%9D%A2"><span class="nav-number">1.2.</span> <span class="nav-text"> 情况二：能识别显卡，但无信号输入且无桌面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%85%E5%86%B5%E4%B8%89%E8%BF%9C%E7%A8%8B%E6%9C%89%E6%A1%8C%E9%9D%A2%E4%BD%86%E6%9C%AC%E5%9C%B0%E6%98%BE%E7%A4%BA%E5%99%A8%E9%BB%91%E5%B1%8F"><span class="nav-number">1.3.</span> <span class="nav-text"> 情况三：远程有桌面，但本地显示器黑屏</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C-%E5%86%8D%E6%AC%A1%E5%A4%8D%E7%8E%B0batch-%E5%A2%9E%E5%A4%A7%E5%90%8E%E9%A2%91%E7%B9%81%E6%8E%89%E7%9B%98"><span class="nav-number">2.</span> <span class="nav-text"> 二、再次复现：batch 增大后频繁掉盘</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89-%E5%86%8D%E6%AC%A1%E5%87%BA%E7%8E%B0%E9%97%AE%E9%A2%98%E5%BC%80%E8%AE%AD-14-%E7%A7%92%E5%B0%B1%E5%B4%A9%E6%BA%83"><span class="nav-number">3.</span> <span class="nav-text"> 三、再次出现问题：开训 14 秒就崩溃</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B-%E6%8E%92%E9%99%A4%E9%A1%B9%E4%B8%8E%E6%A0%B9%E5%9B%A0%E5%88%A4%E6%96%AD"><span class="nav-number">4.</span> <span class="nav-text"> 四、排除项与根因判断</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%8E%92%E9%99%A4%E6%98%BE%E5%AD%98%E4%B8%8D%E8%B6%B3"><span class="nav-number">4.1.</span> <span class="nav-text"> 1. 排除显存不足</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%8E%92%E9%99%A4%E5%8D%95%E7%BA%AF%E8%BF%87%E7%83%AD"><span class="nav-number">4.2.</span> <span class="nav-text"> 2. 排除单纯过热</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%8E%92%E9%99%A4%E7%94%B5%E6%BA%90%E5%AE%B9%E9%87%8F%E4%B8%8D%E8%B6%B3%E4%BD%86%E4%BF%9D%E7%95%99%E7%9E%AC%E6%97%B6%E5%B0%96%E5%B3%B0%E5%88%A4%E6%96%AD"><span class="nav-number">4.3.</span> <span class="nav-text"> 3. 排除电源容量不足，但保留瞬时尖峰判断</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-pcie-gen5-%E9%93%BE%E8%B7%AF%E5%80%BC%E5%BE%97%E6%80%80%E7%96%91%E4%BD%86%E5%8F%AF%E6%8E%92%E9%99%A4"><span class="nav-number">4.4.</span> <span class="nav-text"> 4. PCIe Gen5 链路值得怀疑但可排除</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94-%E5%86%B3%E5%AE%9A%E6%80%A7%E9%AA%8C%E8%AF%81%E9%99%90%E5%88%B6%E5%8A%9F%E8%80%97%E5%88%B0-400w-%E5%90%8E%E7%A8%B3%E5%AE%9A%E8%AE%AD%E7%BB%83"><span class="nav-number">5.</span> <span class="nav-text"> 五、决定性验证：限制功耗到 400W 后稳定训练</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD-%E7%9F%AD%E6%9C%9F%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E5%85%88%E7%A8%B3%E5%AE%9A%E8%AE%AD%E7%BB%83"><span class="nav-number">6.</span> <span class="nav-text"> 六、短期解决方案：先稳定训练</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E4%B8%B4%E6%97%B6%E8%AE%BE%E7%BD%AE"><span class="nav-number">6.1.</span> <span class="nav-text"> 1. 临时设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%BC%80%E6%9C%BA%E8%87%AA%E5%8A%A8%E7%94%9F%E6%95%88"><span class="nav-number">6.2.</span> <span class="nav-text"> 2. 开机自动生效</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83-%E5%8F%AF%E8%83%BD%E7%9A%84%E9%95%BF%E6%9C%9F%E6%B2%BB%E6%9C%AC%E6%96%B9%E6%A1%88"><span class="nav-number">7.</span> <span class="nav-text"> 七、可能的长期治本方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-bios-%E4%B8%AD%E5%B0%86%E6%98%BE%E5%8D%A1%E6%A7%BD%E9%99%8D%E5%88%B0-pcie-gen4"><span class="nav-number">7.1.</span> <span class="nav-text"> 1. BIOS 中将显卡槽降到 PCIe Gen4</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%9B%B4%E6%96%B0%E4%B8%BB%E6%9D%BF-bios"><span class="nav-number">7.2.</span> <span class="nav-text"> 2. 更新主板 BIOS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%85%B3%E9%97%AD-aspm"><span class="nav-number">7.3.</span> <span class="nav-text"> 3. 关闭 ASPM</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E9%80%90%E6%AD%A5%E8%A7%A3%E5%BC%80%E5%8A%9F%E8%80%97%E4%B8%8A%E9%99%90"><span class="nav-number">7.4.</span> <span class="nav-text"> 4. 逐步解开功耗上限</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB-%E6%9C%AA%E6%9D%A5%E5%86%8D%E6%AC%A1%E5%B4%A9%E6%BA%83%E6%97%B6%E7%9A%84%E5%BF%AB%E9%80%9F%E8%87%AA%E6%9F%A5%E5%91%BD%E4%BB%A4"><span class="nav-number">8.</span> <span class="nav-text"> 八、未来再次崩溃时的快速自查命令</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -182,13 +182,13 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">4</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
@@ -256,7 +256,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-05-31 19:10:14" itemprop="dateModified" datetime="2026-05-31T19:10:14+08:00">2026-05-31</time>
+      <time title="修改时间：2026-06-28 10:41:42" itemprop="dateModified" datetime="2026-06-28T10:41:42+08:00">2026-06-28</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -277,9 +277,9 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><p>先交代一下这套深度学习环境的硬件配置：</p>
+    <div class="post-body" itemprop="articleBody"><p>先交代一下硬件配置：</p>
 <ul>
-<li><strong>显卡</strong>：技嘉 RTX 5090 纯血版（国外背回来的）</li>
+<li><strong>显卡</strong>：技嘉 RTX 5090 纯血版</li>
 <li><strong>CPU</strong>：AMD 9950X</li>
 <li><strong>主板</strong>：华硕 X870E-PLUS WIFI7</li>
 <li><strong>固态</strong>：三星 990 Pro 2TB</li>
@@ -289,9 +289,9 @@
 <li><strong>风冷散热</strong>：九州风神 阿萨辛4</li>
 <li><strong>内存</strong>：美商海盗船 DDR5 5200 32G×2</li>
 <li><strong>系统</strong>：Ubuntu 24.04.4 LTS，内核 6.17.0-29-generic</li>
-<li><strong>驱动</strong>：NVIDIA 590.48.01（开源内核模块 + GSP），CUDA Runtime 13.1</li>
+<li><strong>驱动</strong>：NVIDIA 590.48.01（开源内核模块 + GSP），CUDA Runtime 13.1/12.8</li>
 </ul>
-<p>最近在跑深度学习训练时，接连遇到几类不同表现的黑屏和 GPU 掉盘问题。起初我以为在 BIOS 里禁用核显就能解决，但实际测试下来发现问题仍然存在。经过日志排查和限功耗验证，最终确认：这不是显存不足，也不是代码问题，而是 <strong>RTX 5090 满功耗下的瞬时功耗尖峰触发供电保护，导致 GPU 掉出 PCIe 总线（Xid 79）</strong>。</p>
+<p>最近在跑深度学习训练时，接连遇到几类不同表现的黑屏和 GPU 掉盘问题。起初我以为在 BIOS 里禁用核显就能解决，但实际测试下来发现问题仍然存在。经过日志排查和限功耗验证，最终确认：这不是显存不足，也不是代码问题，而是 <strong>RTX 5090 满功耗下的瞬时功耗尖峰触发供电保护，导致 GPU 掉出 PCIe 总线（Xid 79）</strong>，简单来说就是开始跑代码的一瞬间功率过大，触发供电保护。</p>
 <span id="more"></span>
 <h2 id="一-最初遇到的三类现象"><a class="markdownIt-Anchor" href="#一-最初遇到的三类现象"></a> 一、最初遇到的三类现象</h2>
 <h3 id="情况一直接掉盘找不到-gpu-节点"><a class="markdownIt-Anchor" href="#情况一直接掉盘找不到-gpu-节点"></a> 情况一：直接掉盘，找不到 GPU 节点</h3>
@@ -324,7 +324,7 @@
 </li>
 </ol>
 <h2 id="二-再次复现batch-增大后频繁掉盘"><a class="markdownIt-Anchor" href="#二-再次复现batch-增大后频繁掉盘"></a> 二、再次复现：batch 增大后频繁掉盘</h2>
-<p>后续又遇到了一次更稳定可复现的问题：batch 设为 6 时，可以轻松跑完 40k 步，此时显存只用约 10GB；将 batch 改为 12 后，显存占用约 18GB，训练跑到约 8000 步时显示器黑屏，<code>nvidia-smi</code> 找不到显卡。</p>
+<p>后续又遇到了一次更稳定且重复出现的问题：batch 设为 6 时，可以轻松跑完 40k 步，此时显存只用约 10GB；将 batch 改为 12 后，显存占用约 18GB，训练跑到约 8000 步时显示器黑屏，<code>nvidia-smi</code> 找不到显卡。</p>
 <p>当时 SSH 仍能连上，风扇狂转，训练实际已经停止。物理强制关机重启后一切恢复正常，但再次开跑仍会出现上述情况，这说明它已经不是偶发现象。</p>
 <p>最初怀疑过几类原因：</p>
 <ol>
@@ -333,12 +333,13 @@
 <li><strong>硬件连接问题</strong>：显卡支架不稳、供电线插接不牢或弯折过大，但检查后暂未发现明显问题。</li>
 </ol>
 <p>当时的计划是先把主机从桌子底下挪到机架上，并加装风扇。如果之后不再出现“显存总共 32GB、刚用了 20GB 左右就桌面崩溃”的情况，就说明大概率是散热或通风问题；如果仍然不好，再考虑联系售后或上门维修。</p>
-<h2 id="三-关键复现开训-14-秒就崩溃"><a class="markdownIt-Anchor" href="#三-关键复现开训-14-秒就崩溃"></a> 三、关键复现：开训 14 秒就崩溃</h2>
-<p>后来我已经把机器搬到了机架上，也更换了工位。再次启动训练时，又遭遇桌面突然消失、显示器黑屏、风扇狂转，而且这次仅仅开训 <strong>14 秒</strong>就崩了。</p>
+<p>实际上，此时早已意识到，此问题与显存大小，使用情况根本无关，显存爆了的话只会报OOM，而不是直接黑屏。</p>
+<h2 id="三-再次出现问题开训-14-秒就崩溃"><a class="markdownIt-Anchor" href="#三-再次出现问题开训-14-秒就崩溃"></a> 三、再次出现问题：开训 14 秒就崩溃</h2>
+<p>后来我已经把机器搬到了机架上，也更换了工位，但由于比较懒，没有在主机顶部加装风扇，但换到了机架上散热非常好的地方。再次启动训练时，又遭遇显示器黑屏、风扇狂转，而且这次仅仅开训 <strong>14 秒</strong>就崩了。</p>
 <p>这时基本可以确定：这不是普通的显存 OOM。OOM 通常只会让 Python 进程报错退出，不会让整机黑屏、GPU 掉盘、风扇狂转并且必须硬关机。</p>
 <p>崩溃前内核日志出现大量 NVIDIA GSP 相关错误：</p>
 <figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NVRM: _issueRpcAndWait: rpcSendMessage failed with status 0x0000000f for fn 76</span><br></pre></td></tr></table></figure>
-<p>这表示 NVIDIA GSP（GPU System Processor）固件 RPC 通信失败或超时。换句话说，GPU 的 GSP 固件已经挂掉，驱动只能疯狂重试。一旦 GSP 死掉，挂在 GPU 上的 Xorg 显示就会冻结（黑屏、ToDesk 掉线），风扇也可能因为失去控制进入 100% 失效保护状态。</p>
+<p>这表示 NVIDIA GSP（GPU System Processor）固件 RPC 通信失败或超时。换句话说，GPU 的 GSP 固件已经挂掉，驱动只能疯狂重试。一旦 GSP 死掉，挂在 GPU 上的 Xorg 显示就会冻结（黑屏），风扇也可能因为失去控制进入 100% 失效保护状态。</p>
 <p>继续往前看崩溃第一现场，在 16:12:16，也就是启动训练那一刻，出现了更关键的日志：</p>
 <figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">NVRM: Xid (PCI:0000:01:00): 79, pid=..., name=cursor, GPU has fallen off the bus.</span><br><span class="line">NVRM: GPU 0000:01:00.0: GPU has fallen off the bus.</span><br><span class="line">NVRM: Xid (PCI:0000:01:00): 154, GPU recovery action changed from 0x0 (None) to 0x2 (Node Reboot Required)</span><br></pre></td></tr></table></figure>
 <p>其中 <strong>Xid 79 = GPU 从 PCIe 总线上掉了</strong>。这基本可以解释所有现象：GPU 整个从总线消失后，后面那一大片 GSP RPC 失败只是驱动在对一个“已经不存在的 GPU”疯狂重试的连锁反应。<code>Node Reboot Required</code> 也解释了为什么必须硬关机才能恢复。</p>
@@ -359,14 +360,13 @@
 <h3 id="3-排除电源容量不足但保留瞬时尖峰判断"><a class="markdownIt-Anchor" href="#3-排除电源容量不足但保留瞬时尖峰判断"></a> 3. 排除电源容量不足，但保留瞬时尖峰判断</h3>
 <p>安钛克 NE1300G 是 1300W 金牌 ATX 3.0 电源，带 RTX 5090 + AMD 9950X 的额定容量理论上绰绰有余。同时，电源线是原生 12V-2x6，并且已经重新检查确认插紧。</p>
 <p>所以“电源额定容量不够”基本可以排除。但 RTX 5090 标称功耗约 575–600W，毫秒级瞬时尖峰可能冲到 900W+，仍然可能触发电源 OCP 或造成瞬时掉电，让 GPU 掉出 PCIe 总线。</p>
-<h3 id="4-pcie-gen5-链路也曾被怀疑"><a class="markdownIt-Anchor" href="#4-pcie-gen5-链路也曾被怀疑"></a> 4. PCIe Gen5 链路也曾被怀疑</h3>
+<h3 id="4-pcie-gen5-链路值得怀疑但可排除"><a class="markdownIt-Anchor" href="#4-pcie-gen5-链路值得怀疑但可排除"></a> 4. PCIe Gen5 链路值得怀疑但可排除</h3>
 <p>因为当前 GPU 正跑在 PCIe Gen5 x16，而 RTX 50 系 + AM5 / X870E 平台对信号完整性要求很高，所以也曾怀疑过 PCIe Gen5 链路在满载瞬间不稳定。</p>
 <p>不过，后续限功耗实验给出了更直接的判断：<strong>限制功率上限到 400W 后，同一份训练配置已经稳定运行 1 小时以上</strong>。这说明主因更偏向满功耗下的瞬时功耗尖峰，而不是显存、代码、驱动或单纯 PCIe Gen5 链路问题。</p>
 <h2 id="五-决定性验证限制功耗到-400w-后稳定训练"><a class="markdownIt-Anchor" href="#五-决定性验证限制功耗到-400w-后稳定训练"></a> 五、决定性验证：限制功耗到 400W 后稳定训练</h2>
 <p>执行以下命令，将 RTX 5090 的功耗上限从 600W 限制到 400W：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pm 1        <span class="comment"># 持久模式</span></span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 400      <span class="comment"># 功耗上限 400W（该卡可设范围 400–600W）</span></span><br></pre></td></tr></table></figure>
 <p>然后重新启动同一份训练：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /home/kxh/Projects/gqa</span><br><span class="line">python tools/train.py my_configs/segformer/segformer_mit-b2_multinatsmoke_align.py</span><br></pre></td></tr></table></figure>
 <p>结果：<strong>同一份配置已经稳定训练 1 小时以上，没有再次黑屏或掉盘。</strong></p>
 <p>这个实验基本确认了根因：</p>
 <blockquote>
@@ -375,30 +375,19 @@
 <p>这与显存不足、训练代码、数据集本身都无关。降功耗主要影响训练速度，不影响模型精度结果，仍然可以正常用于论文复现和实验对比。</p>
 <h2 id="六-短期解决方案先稳定训练"><a class="markdownIt-Anchor" href="#六-短期解决方案先稳定训练"></a> 六、短期解决方案：先稳定训练</h2>
 <h3 id="1-临时设置"><a class="markdownIt-Anchor" href="#1-临时设置"></a> 1. 临时设置</h3>
-<p>每次重启后手动执行：</p>
+<p>每次重启电脑后手动执行：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pm 1</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 400</span><br></pre></td></tr></table></figure>
-<p>验证当前功耗上限：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nvidia-smi -q | grep <span class="string">&quot;Current Power Limit&quot;</span></span><br></pre></td></tr></table></figure>
-<p>如果显示接近 <code>400.00 W</code>，说明设置已经生效。</p>
 <h3 id="2-开机自动生效"><a class="markdownIt-Anchor" href="#2-开机自动生效"></a> 2. 开机自动生效</h3>
 <p>因为 <code>nvidia-smi -pl 400</code> 重启后会失效，如果不固化，下次重启又会恢复 600W，可能再次崩溃。推荐写成 systemd 服务：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">tee</span> /etc/systemd/system/nvidia-powerlimit.service &gt;/dev/null &lt;&lt;<span class="string">&#x27;EOF&#x27;</span></span><br><span class="line">[Unit]</span><br><span class="line">Description=Cap NVIDIA GPU power <span class="built_in">limit</span> to 400W (avoid 5090 transient brownout)</span><br><span class="line">After=multi-user.target</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">Type=oneshot</span><br><span class="line">ExecStart=/usr/bin/nvidia-smi -pm 1</span><br><span class="line">ExecStart=/usr/bin/nvidia-smi -pl 400</span><br><span class="line">RemainAfterExit=<span class="literal">true</span></span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"><span class="built_in">sudo</span> systemctl daemon-reload</span><br><span class="line"><span class="built_in">sudo</span> systemctl <span class="built_in">enable</span> --now nvidia-powerlimit.service</span><br></pre></td></tr></table></figure>
 <p>检查服务状态：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl status nvidia-powerlimit.service</span><br></pre></td></tr></table></figure>
-<h2 id="七-在稳定前提下兼顾速度"><a class="markdownIt-Anchor" href="#七-在稳定前提下兼顾速度"></a> 七、在稳定前提下兼顾速度</h2>
-<p>400W 相比满血 600W 可能会慢一些，大约影响训练速度 10–20%，但不影响精度。如果后续希望兼顾速度，可以用二分法逐步上探稳定功耗：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 480</span><br></pre></td></tr></table></figure>
-<p>跑训练观察至少 30 分钟：</p>
-<ul>
-<li>如果崩溃，就退回 400W；</li>
-<li>如果稳定，可以再尝试 500W、520W 或更高；</li>
-<li>找到稳定值后，把 systemd 服务里的 <code>-pl 400</code> 改成该值。</li>
-</ul>
-<p>不过在论文复现和实验验证阶段，建议先稳定在 400W，把实验完整跑完。速度优化可以之后再做。</p>
-<h2 id="八-长期治本方案"><a class="markdownIt-Anchor" href="#八-长期治本方案"></a> 八、长期治本方案</h2>
+<p>但是其实我也没有写这个系统服务，因为，<strong>这台5090几乎不怎么重启</strong>。</p>
+<h2 id="七-可能的长期治本方案"><a class="markdownIt-Anchor" href="#七-可能的长期治本方案"></a> 七、可能的长期治本方案</h2>
 <p>如果后续想恢复更高功耗，甚至接近满血 600W，可以按成本从低到高逐项尝试。</p>
 <h3 id="1-bios-中将显卡槽降到-pcie-gen4"><a class="markdownIt-Anchor" href="#1-bios-中将显卡槽降到-pcie-gen4"></a> 1. BIOS 中将显卡槽降到 PCIe Gen4</h3>
 <p>这是 50 系显卡掉总线问题中比较常见、也比较有效的稳定性修复方式。</p>
+<p>网上也有相关<a target="_blank" rel="noopener" href="https://www.reddit.com/r/LocalLLaMA/comments/1ogtdbg/what_is_the_real_world_hit_of_using_pcie_40/?tl=zh-hans">讨论</a>，个人仍旧不敢轻易尝试。</p>
 <p>操作路径大致为：</p>
 <figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">重启按 Del 进入 ASUS BIOS</span><br><span class="line">-&gt; Advanced（高级）</span><br><span class="line">-&gt; PCI Subsystem Settings</span><br><span class="line">-&gt; PCIe Link Speed / PCIEX16_1 Link Speed</span><br><span class="line">-&gt; 从 Auto / Gen5 改成 Gen4</span><br><span class="line">-&gt; 保存并重启</span><br></pre></td></tr></table></figure>
 <p>对单卡训练来说，PCIe Gen4 x16 的带宽基本够用，对训练性能影响很小，但可能显著提升稳定性。</p>
@@ -412,25 +401,7 @@
 <p>完成上面几项后，可以尝试逐步上调功耗上限：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 500</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 550</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 600</span><br></pre></td></tr></table></figure>
 <p>每一档都要跑训练观察稳定性，找到能稳定训练的最高功耗值。</p>
-<h2 id="九-是否需要联系售后"><a class="markdownIt-Anchor" href="#九-是否需要联系售后"></a> 九、是否需要联系售后</h2>
-<p>当前暂时不需要。</p>
-<p>限功耗到 400W 后能够稳定运行，说明硬件大概率没有直接损坏。更像是 5090 满功耗瞬态尖峰叠加默认功耗上限带来的稳定性问题，先通过软件层面限制功耗即可解决。</p>
-<p>只有在以下情况才建议考虑联系售后或上门检测：</p>
-<ul>
-<li>已经限制功耗到 400W；</li>
-<li>已经将 PCIe 从 Gen5 降到 Gen4；</li>
-<li>已经更新主板 BIOS；</li>
-<li>必要时也关闭了 ASPM；</li>
-<li>但系统仍然频繁黑屏、掉盘、需要硬关机。</li>
-</ul>
-<p>如果这些操作都无效，才更可能是这块 5090 或这台电源存在个体瑕疵，再走保修、换件检测会更有意义。</p>
-<h2 id="十-训练和测试命令"><a class="markdownIt-Anchor" href="#十-训练和测试命令"></a> 十、训练和测试命令</h2>
-<p>功耗限制固化后，可以正常训练和测试。</p>
-<p>训练（论文对齐 B2）：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /home/kxh/Projects/gqa</span><br><span class="line">python tools/train.py my_configs/segformer/segformer_mit-b2_multinatsmoke_align.py</span><br></pre></td></tr></table></figure>
-<p>分尺度测试（对齐论文口径）：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">python tools/smoke_test_multiscale.py \</span><br><span class="line">  my_configs/segformer/segformer_mit-b2_multinatsmoke_align.py \</span><br><span class="line">  work_dirs/MultiNatSmoke/segformer_mit_b2_align/best_mns_IoU_epoch_*.pth</span><br></pre></td></tr></table></figure>
-<h2 id="十一-未来再次崩溃时的快速自查命令"><a class="markdownIt-Anchor" href="#十一-未来再次崩溃时的快速自查命令"></a> 十一、未来再次崩溃时的快速自查命令</h2>
+<h2 id="八-未来再次崩溃时的快速自查命令"><a class="markdownIt-Anchor" href="#八-未来再次崩溃时的快速自查命令"></a> 八、未来再次崩溃时的快速自查命令</h2>
 <p>如果之后再次崩溃，可以优先看上一次启动的 Xid 错误：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">journalctl -b -1 -k | grep -iE <span class="string">&quot;Xid|fallen off the bus&quot;</span></span><br></pre></td></tr></table></figure>
 <p>实时查看功耗、限频和链路状态：</p>
@@ -443,47 +414,6 @@
 <li><strong>Xid 154</strong>：GPU 恢复需要节点重启。</li>
 <li><strong>Xid 13 / 31 / 43</strong>：更偏向显存、非法访问或软件层面问题，与这次现象不同。</li>
 </ul>
-<h2 id="十二-状态总览"><a class="markdownIt-Anchor" href="#十二-状态总览"></a> 十二、状态总览</h2>
-<table>
-<thead>
-<tr>
-<th>项目</th>
-<th>状态</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>根因</td>
-<td>已确认：满功耗瞬态尖峰导致 GPU 掉总线（Xid 79）</td>
-</tr>
-<tr>
-<td>短期方案</td>
-<td>功耗限制到 400W，已稳定训练 1h+</td>
-</tr>
-<tr>
-<td>固化方案</td>
-<td>建议配置 <code>nvidia-powerlimit.service</code> 开机自动限功耗</td>
-</tr>
-<tr>
-<td>长期优化</td>
-<td>可选：BIOS 降 Gen4、更新 BIOS、关闭 ASPM 后逐步解锁功耗</td>
-</tr>
-<tr>
-<td>是否维修</td>
-<td>暂不需要</td>
-</tr>
-<tr>
-<td>对实验结果影响</td>
-<td>不影响精度，只影响训练速度，可正常与论文对比</td>
-</tr>
-</tbody>
-</table>
-<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
-<p>这次问题的关键不是“显存不够”，也不是训练代码本身，而是 <strong>RTX 5090 满功耗瞬时尖峰导致 GPU 从 PCIe 总线上掉了（Xid 79）</strong>。</p>
-<p>目前最稳妥的处理方式是：先把功耗上限固定在 400W，保证训练稳定完成；等实验跑完后，再考虑通过 BIOS 降 Gen4、更新 BIOS、关闭 ASPM、逐步上调功耗上限等方式，寻找速度和稳定性的平衡点。</p>
-<blockquote>
-<p>关联阅读：<a href="/2026/04/13/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87/">语义分割评价指标梳理与代码实现记录</a>、<a href="/2026/05/25/%E5%8F%91%E6%8C%A5AI-MMSegmentation%E7%9A%84%E5%BF%AB%E9%80%9F%E9%AA%8C%E8%AF%81%E6%83%B3%E6%B3%95%E7%9A%84%E4%BC%98%E5%8A%BF/">发挥 AI+MMSegmentation 的快速验证想法的优势</a></p>
-</blockquote>
 
     </div>
 
@@ -519,8 +449,8 @@
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2026/05/25/%E5%8F%91%E6%8C%A5AI-MMSegmentation%E7%9A%84%E5%BF%AB%E9%80%9F%E9%AA%8C%E8%AF%81%E6%83%B3%E6%B3%95%E7%9A%84%E4%BC%98%E5%8A%BF/" rel="next" title="发挥AI+MMSegmentation的快速验证想法的优势">
-                  发挥AI+MMSegmentation的快速验证想法的优势 <i class="fa fa-angle-right"></i>
+                <a href="/2026/05/28/CodeX-CC%E7%A7%91%E7%A0%94%E5%90%91%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/" rel="next" title="CodeX&#x2F;CC科研向使用经验">
+                  CodeX/CC科研向使用经验 <i class="fa fa-angle-right"></i>
                 </a>
             </div>
           </div>

@@ -116,7 +116,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-folder-open fa-fw"></i>分类<span class="badge">5</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">11</span></a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-folder-open fa-fw"></i>分类<span class="badge">4</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">8</span></a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
         </a>
@@ -179,13 +179,13 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">4</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
@@ -244,9 +244,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2026-06-05 14:27:17 / 修改时间：16:23:32" itemprop="dateCreated datePublished" datetime="2026-06-05T14:27:17+08:00">2026-06-05</time>
+      <time title="创建时间：2026-06-05 14:27:17" itemprop="dateCreated datePublished" datetime="2026-06-05T14:27:17+08:00">2026-06-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-06-28 11:05:47" itemprop="dateModified" datetime="2026-06-28T11:05:47+08:00">2026-06-28</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -268,105 +274,14 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，且在中国大陆充值需要耗费一些精力（后续会出充值教程），而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
+          <p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
 参考链接：<a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">Deepseek接入CC的官方文档</a><br />
 <a target="_blank" rel="noopener" href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
 <a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
+<p>另外，CC本身是免费的，如果开通了claude的pro计划，可以在里面使用claude原生模型，最近找到了充值方式，首先你需要一个claude账号，这一步目前来说好像不是那么简单（容易封号），而我是前几年就有了，当年还是从闲鱼找人帮我注册的，花了10块，然后需要一个苹果手机，需要一个美区（或者不限制的区域）苹果账号，此时下载Claude的app，直接在app里点升级pro，自动弹出app付款，此时需要app store里面登陆美区账号付款的，在此之前使用支付宝礼品卡给美区账号充值🔪</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/06/04/%E6%8C%87%E6%A0%87%E5%A4%8D%E7%8E%B0%E4%B8%8E%E8%B0%83%E5%8F%82/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="KK">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/06/04/%E6%8C%87%E6%A0%87%E5%A4%8D%E7%8E%B0%E4%B8%8E%E8%B0%83%E5%8F%82/" class="post-title-link" itemprop="url">指标复现与调参</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-06-04 15:30:00" itemprop="dateCreated datePublished" datetime="2026-06-04T15:30:00+08:00">2026-06-04</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-06-09 21:28:43" itemprop="dateModified" datetime="2026-06-09T21:28:43+08:00">2026-06-09</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">深度学习</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>最近花了将近一周的时间，把一篇 WACV 2026 论文（<em>AusSmoke meets MultiNatSmoke</em>）中基于 HuggingFace 的 SegFormer 基线，完整迁移到了 MMSegmentation 1.x 框架上，并试图逐项对齐其训练与评估口径。这个过程踩了不少坑——论文和代码不一致、框架默认值陷阱、评测口径分歧……这里把全流程记录下来，方便日后回顾，也希望能帮到有类似需求的同学。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/06/04/%E6%8C%87%E6%A0%87%E5%A4%8D%E7%8E%B0%E4%B8%8E%E8%B0%83%E5%8F%82/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -601,184 +516,6 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/05/26/%E5%B7%A5%E7%A7%91%E8%AE%BA%E6%96%87%E5%86%99%E4%BD%9C%E9%80%BB%E8%BE%91%E4%B8%8E%E6%B5%81%E7%A8%8B/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="KK">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/05/26/%E5%B7%A5%E7%A7%91%E8%AE%BA%E6%96%87%E5%86%99%E4%BD%9C%E9%80%BB%E8%BE%91%E4%B8%8E%E6%B5%81%E7%A8%8B/" class="post-title-link" itemprop="url">工科论文写作逻辑与流程</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-05-26 21:09:57" itemprop="dateCreated datePublished" datetime="2026-05-26T21:09:57+08:00">2026-05-26</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-05-31 16:24:31" itemprop="dateModified" datetime="2026-05-31T16:24:31+08:00">2026-05-31</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E7%A7%91%E7%A0%94%E6%96%B9%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">科研方法</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
-<p>最近在做烟雾分割相关实验和读文献时，越来越觉得：<strong>一篇能中、能留住的工科论文，往往不是「方法堆叠」写得好，而是「问题链条」讲得通。</strong> 方法可以换 backbone、换 loss、换训练 trick，但审稿人真正关心的是：你到底在解决什么、为什么现有工作还不够、你的设计是不是冲着这个缺口去的。</p>
-<p>这篇文章不是通用写作课笔记，而是结合<strong>计算机视觉 → 语义分割 → 烟雾分割</strong>这条线，把自己近期梳理的一套<strong>问题驱动写作逻辑</strong>记下来，方便以后开新课题、改稿子、和导师对齐 story 时对照使用。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/05/26/%E5%B7%A5%E7%A7%91%E8%AE%BA%E6%96%87%E5%86%99%E4%BD%9C%E9%80%BB%E8%BE%91%E4%B8%8E%E6%B5%81%E7%A8%8B/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/05/25/%E5%8F%91%E6%8C%A5AI-MMSegmentation%E7%9A%84%E5%BF%AB%E9%80%9F%E9%AA%8C%E8%AF%81%E6%83%B3%E6%B3%95%E7%9A%84%E4%BC%98%E5%8A%BF/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="KK">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/05/25/%E5%8F%91%E6%8C%A5AI-MMSegmentation%E7%9A%84%E5%BF%AB%E9%80%9F%E9%AA%8C%E8%AF%81%E6%83%B3%E6%B3%95%E7%9A%84%E4%BC%98%E5%8A%BF/" class="post-title-link" itemprop="url">发挥AI+MMSegmentation的快速验证想法的优势</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-05-25 09:34:55" itemprop="dateCreated datePublished" datetime="2026-05-25T09:34:55+08:00">2026-05-25</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-05-28 15:07:37" itemprop="dateModified" datetime="2026-05-28T15:07:37+08:00">2026-05-28</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">深度学习</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
     <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -815,7 +552,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-05-31 19:10:14" itemprop="dateModified" datetime="2026-05-31T19:10:14+08:00">2026-05-31</time>
+      <time title="修改时间：2026-06-28 10:41:42" itemprop="dateModified" datetime="2026-06-28T10:41:42+08:00">2026-06-28</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -837,9 +574,9 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p>先交代一下这套深度学习环境的硬件配置：</p>
+          <p>先交代一下硬件配置：</p>
 <ul>
-<li><strong>显卡</strong>：技嘉 RTX 5090 纯血版（国外背回来的）</li>
+<li><strong>显卡</strong>：技嘉 RTX 5090 纯血版</li>
 <li><strong>CPU</strong>：AMD 9950X</li>
 <li><strong>主板</strong>：华硕 X870E-PLUS WIFI7</li>
 <li><strong>固态</strong>：三星 990 Pro 2TB</li>
@@ -849,9 +586,9 @@
 <li><strong>风冷散热</strong>：九州风神 阿萨辛4</li>
 <li><strong>内存</strong>：美商海盗船 DDR5 5200 32G×2</li>
 <li><strong>系统</strong>：Ubuntu 24.04.4 LTS，内核 6.17.0-29-generic</li>
-<li><strong>驱动</strong>：NVIDIA 590.48.01（开源内核模块 + GSP），CUDA Runtime 13.1</li>
+<li><strong>驱动</strong>：NVIDIA 590.48.01（开源内核模块 + GSP），CUDA Runtime 13.1/12.8</li>
 </ul>
-<p>最近在跑深度学习训练时，接连遇到几类不同表现的黑屏和 GPU 掉盘问题。起初我以为在 BIOS 里禁用核显就能解决，但实际测试下来发现问题仍然存在。经过日志排查和限功耗验证，最终确认：这不是显存不足，也不是代码问题，而是 <strong>RTX 5090 满功耗下的瞬时功耗尖峰触发供电保护，导致 GPU 掉出 PCIe 总线（Xid 79）</strong>。</p>
+<p>最近在跑深度学习训练时，接连遇到几类不同表现的黑屏和 GPU 掉盘问题。起初我以为在 BIOS 里禁用核显就能解决，但实际测试下来发现问题仍然存在。经过日志排查和限功耗验证，最终确认：这不是显存不足，也不是代码问题，而是 <strong>RTX 5090 满功耗下的瞬时功耗尖峰触发供电保护，导致 GPU 掉出 PCIe 总线（Xid 79）</strong>，简单来说就是开始跑代码的一瞬间功率过大，触发供电保护。</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/#more" rel="contents">
@@ -1015,7 +752,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-06-04 16:15:24" itemprop="dateModified" datetime="2026-06-04T16:15:24+08:00">2026-06-04</time>
+      <time title="修改时间：2026-06-28 11:05:17" itemprop="dateModified" datetime="2026-06-28T11:05:17+08:00">2026-06-28</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -1155,9 +892,98 @@
 
 
 
-  <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" title="下一页" aria-label="下一页" href="/page/2/"><i class="fa fa-angle-right"></i></a>
-  </nav>
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="KK">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="3hree5ive - 个人树洞，欢迎探访">
+      <meta itemprop="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/" class="post-title-link" itemprop="url">2026版：Hexo + GitHub Pages 个人博客搭建全记录</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-03-29 13:41:47" itemprop="dateCreated datePublished" datetime="2026-03-29T13:41:47+08:00">2026-03-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-05-31 16:24:31" itemprop="dateModified" datetime="2026-05-31T16:24:31+08:00">2026-05-31</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BB%BA%E7%AB%99%E6%95%99%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">建站教程</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
 
 </div>
   </main>

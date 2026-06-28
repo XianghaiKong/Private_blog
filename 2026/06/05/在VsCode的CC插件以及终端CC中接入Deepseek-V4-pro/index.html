@@ -20,15 +20,15 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"3hree5ive.top","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-dark","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":2,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，且在中国大陆充值需要耗费一些精力（后续会出充值教程），而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pr">
+    <meta name="description" content="Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。 参考链接：Deepseek接入CC">
 <meta property="og:type" content="article">
 <meta property="og:title" content="在VS Code的CC插件以及终端CC中接入DeepSeek-V4-Pro">
 <meta property="og:url" content="https://3hree5ive.top/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/index.html">
 <meta property="og:site_name" content="3hree5ive - 个人树洞，欢迎探访">
-<meta property="og:description" content="Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，且在中国大陆充值需要耗费一些精力（后续会出充值教程），而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pr">
+<meta property="og:description" content="Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。 参考链接：Deepseek接入CC">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-06-05T06:27:17.000Z">
-<meta property="article:modified_time" content="2026-06-05T08:23:32.289Z">
+<meta property="article:modified_time" content="2026-06-28T03:05:47.324Z">
 <meta property="article:author" content="KK">
 <meta property="article:tag" content="工程工具">
 <meta property="article:tag" content="深度学习">
@@ -118,7 +118,7 @@
 
 
 <nav class="site-nav">
-  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-folder-open fa-fw"></i>分类<span class="badge">5</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">11</span></a></li>
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-folder-open fa-fw"></i>分类<span class="badge">4</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">8</span></a></li>
       <li class="menu-item menu-item-search">
         <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
         </a>
@@ -169,7 +169,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E7%BD%AE%E5%87%86%E5%A4%87"><span class="nav-number">1.</span> <span class="nav-text"> 前置准备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E7%BB%88%E7%AB%AF-cc-%E6%8E%A5%E5%85%A5"><span class="nav-number">2.</span> <span class="nav-text"> 一：终端 CC 接入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9A%8F%E5%90%8E%E5%9C%A8%E7%BB%88%E7%AB%AF%E4%B8%AD%E5%90%AF%E5%8A%A8-claudecc-%E4%BE%BF%E4%BC%9A%E9%80%9A%E8%BF%87-deepseek-api-%E8%BF%90%E8%A1%8C"><span class="nav-number">3.</span> <span class="nav-text"> 随后在终端中启动 claude，CC 便会通过 DeepSeek API 运行。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8Cvscode-cc-%E6%8F%92%E4%BB%B6%E6%8E%A5%E5%85%A5"><span class="nav-number">4.</span> <span class="nav-text"> 二：VSCode CC 插件接入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A8%E8%8D%90%E7%9A%84%E9%A2%9D%E5%A4%96%E9%85%8D%E7%BD%AE"><span class="nav-number">5.</span> <span class="nav-text"> 推荐的额外配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E6%98%A0%E5%B0%84%E5%85%B3%E7%B3%BB"><span class="nav-number">6.</span> <span class="nav-text"> 模型映射关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%9F%E8%83%BD%E5%85%BC%E5%AE%B9%E6%80%A7%E4%B8%80%E8%A7%88"><span class="nav-number">7.</span> <span class="nav-text"> 功能兼容性一览</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%8C%E5%85%A8%E6%94%AF%E6%8C%81"><span class="nav-number">7.1.</span> <span class="nav-text"> ✅ 完全支持</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EF%B8%8F-%E9%83%A8%E5%88%86%E6%94%AF%E6%8C%81-%E8%A2%AB%E5%BF%BD%E7%95%A5"><span class="nav-number">7.2.</span> <span class="nav-text"> ⚠️ 部分支持 &#x2F; 被忽略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8D%E6%94%AF%E6%8C%81"><span class="nav-number">7.3.</span> <span class="nav-text"> ❌ 不支持</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%99%85%E4%BD%BF%E7%94%A8%E4%B8%AD%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">8.</span> <span class="nav-text"> 实际使用中需要注意的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%9B%BE%E7%89%87%E4%B8%8D%E5%8F%AF%E7%94%A8%E6%98%AF%E7%A1%AC%E4%BC%A4"><span class="nav-number">8.1.</span> <span class="nav-text"> 1. 图片不可用是硬伤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E9%80%9F%E5%BA%A6%E4%B8%8E%E6%88%90%E6%9C%AC%E7%9A%84%E6%9D%83%E8%A1%A1"><span class="nav-number">8.2.</span> <span class="nav-text"> 2. 速度与成本的权衡</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E4%B8%8D%E5%90%8C%E8%AE%A2%E9%98%85%E6%96%B9%E6%A1%88%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">8.3.</span> <span class="nav-text"> 3. 不同订阅方案的区别</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AA%E4%BA%BA%E4%BD%BF%E7%94%A8%E4%BD%93%E9%AA%8C"><span class="nav-number">9.</span> <span class="nav-text"> 个人使用体验</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%90%E6%9C%AC%E7%9C%9F%E7%9A%84%E4%BE%BF%E5%AE%9C"><span class="nav-number">9.1.</span> <span class="nav-text"> 成本：真的便宜</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8E-cursor-pro-%E7%9A%84%E5%AF%B9%E6%AF%94"><span class="nav-number">9.2.</span> <span class="nav-text"> 与 Cursor Pro 的对比</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E9%99%85%E8%83%BD%E5%8A%9B%E6%84%9F%E5%8F%97"><span class="nav-number">9.3.</span> <span class="nav-text"> 实际能力感受</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">10.</span> <span class="nav-text"> 总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="nav-number">11.</span> <span class="nav-text"> 参考资料</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E7%BD%AE%E5%87%86%E5%A4%87"><span class="nav-number">1.</span> <span class="nav-text"> 前置准备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E7%BB%88%E7%AB%AF-cc-%E6%8E%A5%E5%85%A5"><span class="nav-number">2.</span> <span class="nav-text"> 一：终端 CC 接入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9A%8F%E5%90%8E%E5%9C%A8%E7%BB%88%E7%AB%AF%E4%B8%AD%E5%90%AF%E5%8A%A8-claudecc-%E4%BE%BF%E4%BC%9A%E9%80%9A%E8%BF%87-deepseek-api-%E8%BF%90%E8%A1%8C"><span class="nav-number">3.</span> <span class="nav-text"> 随后在终端中启动 claude，CC 便会通过 DeepSeek API 运行。</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8Cvscode-cc-%E6%8F%92%E4%BB%B6%E6%8E%A5%E5%85%A5"><span class="nav-number">4.</span> <span class="nav-text"> 二：VSCode CC 插件接入</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A8%E8%8D%90%E7%9A%84%E9%A2%9D%E5%A4%96%E9%85%8D%E7%BD%AE"><span class="nav-number">5.</span> <span class="nav-text"> 推荐的额外配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E6%98%A0%E5%B0%84%E5%85%B3%E7%B3%BB"><span class="nav-number">6.</span> <span class="nav-text"> 模型映射关系</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%9F%E8%83%BD%E5%85%BC%E5%AE%B9%E6%80%A7%E4%B8%80%E8%A7%88"><span class="nav-number">7.</span> <span class="nav-text"> 功能兼容性一览</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%8C%E5%85%A8%E6%94%AF%E6%8C%81"><span class="nav-number">7.1.</span> <span class="nav-text"> ✅ 完全支持</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EF%B8%8F-%E9%83%A8%E5%88%86%E6%94%AF%E6%8C%81-%E8%A2%AB%E5%BF%BD%E7%95%A5"><span class="nav-number">7.2.</span> <span class="nav-text"> ⚠️ 部分支持 &#x2F; 被忽略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8D%E6%94%AF%E6%8C%81"><span class="nav-number">7.3.</span> <span class="nav-text"> ❌ 不支持</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E9%99%85%E4%BD%BF%E7%94%A8%E4%B8%AD%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">8.</span> <span class="nav-text"> 实际使用中需要注意的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%9B%BE%E7%89%87%E4%B8%8D%E5%8F%AF%E7%94%A8%E6%98%AF%E7%A1%AC%E4%BC%A4"><span class="nav-number">8.1.</span> <span class="nav-text"> 1. 图片不可用是硬伤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E9%80%9F%E5%BA%A6%E4%B8%8E%E6%88%90%E6%9C%AC%E7%9A%84%E6%9D%83%E8%A1%A1"><span class="nav-number">8.2.</span> <span class="nav-text"> 2. 速度与成本的权衡</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E4%B8%8D%E5%90%8C%E8%AE%A2%E9%98%85%E6%96%B9%E6%A1%88%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">8.3.</span> <span class="nav-text"> 3. 不同订阅方案的区别</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AA%E4%BA%BA%E4%BD%BF%E7%94%A8%E4%BD%93%E9%AA%8C"><span class="nav-number">9.</span> <span class="nav-text"> 个人使用体验</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%88%90%E6%9C%AC%E7%9C%9F%E7%9A%84%E4%BE%BF%E5%AE%9C"><span class="nav-number">9.1.</span> <span class="nav-text"> 成本：真的便宜</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8E-cursor-pro-%E7%9A%84%E5%AF%B9%E6%AF%94"><span class="nav-number">9.2.</span> <span class="nav-text"> 与 Cursor Pro 的对比</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E9%99%85%E8%83%BD%E5%8A%9B%E6%84%9F%E5%8F%97"><span class="nav-number">9.3.</span> <span class="nav-text"> 实际能力感受</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">10.</span> <span class="nav-text"> 总结</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -182,13 +182,13 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">4</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
@@ -248,9 +248,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2026-06-05 14:27:17 / 修改时间：16:23:32" itemprop="dateCreated datePublished" datetime="2026-06-05T14:27:17+08:00">2026-06-05</time>
+      <time title="创建时间：2026-06-05 14:27:17" itemprop="dateCreated datePublished" datetime="2026-06-05T14:27:17+08:00">2026-06-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-06-28 11:05:47" itemprop="dateModified" datetime="2026-06-28T11:05:47+08:00">2026-06-28</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -271,10 +277,11 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，且在中国大陆充值需要耗费一些精力（后续会出充值教程），而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
+    <div class="post-body" itemprop="articleBody"><p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
 参考链接：<a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">Deepseek接入CC的官方文档</a><br />
 <a target="_blank" rel="noopener" href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
 <a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
+<p>另外，CC本身是免费的，如果开通了claude的pro计划，可以在里面使用claude原生模型，最近找到了充值方式，首先你需要一个claude账号，这一步目前来说好像不是那么简单（容易封号），而我是前几年就有了，当年还是从闲鱼找人帮我注册的，花了10块，然后需要一个苹果手机，需要一个美区（或者不限制的区域）苹果账号，此时下载Claude的app，直接在app里点升级pro，自动弹出app付款，此时需要app store里面登陆美区账号付款的，在此之前使用支付宝礼品卡给美区账号充值🔪</p>
 <span id="more"></span>
 <hr />
 <h2 id="前置准备"><a class="markdownIt-Anchor" href="#前置准备"></a> 前置准备</h2>
@@ -448,12 +455,6 @@
 <p>📌 <strong>不适用场景</strong>：前端 UI 开发（需要看图）、截图 Debug、多模态分析</p>
 </blockquote>
 <hr />
-<h2 id="参考资料"><a class="markdownIt-Anchor" href="#参考资料"></a> 参考资料</h2>
-<ul>
-<li><a target="_blank" rel="noopener" href="https://api-docs.deepseek.com/guides/anthropic_api">DeepSeek 官方 Anthropic API 文档</a></li>
-<li><a target="_blank" rel="noopener" href="https://code.claude.com/docs/en/vs-code">Claude Code VS Code Extension 官方文档</a></li>
-<li><a target="_blank" rel="noopener" href="https://blog.techfetch.dev/blog/2025/09/17/claude-code-third-party-vendor-usage-guide-in-depth-analysis-best-practices/">Claude Code Third-party Vendor Usage Guide</a></li>
-</ul>
 
     </div>
 
@@ -484,8 +485,8 @@
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2026/06/04/%E6%8C%87%E6%A0%87%E5%A4%8D%E7%8E%B0%E4%B8%8E%E8%B0%83%E5%8F%82/" rel="prev" title="指标复现与调参">
-                  <i class="fa fa-angle-left"></i> 指标复现与调参
+                <a href="/2026/06/01/%E5%AE%9E%E9%AA%8C%E7%AE%A1%E7%90%86%E4%B8%8E%E8%AF%84%E6%B5%8B%E8%84%9A%E6%9C%AC%E8%AF%B4%E6%98%8E%EF%BC%88mmseg-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B7%A5%E5%85%B7%E9%93%BE%EF%BC%89/" rel="prev" title="实验管理与评测脚本说明（mmseg 自定义工具链）">
+                  <i class="fa fa-angle-left"></i> 实验管理与评测脚本说明（mmseg 自定义工具链）
                 </a>
             </div>
             <div class="post-nav-item">
