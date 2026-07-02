@@ -1,6 +1,151 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>RTX 5090 深度学习环境显卡掉线排查记录</title>
+    <url>/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/</url>
+    <content><![CDATA[<p>先交代一下硬件配置：</p>
+<ul>
+<li><strong>显卡</strong>：技嘉 RTX 5090 纯血版</li>
+<li><strong>CPU</strong>：AMD 9950X</li>
+<li><strong>主板</strong>：华硕 X870E-PLUS WIFI7</li>
+<li><strong>固态</strong>：三星 990 Pro 2TB</li>
+<li><strong>机械硬盘</strong>：西部数据紫盘 2TB</li>
+<li><strong>机箱</strong>：安钛克 FLUX SE</li>
+<li><strong>电源</strong>：安钛克 NE 1300 金牌（1300W，ATX 3.0，原生 12V-2x6）</li>
+<li><strong>风冷散热</strong>：九州风神 阿萨辛4</li>
+<li><strong>内存</strong>：美商海盗船 DDR5 5200 32G×2</li>
+<li><strong>系统</strong>：Ubuntu 24.04.4 LTS，内核 6.17.0-29-generic</li>
+<li><strong>驱动</strong>：NVIDIA 590.48.01（开源内核模块 + GSP），CUDA Runtime 13.1/12.8</li>
+</ul>
+<p>最近在跑深度学习训练时，接连遇到几类不同表现的黑屏和 GPU 掉盘问题。起初我以为在 BIOS 里禁用核显就能解决，但实际测试下来发现问题仍然存在。经过日志排查和限功耗验证，最终确认：这不是显存不足，也不是代码问题，而是 <strong>RTX 5090 满功耗下的瞬时功耗尖峰触发供电保护，导致 GPU 掉出 PCIe 总线（Xid 79）</strong>，简单来说就是开始跑代码的一瞬间功率过大，触发供电保护。</p>
+<span id="more"></span>
+<h2 id="一-最初遇到的三类现象"><a class="markdownIt-Anchor" href="#一-最初遇到的三类现象"></a> 一、最初遇到的三类现象</h2>
+<h3 id="情况一直接掉盘找不到-gpu-节点"><a class="markdownIt-Anchor" href="#情况一直接掉盘找不到-gpu-节点"></a> 情况一：直接掉盘，找不到 GPU 节点</h3>
+<p>这是比较棘手的一种情况。当时正在跑训练，中途桌面突然消失，机箱风扇维持高转速。通过终端 SSH 连进去后，输入 <code>nvidia-smi</code> 提示找不到显卡设备，表现为典型的 GPU 掉盘。</p>
+<p>初步分析，这多半是在负载突变或者供电出现瞬时波动时，触发了主板或电源的某种保护机制，导致 PCIe 设备被系统断开。针对这种硬件级别的保护掉线，最直接的恢复方式只能是硬重启机器。</p>
+<h3 id="情况二能识别显卡但无信号输入且无桌面"><a class="markdownIt-Anchor" href="#情况二能识别显卡但无信号输入且无桌面"></a> 情况二：能识别显卡，但无信号输入且无桌面</h3>
+<p>这种情况表现为：开机后 <code>nvidia-smi</code> 能正常找到显卡并输出状态，但是显示器提示无信号输入，使用 ToDesk 远程连接时也显示没有桌面环境。</p>
+<p>遇到这种状况，我的处理方式是<strong>彻底断电重置</strong>：关机，拔掉主机电源线，静置等待一分钟左右，然后再插上电源开机。通常这样操作一次就能恢复正常。推测可能是主板静电或某些电容的残余电荷干扰了显示输出，拔电静置可以帮助主板彻底放电。</p>
+<h3 id="情况三远程有桌面但本地显示器黑屏"><a class="markdownIt-Anchor" href="#情况三远程有桌面但本地显示器黑屏"></a> 情况三：远程有桌面，但本地显示器黑屏</h3>
+<p>第三种情况有些特殊：本地显示器依然毫无反应（无输入信号），但是通过 ToDesk 远程连接，居然可以正常看到并操作 Ubuntu 桌面。</p>
+<p>经过摸索，这主要可能是 Ubuntu 下的显示服务器配置异常，或者显卡驱动与 Wayland 发生冲突。可以在 ToDesk 里打开终端，尝试重置相关配置：</p>
+<ol>
+<li>
+<p>清理旧的 xorg 配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">rm</span> /etc/X11/xorg.conf</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>重新生成 NVIDIA 的 xconfig：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-xconfig</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p>关闭 Wayland，强制系统使用 X11 协议。编辑 gdm3 的配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nano /etc/gdm3/custom.conf</span><br></pre></td></tr></table></figure>
+<p>找到里面被注释掉的 <code>#WaylandEnable=false</code> 这一行，去掉前面的 <code>#</code> 号，变成 <code>WaylandEnable=false</code>，然后保存退出。</p>
+</li>
+<li>
+<p>重启系统：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> reboot</span><br></pre></td></tr></table></figure>
+<p><strong>补充说明</strong>：重启的时候，建议给显示器换一个 DP 接口重新插拔一次，通常就能正常点亮。</p>
+</li>
+</ol>
+<h2 id="二-再次复现batch-增大后频繁掉盘"><a class="markdownIt-Anchor" href="#二-再次复现batch-增大后频繁掉盘"></a> 二、再次复现：batch 增大后频繁掉盘</h2>
+<p>后续又遇到了一次更稳定且重复出现的问题：batch 设为 6 时，可以轻松跑完 40k 步，此时显存只用约 10GB；将 batch 改为 12 后，显存占用约 18GB，训练跑到约 8000 步时显示器黑屏，<code>nvidia-smi</code> 找不到显卡。</p>
+<p>当时 SSH 仍能连上，风扇狂转，训练实际已经停止。物理强制关机重启后一切恢复正常，但再次开跑仍会出现上述情况，这说明它已经不是偶发现象。</p>
+<p>最初怀疑过几类原因：</p>
+<ol>
+<li><strong>散热不佳</strong>：主机原本放在桌子下面，空间狭小，通风不良。</li>
+<li><strong>电源余量不足</strong>：满载时整机功耗过大，1300W 电源可能不够。</li>
+<li><strong>硬件连接问题</strong>：显卡支架不稳、供电线插接不牢或弯折过大，但检查后暂未发现明显问题。</li>
+</ol>
+<p>当时的计划是先把主机从桌子底下挪到机架上，并加装风扇。如果之后不再出现“显存总共 32GB、刚用了 20GB 左右就桌面崩溃”的情况，就说明大概率是散热或通风问题；如果仍然不好，再考虑联系售后或上门维修。</p>
+<p>实际上，此时早已意识到，此问题与显存大小，使用情况根本无关，显存爆了的话只会报OOM，而不是直接黑屏。</p>
+<h2 id="三-再次出现问题开训-14-秒就崩溃"><a class="markdownIt-Anchor" href="#三-再次出现问题开训-14-秒就崩溃"></a> 三、再次出现问题：开训 14 秒就崩溃</h2>
+<p>后来我已经把机器搬到了机架上，也更换了工位，但由于比较懒，没有在主机顶部加装风扇，但换到了机架上散热非常好的地方。再次启动训练时，又遭遇显示器黑屏、风扇狂转，而且这次仅仅开训 <strong>14 秒</strong>就崩了。</p>
+<p>这时基本可以确定：这不是普通的显存 OOM。OOM 通常只会让 Python 进程报错退出，不会让整机黑屏、GPU 掉盘、风扇狂转并且必须硬关机。</p>
+<p>崩溃前内核日志出现大量 NVIDIA GSP 相关错误：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">NVRM: _issueRpcAndWait: rpcSendMessage failed with status 0x0000000f for fn 76</span><br></pre></td></tr></table></figure>
+<p>这表示 NVIDIA GSP（GPU System Processor）固件 RPC 通信失败或超时。换句话说，GPU 的 GSP 固件已经挂掉，驱动只能疯狂重试。一旦 GSP 死掉，挂在 GPU 上的 Xorg 显示就会冻结（黑屏），风扇也可能因为失去控制进入 100% 失效保护状态。</p>
+<p>继续往前看崩溃第一现场，在 16:12:16，也就是启动训练那一刻，出现了更关键的日志：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">NVRM: Xid (PCI:0000:01:00): 79, pid=..., name=cursor, GPU has fallen off the bus.</span><br><span class="line">NVRM: GPU 0000:01:00.0: GPU has fallen off the bus.</span><br><span class="line">NVRM: Xid (PCI:0000:01:00): 154, GPU recovery action changed from 0x0 (None) to 0x2 (Node Reboot Required)</span><br></pre></td></tr></table></figure>
+<p>其中 <strong>Xid 79 = GPU 从 PCIe 总线上掉了</strong>。这基本可以解释所有现象：GPU 整个从总线消失后，后面那一大片 GSP RPC 失败只是驱动在对一个“已经不存在的 GPU”疯狂重试的连锁反应。<code>Node Reboot Required</code> 也解释了为什么必须硬关机才能恢复。</p>
+<p>几个关键细节：</p>
+<ul>
+<li>训练日志目录时间戳是 16:12:02，而 GPU 掉总线发生在 16:12:16，开训仅 14 秒就崩了。</li>
+<li>崩溃前没有过热迹象，<code>HW Thermal Slowdown</code> 全程为 0。</li>
+<li>崩溃前无任何 PCIe AER 报错，属于“毫无征兆瞬间掉总线”。</li>
+<li>当前 GPU 功率上限为 600W，最低可限制到 400W。</li>
+<li>当时 PCIe 链路状态为 <code>pcie.link.gen.current = 5</code>，也就是 PCIe Gen5 x16。</li>
+</ul>
+<h2 id="四-排除项与根因判断"><a class="markdownIt-Anchor" href="#四-排除项与根因判断"></a> 四、排除项与根因判断</h2>
+<h3 id="1-排除显存不足"><a class="markdownIt-Anchor" href="#1-排除显存不足"></a> 1. 排除显存不足</h3>
+<p>显存不足只会让 Python 进程报错退出，最多导致训练进程中断，不会导致整机黑屏、ToDesk 掉线、风扇狂转，也不会让 GPU 从 PCIe 总线上消失。</p>
+<p>因此，这次问题不是普通 OOM，也不是配置文件里 batch 太大导致的常规训练错误。</p>
+<h3 id="2-排除单纯过热"><a class="markdownIt-Anchor" href="#2-排除单纯过热"></a> 2. 排除单纯过热</h3>
+<p>虽然最初怀疑过散热，但这次关键复现只训练了 14 秒就崩溃，而且日志里没有 <code>HW Thermal Slowdown</code>。GPU 还没来得及热起来，因此单纯过热不是主要原因。</p>
+<h3 id="3-排除电源容量不足但保留瞬时尖峰判断"><a class="markdownIt-Anchor" href="#3-排除电源容量不足但保留瞬时尖峰判断"></a> 3. 排除电源容量不足，但保留瞬时尖峰判断</h3>
+<p>安钛克 NE1300G 是 1300W 金牌 ATX 3.0 电源，带 RTX 5090 + AMD 9950X 的额定容量理论上绰绰有余。同时，电源线是原生 12V-2x6，并且已经重新检查确认插紧。</p>
+<p>所以“电源额定容量不够”基本可以排除。但 RTX 5090 标称功耗约 575–600W，毫秒级瞬时尖峰可能冲到 900W+，仍然可能触发电源 OCP 或造成瞬时掉电，让 GPU 掉出 PCIe 总线。</p>
+<h3 id="4-pcie-gen5-链路值得怀疑但可排除"><a class="markdownIt-Anchor" href="#4-pcie-gen5-链路值得怀疑但可排除"></a> 4. PCIe Gen5 链路值得怀疑但可排除</h3>
+<p>因为当前 GPU 正跑在 PCIe Gen5 x16，而 RTX 50 系 + AM5 / X870E 平台对信号完整性要求很高，所以也曾怀疑过 PCIe Gen5 链路在满载瞬间不稳定。</p>
+<p>不过，后续限功耗实验给出了更直接的判断：<strong>限制功率上限到 400W 后，同一份训练配置已经稳定运行 1 小时以上</strong>。这说明主因更偏向满功耗下的瞬时功耗尖峰，而不是显存、代码、驱动或单纯 PCIe Gen5 链路问题。</p>
+<h2 id="五-决定性验证限制功耗到-400w-后稳定训练"><a class="markdownIt-Anchor" href="#五-决定性验证限制功耗到-400w-后稳定训练"></a> 五、决定性验证：限制功耗到 400W 后稳定训练</h2>
+<p>执行以下命令，将 RTX 5090 的功耗上限从 600W 限制到 400W：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pm 1        <span class="comment"># 持久模式</span></span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 400      <span class="comment"># 功耗上限 400W（该卡可设范围 400–600W）</span></span><br></pre></td></tr></table></figure>
+<p>然后重新启动同一份训练：</p>
+<p>结果：<strong>同一份配置已经稳定训练 1 小时以上，没有再次黑屏或掉盘。</strong></p>
+<p>这个实验基本确认了根因：</p>
+<blockquote>
+<p>RTX 5090 在满功耗下的瞬时功耗尖峰触发供电保护或瞬时掉电，导致 GPU 掉出 PCIe 总线（Xid 79）。限制功耗上限后，尖峰被削平，系统恢复稳定。</p>
+</blockquote>
+<p>这与显存不足、训练代码、数据集本身都无关。降功耗主要影响训练速度，不影响模型精度结果，仍然可以正常用于论文复现和实验对比。</p>
+<h2 id="六-短期解决方案先稳定训练"><a class="markdownIt-Anchor" href="#六-短期解决方案先稳定训练"></a> 六、短期解决方案：先稳定训练</h2>
+<h3 id="1-临时设置"><a class="markdownIt-Anchor" href="#1-临时设置"></a> 1. 临时设置</h3>
+<p>每次重启电脑后手动执行：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pm 1</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 400</span><br></pre></td></tr></table></figure>
+<h3 id="2-开机自动生效"><a class="markdownIt-Anchor" href="#2-开机自动生效"></a> 2. 开机自动生效</h3>
+<p>因为 <code>nvidia-smi -pl 400</code> 重启后会失效，如果不固化，下次重启又会恢复 600W，可能再次崩溃。推荐写成 systemd 服务：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">tee</span> /etc/systemd/system/nvidia-powerlimit.service &gt;/dev/null &lt;&lt;<span class="string">&#x27;EOF&#x27;</span></span><br><span class="line">[Unit]</span><br><span class="line">Description=Cap NVIDIA GPU power <span class="built_in">limit</span> to 400W (avoid 5090 transient brownout)</span><br><span class="line">After=multi-user.target</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">Type=oneshot</span><br><span class="line">ExecStart=/usr/bin/nvidia-smi -pm 1</span><br><span class="line">ExecStart=/usr/bin/nvidia-smi -pl 400</span><br><span class="line">RemainAfterExit=<span class="literal">true</span></span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"><span class="built_in">sudo</span> systemctl daemon-reload</span><br><span class="line"><span class="built_in">sudo</span> systemctl <span class="built_in">enable</span> --now nvidia-powerlimit.service</span><br></pre></td></tr></table></figure>
+<p>检查服务状态：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl status nvidia-powerlimit.service</span><br></pre></td></tr></table></figure>
+<p>但是其实我也没有写这个系统服务，因为，<strong>这台5090几乎不怎么重启</strong>。</p>
+<h2 id="七-可能的长期治本方案"><a class="markdownIt-Anchor" href="#七-可能的长期治本方案"></a> 七、可能的长期治本方案</h2>
+<p>如果后续想恢复更高功耗，甚至接近满血 600W，可以按成本从低到高逐项尝试。</p>
+<h3 id="1-bios-中将显卡槽降到-pcie-gen4"><a class="markdownIt-Anchor" href="#1-bios-中将显卡槽降到-pcie-gen4"></a> 1. BIOS 中将显卡槽降到 PCIe Gen4</h3>
+<p>这是 50 系显卡掉总线问题中比较常见、也比较有效的稳定性修复方式。</p>
+<p>网上也有相关<a href="https://www.reddit.com/r/LocalLLaMA/comments/1ogtdbg/what_is_the_real_world_hit_of_using_pcie_40/?tl=zh-hans">讨论</a>，个人仍旧不敢轻易尝试。</p>
+<p>操作路径大致为：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">重启按 Del 进入 ASUS BIOS</span><br><span class="line">-&gt; Advanced（高级）</span><br><span class="line">-&gt; PCI Subsystem Settings</span><br><span class="line">-&gt; PCIe Link Speed / PCIEX16_1 Link Speed</span><br><span class="line">-&gt; 从 Auto / Gen5 改成 Gen4</span><br><span class="line">-&gt; 保存并重启</span><br></pre></td></tr></table></figure>
+<p>对单卡训练来说，PCIe Gen4 x16 的带宽基本够用，对训练性能影响很小，但可能显著提升稳定性。</p>
+<h3 id="2-更新主板-bios"><a class="markdownIt-Anchor" href="#2-更新主板-bios"></a> 2. 更新主板 BIOS</h3>
+<p>X870E 早期 BIOS 对 Gen5 显卡稳定性可能存在兼容性问题，华硕后续 AGESA 更新修复了不少相关问题。建议去华硕官网下载安装 X870E-PLUS WIFI7 的最新 BIOS。</p>
+<h3 id="3-关闭-aspm"><a class="markdownIt-Anchor" href="#3-关闭-aspm"></a> 3. 关闭 ASPM</h3>
+<p>可以在 GRUB 内核启动参数中追加：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">pcie_aspm=off</span><br></pre></td></tr></table></figure>
+<p>这样可以排除 PCIe 省电状态切换导致掉链路的可能性。不过这一步属于系统配置调整，建议在前面几步无效后再做。</p>
+<h3 id="4-逐步解开功耗上限"><a class="markdownIt-Anchor" href="#4-逐步解开功耗上限"></a> 4. 逐步解开功耗上限</h3>
+<p>完成上面几项后，可以尝试逐步上调功耗上限：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 500</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 550</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 600</span><br></pre></td></tr></table></figure>
+<p>每一档都要跑训练观察稳定性，找到能稳定训练的最高功耗值。</p>
+<h2 id="八-未来再次崩溃时的快速自查命令"><a class="markdownIt-Anchor" href="#八-未来再次崩溃时的快速自查命令"></a> 八、未来再次崩溃时的快速自查命令</h2>
+<p>如果之后再次崩溃，可以优先看上一次启动的 Xid 错误：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">journalctl -b -1 -k | grep -iE <span class="string">&quot;Xid|fallen off the bus&quot;</span></span><br></pre></td></tr></table></figure>
+<p>实时查看功耗、限频和链路状态：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">nvidia-smi -q | grep -iE <span class="string">&quot;Power Limit|Power Draw|Throttle|Slowdown&quot;</span></span><br><span class="line">nvidia-smi --query-gpu=pcie.link.gen.current,pcie.link.width.current --format=csv</span><br></pre></td></tr></table></figure>
+<p>确认功耗上限服务状态：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl status nvidia-powerlimit.service</span><br></pre></td></tr></table></figure>
+<p>常见 Xid 速查：</p>
+<ul>
+<li><strong>Xid 79</strong>：GPU 掉出总线，常见于供电、链路或接触问题。</li>
+<li><strong>Xid 154</strong>：GPU 恢复需要节点重启。</li>
+<li><strong>Xid 13 / 31 / 43</strong>：更偏向显存、非法访问或软件层面问题，与这次现象不同。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>深度学习</category>
+      </categories>
+  </entry>
+  <entry>
     <title>CodeX/CC科研向使用经验</title>
     <url>/2026/05/28/CodeX-CC%E7%A7%91%E7%A0%94%E5%90%91%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/</url>
     <content><![CDATA[<p>结合最近一段时间的科研实践（主要是论文复现）以及 <a href="https://mp.weixin.qq.com/s/gyLbhAIIe67KhfrCqtWXmw">Datawhale 的公众号经验贴</a>，这里整理一些使用 CodeX / Claude Code 这类编程 Agent 辅助科研开发的经验。</p>
@@ -107,101 +252,6 @@
       </categories>
   </entry>
   <entry>
-    <title>在 RTX 5090 上配置 MMSegmentation 并跑通自定义数据集 (OneDL 版)</title>
-    <url>/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/</url>
-    <content><![CDATA[<p>在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。</p>
-<span id="more"></span>
-<h2 id="一-基础环境配置"><a class="markdownIt-Anchor" href="#一-基础环境配置"></a> 一、基础环境配置</h2>
-<p>RTX 5090 对 CUDA 版本有一定要求，经过测试，以下版本组合运行较为稳定：</p>
-<ul>
-<li><strong>CUDA</strong>: 12.8 (5090 最低支持 12.8 版本的 CUDA)</li>
-<li><strong>PyTorch</strong>: 2.8.0</li>
-<li><strong>Python</strong>: 3.10 (建议 3.10.x 或 3.12.x)</li>
-</ul>
-<blockquote>
-<p>💡 <strong>个人习惯：建立基础克隆环境</strong><br />
-由于目前部分国内镜像源可能还没有完全同步最新的 GPU 版 PyTorch，我通常会先建一个只包含上述核心组件的“基础环境”。后续新建项目时直接克隆这个基础环境，可以避免重复下载和安装。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda create -n new_env_name --<span class="built_in">clone</span> base_5090_env</span><br></pre></td></tr></table></figure>
-</blockquote>
-<hr />
-<h2 id="二-框架选择使用-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#二-框架选择使用-onedl-mmsegmentation"></a> 二、框架选择：使用 OneDL-MMSegmentation</h2>
-<p>官方的 OpenMMLab 库 <code>mmsegmentation</code> 已经有较长一段时间未更新，最新的 1.x 版本在适配最新的硬件环境（如 CUDA 12.8）和 PyTorch 2.x 时会遇到不少兼容性问题。虽然可以通过手动修改配置、从源码编译 <code>mmcv</code> 来强行适配，但维护成本较高。</p>
-<p>在调研后，我选择了第三方维护的复刻版本：<strong><a href="https://github.com/VBTI-development/onedl-mmsegmentation">onedl-mmsegmentation</a></strong>。该库对最新的 PyTorch 2.x 提供了较好的支持。</p>
-<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/1.png" class="" title="官方说明: onedl-mmsegmentation 重要提示"></p>
-*图 1：官方主页中的相关兼容性说明。*
-<hr />
-<h2 id="三-完整的安装与配置流程"><a class="markdownIt-Anchor" href="#三-完整的安装与配置流程"></a> 三、完整的安装与配置流程</h2>
-<h3 id="1-创建环境与安装-pytorch"><a class="markdownIt-Anchor" href="#1-创建环境与安装-pytorch"></a> 1. 创建环境与安装 PyTorch</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda create -n mmseg python=3.10 -y</span><br><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 注意：需通过官方源安装指定 CUDA 12.8 版本的 PyTorch</span></span><br><span class="line">pip install torch==2.8.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128</span><br></pre></td></tr></table></figure>
-<h3 id="2-安装基础依赖包"><a class="markdownIt-Anchor" href="#2-安装基础依赖包"></a> 2. 安装基础依赖包</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install -U onedl-mim</span><br><span class="line">mim install onedl-mmengine</span><br></pre></td></tr></table></figure>
-<h3 id="3-安装-mmcv"><a class="markdownIt-Anchor" href="#3-安装-mmcv"></a> 3. 安装 MMCV</h3>
-<p>在整个配置过程中，<code>mmcv</code> 的安装是比较容易出错的一步。主要有两种方案：</p>
-<h4 id="方案-a使用预编译-wheel-包安装-推荐"><a class="markdownIt-Anchor" href="#方案-a使用预编译-wheel-包安装-推荐"></a> 方案 A：使用预编译 Wheel 包安装 (推荐)</h4>
-<p>最理想的方式是使用 <code>mim</code> 自动安装预编译包：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mim install onedl-mmcv==2.3.2</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>⚠️ <strong>编译提示</strong>：<br />
-如果在终端日志中看到 <code>Building wheel from source</code>，说明系统未能匹配到合适的预构建包，正在尝试本地编译。这种情况往往由于缺少 C++ 扩展编译环境，导致后续调用 <code>mmcv._ext</code> 时报错。</p>
-</blockquote>
-<p>为了避免编译错误，可以根据 <a href="https://onedl-mmcv.readthedocs.io/en/latest/get_started/installation.html">OneDL-MMCV 官方文档</a> 寻找对应的预编译包（如 Python 3.10 + CUDA 12.8 + PyTorch 2.8.0）。如果自动匹配失败，建议直接通过获取到的 .whl 链接进行安装：</p>
-<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/3.png" class="" title="预编译包列表"></p>
-*图 2：官方发布的预编译包列表。*
-<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/4.png" class=""></p>
-*图 3：复制对应版本的下载链接。*
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 示例：通过复制的 .whl 文件绝对链接直接安装</span></span><br><span class="line">pip install https://mmwheels-bucket.onedl.ai/cu128-torch280/onedl-mmcv/onedl_mmcv-2.3.3-cp310-cp310-manylinux_2_34_x86_64.whl</span><br></pre></td></tr></table></figure>
-<h4 id="方案-b从源代码编译"><a class="markdownIt-Anchor" href="#方案-b从源代码编译"></a> 方案 B：从源代码编译</h4>
-<p>如果无法使用预编译包，也可以从源码编译，建议将代码克隆到工程的同级目录：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/open-mmlab/mmcv.git</span><br><span class="line"><span class="built_in">cd</span> mmcv</span><br><span class="line">git checkout v2.1.0  <span class="comment"># 切换到所需的分支</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 配置环境变量以编译 C++ 算子</span></span><br><span class="line"><span class="built_in">export</span> FORCE_CUDA=1</span><br><span class="line"><span class="built_in">export</span> MMCV_WITH_OPS=1</span><br><span class="line"></span><br><span class="line">pip install -r requirements.txt</span><br><span class="line">python setup.py build_ext --inplace</span><br><span class="line">pip install -e .</span><br></pre></td></tr></table></figure>
-<h3 id="4-从源码安装-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#4-从源码安装-onedl-mmsegmentation"></a> 4. 从源码安装 OneDL-MMSegmentation</h3>
-<p>确认 <code>mmcv</code> 正确安装并能导入 <code>mmcv._ext</code> 后，即可安装主框架：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> -b main https://github.com/vbti-development/onedl-mmsegmentation.git</span><br><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line">pip install -v -e .</span><br></pre></td></tr></table></figure>
-<hr />
-<h2 id="四-测试与验证环境"><a class="markdownIt-Anchor" href="#四-测试与验证环境"></a> 四、测试与验证环境</h2>
-<p>完成上述步骤后，可以使用官方提供的 Demo 进行推理测试，以验证环境是否正常配置：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取测试用的配置和模型权重</span></span><br><span class="line">mim download mmsegmentation --config pspnet_r50-d8_4xb2-40k_cityscapes-512x1024 --dest .</span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行单张图片推理</span></span><br><span class="line">python demo/image_demo.py demo/demo.png \</span><br><span class="line">    configs/pspnet/pspnet_r50-d8_4xb2-40k_cityscapes-512x1024.py \</span><br><span class="line">    pspnet_r50-d8_512x1024_40k_cityscapes_20200605_003338-2966598c.pth \</span><br><span class="line">    --device cuda:0 --out-file result.jpg</span><br></pre></td></tr></table></figure>
-<p>如果当前目录生成了带有分割蒙版的 <code>result.jpg</code>，说明环境的安装配置已经初步完成。</p>
-<hr />
-<h2 id="五-在内置数据集-ade20k-上的训练尝试"><a class="markdownIt-Anchor" href="#五-在内置数据集-ade20k-上的训练尝试"></a> 五、在内置数据集 (ADE20K) 上的训练尝试</h2>
-<p>在切入自定义数据前，我先尝试用内置的 ADE20K 数据集走了一遍完整的训练和测试流程，以熟悉框架的调用逻辑。</p>
-<ol>
-<li><strong>准备数据</strong>：按照官方文档指引，解压 ADE20K 并放至 <code>data/ade</code> 目录。</li>
-<li><strong>启动训练</strong>：尝试使用 Segformer 模型。得益于 5090 充足的显存，可以将 batch size 适当调大以加速验证。</li>
-</ol>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 覆盖默认超参数配置</span></span><br><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8</span><br></pre></td></tr></table></figure>
-<p>也可以通过修改迭代参数进行一次快速测试：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k_fast \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8 train_cfg.max_iters=40000 train_cfg.val_interval=2000</span><br></pre></td></tr></table></figure>
-<h3 id="显卡状态监控"><a class="markdownIt-Anchor" href="#显卡状态监控"></a> 显卡状态监控</h3>
-<p>为了观察高负载下的硬件表现，可以在训练期间监控显卡状态：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 方法 1：系统自带</span></span><br><span class="line">watch -n 1 nvidia-smi</span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法 2：使用第三方库 nvitop</span></span><br><span class="line">conda activate base</span><br><span class="line">pip install nvitop</span><br><span class="line">nvitop</span><br></pre></td></tr></table></figure>
-<h3 id="模型验证"><a class="markdownIt-Anchor" href="#模型验证"></a> 模型验证</h3>
-<p>训练完成后，评估精度并输出预测结果：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/test.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    work_dirs/segformer_mit-b0_ade20k/best_mIoU_iter_xxx.pth \</span><br><span class="line">    --out work_dirs/segformer_mit-b0_ade20k/results \</span><br><span class="line">    --show-dir work_dirs/segformer_mit-b0_ade20k/vis_results</span><br></pre></td></tr></table></figure>
-<hr />
-<h2 id="六-跑通自定义数据集以-smokeseg-为例"><a class="markdownIt-Anchor" href="#六-跑通自定义数据集以-smokeseg-为例"></a> 六、跑通自定义数据集：以 SmokeSeg 为例</h2>
-<p>结合自己课题，这里以开源的烟雾分割数据集 <strong><a href="https://github.com/LujianYao/FoSp">SmokeSeg</a></strong> 为例，记录了如何将其接入 MMSegmentation 框架。</p>
-<p>假设数据已转为标准 VOC 格式并存放在项目目录的 <code>data/SmokeSeg</code> 中。</p>
-<h3 id="1-注册新数据集"><a class="markdownIt-Anchor" href="#1-注册新数据集"></a> 1. 注册新数据集</h3>
-<p>在 MMSegmentation 1.x 规范中，自定义数据集需继承 <code>BaseSegDataset</code>。</p>
-<ul>
-<li>在 <code>mmseg/datasets/</code> 下创建 <code>smoke_voc.py</code>，编写数据集读取逻辑。</li>
-<li>在 <code>mmseg/datasets/__init__.py</code> 中导入并暴露该模块以便系统调用。</li>
-</ul>
-<h3 id="2-编写训练配置文件"><a class="markdownIt-Anchor" href="#2-编写训练配置文件"></a> 2. 编写训练配置文件</h3>
-<p>在 <code>configs/segformer/</code> 目录下新建对应 SmokeSeg 的配置文件，例如 <code>segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</code>。<br />
-<em>(注: 可以直接利用框架的 <code>_base_</code> 机制继承官方的 SegFormer-B5 配置文件，然后在此基础上仅重写类别数、数据路径等参数。)</em></p>
-<h3 id="3-执行训练与可视化"><a class="markdownIt-Anchor" href="#3-执行训练与可视化"></a> 3. 执行训练与可视化</h3>
-<p>调用新配置开始模型训练：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</span><br></pre></td></tr></table></figure>
-<p>训练结束后进行测试并可视化：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/test.py \</span><br><span class="line">    configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py \</span><br><span class="line">    你的最优权重文件路径.pth \</span><br><span class="line">    --show-dir vis_results_smokeseg/</span><br></pre></td></tr></table></figure>
-<p>到这里，整套分割库的本地化配置和运行流程基本走通了。接下来就可以在此框架上开展进一步的调参和对比实验。</p>
-]]></content>
-      <categories>
-        <category>深度学习</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Git 核心操作记录：面向日常开发的实践总结</title>
     <url>/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/</url>
     <content><![CDATA[<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
@@ -289,28 +339,6 @@
 </li>
 </ul>
 <hr />
-<h2 id="四-平行宇宙分支与合并"><a class="markdownIt-Anchor" href="#四-平行宇宙分支与合并"></a> 四、 平行宇宙：分支与合并</h2>
-<p><strong>什么时候需要新分支？</strong><br />
-当你正在开发一个新功能（或者修复一个 Bug），但不希望影响现有的主线稳定代码时，就需要切出一个新分支。在这个独立的分支里，你可以随便改，改坏了也没事。</p>
-<h3 id="1-创建并切换到新分支"><a class="markdownIt-Anchor" href="#1-创建并切换到新分支"></a> 1. 创建并切换到新分支</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 创建一个名为 dev-feature 的新分支，并立刻切换过去</span></span><br><span class="line">git checkout -b dev-feature</span><br><span class="line"></span><br><span class="line"><span class="comment"># (注：较新的 Git 版本更推荐使用 switch 命令)</span></span><br><span class="line">git switch -c dev-feature</span><br></pre></td></tr></table></figure>
-<h3 id="2-在分支上开发与提交"><a class="markdownIt-Anchor" href="#2-在分支上开发与提交"></a> 2. 在分支上开发与提交</h3>
-<p>在新分支上，一切操作和之前一样：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m <span class="string">&quot;完成了新功能开发&quot;</span></span><br></pre></td></tr></table></figure>
-<h3 id="3-合并分支"><a class="markdownIt-Anchor" href="#3-合并分支"></a> 3. 合并分支</h3>
-<p>功能开发完毕且测试通过后，你需要把它合并回主分支（通常叫 <code>main</code> 或 <code>master</code>）：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 第一步：先切换回主分支</span></span><br><span class="line">git checkout main</span><br><span class="line"></span><br><span class="line"><span class="comment"># 第二步：把开发分支合并进当前所在的（主）分支</span></span><br><span class="line">git merge dev-feature</span><br></pre></td></tr></table></figure>
-<hr />
-<h2 id="五-云端同步推送到-github"><a class="markdownIt-Anchor" href="#五-云端同步推送到-github"></a> 五、 云端同步：推送到 GitHub</h2>
-<p>本地的代码玩得再溜，最终也是要推送到远程（如 GitHub）备份或与他人共享的。</p>
-<h3 id="1-关联远程仓库仅针对-git-init-初始化的项目"><a class="markdownIt-Anchor" href="#1-关联远程仓库仅针对-git-init-初始化的项目"></a> 1. 关联远程仓库（仅针对 git init 初始化的项目）</h3>
-<p>如果是 <code>git clone</code> 下来的项目，它已经默认关联了远程仓库，这一步可以跳过。如果是你自己 <code>git init</code> 创建的本地项目，需要先跟 GitHub 上的空仓库建立关联：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git remote add origin https://github.com/用户名/你的仓库名.git</span><br></pre></td></tr></table></figure>
-<h3 id="2-推送本地代码"><a class="markdownIt-Anchor" href="#2-推送本地代码"></a> 2. 推送本地代码</h3>
-<p>把本地的 <code>main</code> 分支推送到远程仓库的 <code>main</code> 分支（第一次推送通常需要加 <code>-u</code> 参数绑定）：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git push -u origin main</span><br></pre></td></tr></table></figure>
-<p>之后日常开发中，只要分支绑定好了，推送只需极其简单的两步走：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git commit -m <span class="string">&quot;日常代码更新&quot;</span></span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
         <category>工具教程</category>
@@ -695,145 +723,106 @@ config 里列出各划分</strong>。</li>
       </categories>
   </entry>
   <entry>
-    <title>RTX 5090 深度学习环境显卡掉线排查记录</title>
-    <url>/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/</url>
-    <content><![CDATA[<p>先交代一下硬件配置：</p>
-<ul>
-<li><strong>显卡</strong>：技嘉 RTX 5090 纯血版</li>
-<li><strong>CPU</strong>：AMD 9950X</li>
-<li><strong>主板</strong>：华硕 X870E-PLUS WIFI7</li>
-<li><strong>固态</strong>：三星 990 Pro 2TB</li>
-<li><strong>机械硬盘</strong>：西部数据紫盘 2TB</li>
-<li><strong>机箱</strong>：安钛克 FLUX SE</li>
-<li><strong>电源</strong>：安钛克 NE 1300 金牌（1300W，ATX 3.0，原生 12V-2x6）</li>
-<li><strong>风冷散热</strong>：九州风神 阿萨辛4</li>
-<li><strong>内存</strong>：美商海盗船 DDR5 5200 32G×2</li>
-<li><strong>系统</strong>：Ubuntu 24.04.4 LTS，内核 6.17.0-29-generic</li>
-<li><strong>驱动</strong>：NVIDIA 590.48.01（开源内核模块 + GSP），CUDA Runtime 13.1/12.8</li>
-</ul>
-<p>最近在跑深度学习训练时，接连遇到几类不同表现的黑屏和 GPU 掉盘问题。起初我以为在 BIOS 里禁用核显就能解决，但实际测试下来发现问题仍然存在。经过日志排查和限功耗验证，最终确认：这不是显存不足，也不是代码问题，而是 <strong>RTX 5090 满功耗下的瞬时功耗尖峰触发供电保护，导致 GPU 掉出 PCIe 总线（Xid 79）</strong>，简单来说就是开始跑代码的一瞬间功率过大，触发供电保护。</p>
+    <title>对于大气散射模型的思考</title>
+    <url>/2026/06/29/%E5%AF%B9%E4%BA%8E%E5%A4%A7%E6%B0%94%E6%95%A3%E5%B0%84%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%80%9D%E8%80%83/</url>
+    <content><![CDATA[<p>最近打算基于把大气散射模型作为论文的一个重要的理论基础</p>
+<p>也不乏有本领域的论文用到此模型，比如Trans-BVM和FoSp</p>
+<p>但是目前我仍旧怀疑其公式推导的正确性，以及使用的合理性和正确性</p>
+<p>于是搜集网络资料，找到一些<a href="https://zhuanlan.zhihu.com/p/500242098">原始推导</a>,以及<a href="https://www.cnblogs.com/rust/p/10420789.html">这篇</a></p>
+<p>等博主在研究一段时间后，本博客将主要针对大气散射模型在深度学习中的应用进行补充</p>
+<p>而且据我所知，在图像抠图领域，也有类似的模型。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>在 RTX 5090 上配置 MMSegmentation 并跑通自定义数据集 (OneDL 版)</title>
+    <url>/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/</url>
+    <content><![CDATA[<p>在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。</p>
 <span id="more"></span>
-<h2 id="一-最初遇到的三类现象"><a class="markdownIt-Anchor" href="#一-最初遇到的三类现象"></a> 一、最初遇到的三类现象</h2>
-<h3 id="情况一直接掉盘找不到-gpu-节点"><a class="markdownIt-Anchor" href="#情况一直接掉盘找不到-gpu-节点"></a> 情况一：直接掉盘，找不到 GPU 节点</h3>
-<p>这是比较棘手的一种情况。当时正在跑训练，中途桌面突然消失，机箱风扇维持高转速。通过终端 SSH 连进去后，输入 <code>nvidia-smi</code> 提示找不到显卡设备，表现为典型的 GPU 掉盘。</p>
-<p>初步分析，这多半是在负载突变或者供电出现瞬时波动时，触发了主板或电源的某种保护机制，导致 PCIe 设备被系统断开。针对这种硬件级别的保护掉线，最直接的恢复方式只能是硬重启机器。</p>
-<h3 id="情况二能识别显卡但无信号输入且无桌面"><a class="markdownIt-Anchor" href="#情况二能识别显卡但无信号输入且无桌面"></a> 情况二：能识别显卡，但无信号输入且无桌面</h3>
-<p>这种情况表现为：开机后 <code>nvidia-smi</code> 能正常找到显卡并输出状态，但是显示器提示无信号输入，使用 ToDesk 远程连接时也显示没有桌面环境。</p>
-<p>遇到这种状况，我的处理方式是<strong>彻底断电重置</strong>：关机，拔掉主机电源线，静置等待一分钟左右，然后再插上电源开机。通常这样操作一次就能恢复正常。推测可能是主板静电或某些电容的残余电荷干扰了显示输出，拔电静置可以帮助主板彻底放电。</p>
-<h3 id="情况三远程有桌面但本地显示器黑屏"><a class="markdownIt-Anchor" href="#情况三远程有桌面但本地显示器黑屏"></a> 情况三：远程有桌面，但本地显示器黑屏</h3>
-<p>第三种情况有些特殊：本地显示器依然毫无反应（无输入信号），但是通过 ToDesk 远程连接，居然可以正常看到并操作 Ubuntu 桌面。</p>
-<p>经过摸索，这主要可能是 Ubuntu 下的显示服务器配置异常，或者显卡驱动与 Wayland 发生冲突。可以在 ToDesk 里打开终端，尝试重置相关配置：</p>
-<ol>
-<li>
-<p>清理旧的 xorg 配置文件：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">rm</span> /etc/X11/xorg.conf</span><br></pre></td></tr></table></figure>
-</li>
-<li>
-<p>重新生成 NVIDIA 的 xconfig：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-xconfig</span><br></pre></td></tr></table></figure>
-</li>
-<li>
-<p>关闭 Wayland，强制系统使用 X11 协议。编辑 gdm3 的配置文件：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nano /etc/gdm3/custom.conf</span><br></pre></td></tr></table></figure>
-<p>找到里面被注释掉的 <code>#WaylandEnable=false</code> 这一行，去掉前面的 <code>#</code> 号，变成 <code>WaylandEnable=false</code>，然后保存退出。</p>
-</li>
-<li>
-<p>重启系统：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> reboot</span><br></pre></td></tr></table></figure>
-<p><strong>补充说明</strong>：重启的时候，建议给显示器换一个 DP 接口重新插拔一次，通常就能正常点亮。</p>
-</li>
-</ol>
-<h2 id="二-再次复现batch-增大后频繁掉盘"><a class="markdownIt-Anchor" href="#二-再次复现batch-增大后频繁掉盘"></a> 二、再次复现：batch 增大后频繁掉盘</h2>
-<p>后续又遇到了一次更稳定且重复出现的问题：batch 设为 6 时，可以轻松跑完 40k 步，此时显存只用约 10GB；将 batch 改为 12 后，显存占用约 18GB，训练跑到约 8000 步时显示器黑屏，<code>nvidia-smi</code> 找不到显卡。</p>
-<p>当时 SSH 仍能连上，风扇狂转，训练实际已经停止。物理强制关机重启后一切恢复正常，但再次开跑仍会出现上述情况，这说明它已经不是偶发现象。</p>
-<p>最初怀疑过几类原因：</p>
-<ol>
-<li><strong>散热不佳</strong>：主机原本放在桌子下面，空间狭小，通风不良。</li>
-<li><strong>电源余量不足</strong>：满载时整机功耗过大，1300W 电源可能不够。</li>
-<li><strong>硬件连接问题</strong>：显卡支架不稳、供电线插接不牢或弯折过大，但检查后暂未发现明显问题。</li>
-</ol>
-<p>当时的计划是先把主机从桌子底下挪到机架上，并加装风扇。如果之后不再出现“显存总共 32GB、刚用了 20GB 左右就桌面崩溃”的情况，就说明大概率是散热或通风问题；如果仍然不好，再考虑联系售后或上门维修。</p>
-<p>实际上，此时早已意识到，此问题与显存大小，使用情况根本无关，显存爆了的话只会报OOM，而不是直接黑屏。</p>
-<h2 id="三-再次出现问题开训-14-秒就崩溃"><a class="markdownIt-Anchor" href="#三-再次出现问题开训-14-秒就崩溃"></a> 三、再次出现问题：开训 14 秒就崩溃</h2>
-<p>后来我已经把机器搬到了机架上，也更换了工位，但由于比较懒，没有在主机顶部加装风扇，但换到了机架上散热非常好的地方。再次启动训练时，又遭遇显示器黑屏、风扇狂转，而且这次仅仅开训 <strong>14 秒</strong>就崩了。</p>
-<p>这时基本可以确定：这不是普通的显存 OOM。OOM 通常只会让 Python 进程报错退出，不会让整机黑屏、GPU 掉盘、风扇狂转并且必须硬关机。</p>
-<p>崩溃前内核日志出现大量 NVIDIA GSP 相关错误：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">NVRM: _issueRpcAndWait: rpcSendMessage failed with status 0x0000000f for fn 76</span><br></pre></td></tr></table></figure>
-<p>这表示 NVIDIA GSP（GPU System Processor）固件 RPC 通信失败或超时。换句话说，GPU 的 GSP 固件已经挂掉，驱动只能疯狂重试。一旦 GSP 死掉，挂在 GPU 上的 Xorg 显示就会冻结（黑屏），风扇也可能因为失去控制进入 100% 失效保护状态。</p>
-<p>继续往前看崩溃第一现场，在 16:12:16，也就是启动训练那一刻，出现了更关键的日志：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">NVRM: Xid (PCI:0000:01:00): 79, pid=..., name=cursor, GPU has fallen off the bus.</span><br><span class="line">NVRM: GPU 0000:01:00.0: GPU has fallen off the bus.</span><br><span class="line">NVRM: Xid (PCI:0000:01:00): 154, GPU recovery action changed from 0x0 (None) to 0x2 (Node Reboot Required)</span><br></pre></td></tr></table></figure>
-<p>其中 <strong>Xid 79 = GPU 从 PCIe 总线上掉了</strong>。这基本可以解释所有现象：GPU 整个从总线消失后，后面那一大片 GSP RPC 失败只是驱动在对一个“已经不存在的 GPU”疯狂重试的连锁反应。<code>Node Reboot Required</code> 也解释了为什么必须硬关机才能恢复。</p>
-<p>几个关键细节：</p>
+<h2 id="一-基础环境配置"><a class="markdownIt-Anchor" href="#一-基础环境配置"></a> 一、基础环境配置</h2>
+<p>RTX 5090 对 CUDA 版本有一定要求，经过测试，以下版本组合运行较为稳定：</p>
 <ul>
-<li>训练日志目录时间戳是 16:12:02，而 GPU 掉总线发生在 16:12:16，开训仅 14 秒就崩了。</li>
-<li>崩溃前没有过热迹象，<code>HW Thermal Slowdown</code> 全程为 0。</li>
-<li>崩溃前无任何 PCIe AER 报错，属于“毫无征兆瞬间掉总线”。</li>
-<li>当前 GPU 功率上限为 600W，最低可限制到 400W。</li>
-<li>当时 PCIe 链路状态为 <code>pcie.link.gen.current = 5</code>，也就是 PCIe Gen5 x16。</li>
+<li><strong>CUDA</strong>: 12.8 (5090 最低支持 12.8 版本的 CUDA)</li>
+<li><strong>PyTorch</strong>: 2.8.0</li>
+<li><strong>Python</strong>: 3.10 (建议 3.10.x 或 3.12.x)</li>
 </ul>
-<h2 id="四-排除项与根因判断"><a class="markdownIt-Anchor" href="#四-排除项与根因判断"></a> 四、排除项与根因判断</h2>
-<h3 id="1-排除显存不足"><a class="markdownIt-Anchor" href="#1-排除显存不足"></a> 1. 排除显存不足</h3>
-<p>显存不足只会让 Python 进程报错退出，最多导致训练进程中断，不会导致整机黑屏、ToDesk 掉线、风扇狂转，也不会让 GPU 从 PCIe 总线上消失。</p>
-<p>因此，这次问题不是普通 OOM，也不是配置文件里 batch 太大导致的常规训练错误。</p>
-<h3 id="2-排除单纯过热"><a class="markdownIt-Anchor" href="#2-排除单纯过热"></a> 2. 排除单纯过热</h3>
-<p>虽然最初怀疑过散热，但这次关键复现只训练了 14 秒就崩溃，而且日志里没有 <code>HW Thermal Slowdown</code>。GPU 还没来得及热起来，因此单纯过热不是主要原因。</p>
-<h3 id="3-排除电源容量不足但保留瞬时尖峰判断"><a class="markdownIt-Anchor" href="#3-排除电源容量不足但保留瞬时尖峰判断"></a> 3. 排除电源容量不足，但保留瞬时尖峰判断</h3>
-<p>安钛克 NE1300G 是 1300W 金牌 ATX 3.0 电源，带 RTX 5090 + AMD 9950X 的额定容量理论上绰绰有余。同时，电源线是原生 12V-2x6，并且已经重新检查确认插紧。</p>
-<p>所以“电源额定容量不够”基本可以排除。但 RTX 5090 标称功耗约 575–600W，毫秒级瞬时尖峰可能冲到 900W+，仍然可能触发电源 OCP 或造成瞬时掉电，让 GPU 掉出 PCIe 总线。</p>
-<h3 id="4-pcie-gen5-链路值得怀疑但可排除"><a class="markdownIt-Anchor" href="#4-pcie-gen5-链路值得怀疑但可排除"></a> 4. PCIe Gen5 链路值得怀疑但可排除</h3>
-<p>因为当前 GPU 正跑在 PCIe Gen5 x16，而 RTX 50 系 + AM5 / X870E 平台对信号完整性要求很高，所以也曾怀疑过 PCIe Gen5 链路在满载瞬间不稳定。</p>
-<p>不过，后续限功耗实验给出了更直接的判断：<strong>限制功率上限到 400W 后，同一份训练配置已经稳定运行 1 小时以上</strong>。这说明主因更偏向满功耗下的瞬时功耗尖峰，而不是显存、代码、驱动或单纯 PCIe Gen5 链路问题。</p>
-<h2 id="五-决定性验证限制功耗到-400w-后稳定训练"><a class="markdownIt-Anchor" href="#五-决定性验证限制功耗到-400w-后稳定训练"></a> 五、决定性验证：限制功耗到 400W 后稳定训练</h2>
-<p>执行以下命令，将 RTX 5090 的功耗上限从 600W 限制到 400W：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pm 1        <span class="comment"># 持久模式</span></span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 400      <span class="comment"># 功耗上限 400W（该卡可设范围 400–600W）</span></span><br></pre></td></tr></table></figure>
-<p>然后重新启动同一份训练：</p>
-<p>结果：<strong>同一份配置已经稳定训练 1 小时以上，没有再次黑屏或掉盘。</strong></p>
-<p>这个实验基本确认了根因：</p>
 <blockquote>
-<p>RTX 5090 在满功耗下的瞬时功耗尖峰触发供电保护或瞬时掉电，导致 GPU 掉出 PCIe 总线（Xid 79）。限制功耗上限后，尖峰被削平，系统恢复稳定。</p>
+<p>💡 <strong>个人习惯：建立基础克隆环境</strong><br />
+由于目前部分国内镜像源可能还没有完全同步最新的 GPU 版 PyTorch，我通常会先建一个只包含上述核心组件的“基础环境”。后续新建项目时直接克隆这个基础环境，可以避免重复下载和安装。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda create -n new_env_name --<span class="built_in">clone</span> base_5090_env</span><br></pre></td></tr></table></figure>
 </blockquote>
-<p>这与显存不足、训练代码、数据集本身都无关。降功耗主要影响训练速度，不影响模型精度结果，仍然可以正常用于论文复现和实验对比。</p>
-<h2 id="六-短期解决方案先稳定训练"><a class="markdownIt-Anchor" href="#六-短期解决方案先稳定训练"></a> 六、短期解决方案：先稳定训练</h2>
-<h3 id="1-临时设置"><a class="markdownIt-Anchor" href="#1-临时设置"></a> 1. 临时设置</h3>
-<p>每次重启电脑后手动执行：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pm 1</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 400</span><br></pre></td></tr></table></figure>
-<h3 id="2-开机自动生效"><a class="markdownIt-Anchor" href="#2-开机自动生效"></a> 2. 开机自动生效</h3>
-<p>因为 <code>nvidia-smi -pl 400</code> 重启后会失效，如果不固化，下次重启又会恢复 600W，可能再次崩溃。推荐写成 systemd 服务：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">tee</span> /etc/systemd/system/nvidia-powerlimit.service &gt;/dev/null &lt;&lt;<span class="string">&#x27;EOF&#x27;</span></span><br><span class="line">[Unit]</span><br><span class="line">Description=Cap NVIDIA GPU power <span class="built_in">limit</span> to 400W (avoid 5090 transient brownout)</span><br><span class="line">After=multi-user.target</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">Type=oneshot</span><br><span class="line">ExecStart=/usr/bin/nvidia-smi -pm 1</span><br><span class="line">ExecStart=/usr/bin/nvidia-smi -pl 400</span><br><span class="line">RemainAfterExit=<span class="literal">true</span></span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"><span class="built_in">sudo</span> systemctl daemon-reload</span><br><span class="line"><span class="built_in">sudo</span> systemctl <span class="built_in">enable</span> --now nvidia-powerlimit.service</span><br></pre></td></tr></table></figure>
-<p>检查服务状态：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl status nvidia-powerlimit.service</span><br></pre></td></tr></table></figure>
-<p>但是其实我也没有写这个系统服务，因为，<strong>这台5090几乎不怎么重启</strong>。</p>
-<h2 id="七-可能的长期治本方案"><a class="markdownIt-Anchor" href="#七-可能的长期治本方案"></a> 七、可能的长期治本方案</h2>
-<p>如果后续想恢复更高功耗，甚至接近满血 600W，可以按成本从低到高逐项尝试。</p>
-<h3 id="1-bios-中将显卡槽降到-pcie-gen4"><a class="markdownIt-Anchor" href="#1-bios-中将显卡槽降到-pcie-gen4"></a> 1. BIOS 中将显卡槽降到 PCIe Gen4</h3>
-<p>这是 50 系显卡掉总线问题中比较常见、也比较有效的稳定性修复方式。</p>
-<p>网上也有相关<a href="https://www.reddit.com/r/LocalLLaMA/comments/1ogtdbg/what_is_the_real_world_hit_of_using_pcie_40/?tl=zh-hans">讨论</a>，个人仍旧不敢轻易尝试。</p>
-<p>操作路径大致为：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">重启按 Del 进入 ASUS BIOS</span><br><span class="line">-&gt; Advanced（高级）</span><br><span class="line">-&gt; PCI Subsystem Settings</span><br><span class="line">-&gt; PCIe Link Speed / PCIEX16_1 Link Speed</span><br><span class="line">-&gt; 从 Auto / Gen5 改成 Gen4</span><br><span class="line">-&gt; 保存并重启</span><br></pre></td></tr></table></figure>
-<p>对单卡训练来说，PCIe Gen4 x16 的带宽基本够用，对训练性能影响很小，但可能显著提升稳定性。</p>
-<h3 id="2-更新主板-bios"><a class="markdownIt-Anchor" href="#2-更新主板-bios"></a> 2. 更新主板 BIOS</h3>
-<p>X870E 早期 BIOS 对 Gen5 显卡稳定性可能存在兼容性问题，华硕后续 AGESA 更新修复了不少相关问题。建议去华硕官网下载安装 X870E-PLUS WIFI7 的最新 BIOS。</p>
-<h3 id="3-关闭-aspm"><a class="markdownIt-Anchor" href="#3-关闭-aspm"></a> 3. 关闭 ASPM</h3>
-<p>可以在 GRUB 内核启动参数中追加：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">pcie_aspm=off</span><br></pre></td></tr></table></figure>
-<p>这样可以排除 PCIe 省电状态切换导致掉链路的可能性。不过这一步属于系统配置调整，建议在前面几步无效后再做。</p>
-<h3 id="4-逐步解开功耗上限"><a class="markdownIt-Anchor" href="#4-逐步解开功耗上限"></a> 4. 逐步解开功耗上限</h3>
-<p>完成上面几项后，可以尝试逐步上调功耗上限：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 500</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 550</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 600</span><br></pre></td></tr></table></figure>
-<p>每一档都要跑训练观察稳定性，找到能稳定训练的最高功耗值。</p>
-<h2 id="八-未来再次崩溃时的快速自查命令"><a class="markdownIt-Anchor" href="#八-未来再次崩溃时的快速自查命令"></a> 八、未来再次崩溃时的快速自查命令</h2>
-<p>如果之后再次崩溃，可以优先看上一次启动的 Xid 错误：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">journalctl -b -1 -k | grep -iE <span class="string">&quot;Xid|fallen off the bus&quot;</span></span><br></pre></td></tr></table></figure>
-<p>实时查看功耗、限频和链路状态：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">nvidia-smi -q | grep -iE <span class="string">&quot;Power Limit|Power Draw|Throttle|Slowdown&quot;</span></span><br><span class="line">nvidia-smi --query-gpu=pcie.link.gen.current,pcie.link.width.current --format=csv</span><br></pre></td></tr></table></figure>
-<p>确认功耗上限服务状态：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl status nvidia-powerlimit.service</span><br></pre></td></tr></table></figure>
-<p>常见 Xid 速查：</p>
+<hr />
+<h2 id="二-框架选择使用-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#二-框架选择使用-onedl-mmsegmentation"></a> 二、框架选择：使用 OneDL-MMSegmentation</h2>
+<p>官方的 OpenMMLab 库 <code>mmsegmentation</code> 已经有较长一段时间未更新，最新的 1.x 版本在适配最新的硬件环境（如 CUDA 12.8）和 PyTorch 2.x 时会遇到不少兼容性问题。虽然可以通过手动修改配置、从源码编译 <code>mmcv</code> 来强行适配，但维护成本较高。</p>
+<p>在调研后，我选择了第三方维护的复刻版本：<strong><a href="https://github.com/VBTI-development/onedl-mmsegmentation">onedl-mmsegmentation</a></strong>。该库对最新的 PyTorch 2.x 提供了较好的支持。</p>
+<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/1.png" class="" title="官方说明: onedl-mmsegmentation 重要提示"></p>
+*图 1：官方主页中的相关兼容性说明。*
+<hr />
+<h2 id="三-完整的安装与配置流程"><a class="markdownIt-Anchor" href="#三-完整的安装与配置流程"></a> 三、完整的安装与配置流程</h2>
+<h3 id="1-创建环境与安装-pytorch"><a class="markdownIt-Anchor" href="#1-创建环境与安装-pytorch"></a> 1. 创建环境与安装 PyTorch</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda create -n mmseg python=3.10 -y</span><br><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 注意：需通过官方源安装指定 CUDA 12.8 版本的 PyTorch</span></span><br><span class="line">pip install torch==2.8.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128</span><br></pre></td></tr></table></figure>
+<h3 id="2-安装基础依赖包"><a class="markdownIt-Anchor" href="#2-安装基础依赖包"></a> 2. 安装基础依赖包</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install -U onedl-mim</span><br><span class="line">mim install onedl-mmengine</span><br></pre></td></tr></table></figure>
+<h3 id="3-安装-mmcv"><a class="markdownIt-Anchor" href="#3-安装-mmcv"></a> 3. 安装 MMCV</h3>
+<p>在整个配置过程中，<code>mmcv</code> 的安装是比较容易出错的一步。主要有两种方案：</p>
+<h4 id="方案-a使用预编译-wheel-包安装-推荐"><a class="markdownIt-Anchor" href="#方案-a使用预编译-wheel-包安装-推荐"></a> 方案 A：使用预编译 Wheel 包安装 (推荐)</h4>
+<p>最理想的方式是使用 <code>mim</code> 自动安装预编译包：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mim install onedl-mmcv==2.3.2</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>⚠️ <strong>编译提示</strong>：<br />
+如果在终端日志中看到 <code>Building wheel from source</code>，说明系统未能匹配到合适的预构建包，正在尝试本地编译。这种情况往往由于缺少 C++ 扩展编译环境，导致后续调用 <code>mmcv._ext</code> 时报错。</p>
+</blockquote>
+<p>为了避免编译错误，可以根据 <a href="https://onedl-mmcv.readthedocs.io/en/latest/get_started/installation.html">OneDL-MMCV 官方文档</a> 寻找对应的预编译包（如 Python 3.10 + CUDA 12.8 + PyTorch 2.8.0）。如果自动匹配失败，建议直接通过获取到的 .whl 链接进行安装：</p>
+<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/3.png" class="" title="预编译包列表"></p>
+*图 2：官方发布的预编译包列表。*
+<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/4.png" class=""></p>
+*图 3：复制对应版本的下载链接。*
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 示例：通过复制的 .whl 文件绝对链接直接安装</span></span><br><span class="line">pip install https://mmwheels-bucket.onedl.ai/cu128-torch280/onedl-mmcv/onedl_mmcv-2.3.3-cp310-cp310-manylinux_2_34_x86_64.whl</span><br></pre></td></tr></table></figure>
+<h4 id="方案-b从源代码编译"><a class="markdownIt-Anchor" href="#方案-b从源代码编译"></a> 方案 B：从源代码编译</h4>
+<p>如果无法使用预编译包，也可以从源码编译，建议将代码克隆到工程的同级目录：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/open-mmlab/mmcv.git</span><br><span class="line"><span class="built_in">cd</span> mmcv</span><br><span class="line">git checkout v2.1.0  <span class="comment"># 切换到所需的分支</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 配置环境变量以编译 C++ 算子</span></span><br><span class="line"><span class="built_in">export</span> FORCE_CUDA=1</span><br><span class="line"><span class="built_in">export</span> MMCV_WITH_OPS=1</span><br><span class="line"></span><br><span class="line">pip install -r requirements.txt</span><br><span class="line">python setup.py build_ext --inplace</span><br><span class="line">pip install -e .</span><br></pre></td></tr></table></figure>
+<h3 id="4-从源码安装-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#4-从源码安装-onedl-mmsegmentation"></a> 4. 从源码安装 OneDL-MMSegmentation</h3>
+<p>确认 <code>mmcv</code> 正确安装并能导入 <code>mmcv._ext</code> 后，即可安装主框架：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> -b main https://github.com/vbti-development/onedl-mmsegmentation.git</span><br><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line">pip install -v -e .</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="四-测试与验证环境"><a class="markdownIt-Anchor" href="#四-测试与验证环境"></a> 四、测试与验证环境</h2>
+<p>完成上述步骤后，可以使用官方提供的 Demo 进行推理测试，以验证环境是否正常配置：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取测试用的配置和模型权重</span></span><br><span class="line">mim download mmsegmentation --config pspnet_r50-d8_4xb2-40k_cityscapes-512x1024 --dest .</span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行单张图片推理</span></span><br><span class="line">python demo/image_demo.py demo/demo.png \</span><br><span class="line">    configs/pspnet/pspnet_r50-d8_4xb2-40k_cityscapes-512x1024.py \</span><br><span class="line">    pspnet_r50-d8_512x1024_40k_cityscapes_20200605_003338-2966598c.pth \</span><br><span class="line">    --device cuda:0 --out-file result.jpg</span><br></pre></td></tr></table></figure>
+<p>如果当前目录生成了带有分割蒙版的 <code>result.jpg</code>，说明环境的安装配置已经初步完成。</p>
+<hr />
+<h2 id="五-在内置数据集-ade20k-上的训练尝试"><a class="markdownIt-Anchor" href="#五-在内置数据集-ade20k-上的训练尝试"></a> 五、在内置数据集 (ADE20K) 上的训练尝试</h2>
+<p>在切入自定义数据前，我先尝试用内置的 ADE20K 数据集走了一遍完整的训练和测试流程，以熟悉框架的调用逻辑。</p>
+<ol>
+<li><strong>准备数据</strong>：按照官方文档指引，解压 ADE20K 并放至 <code>data/ade</code> 目录。</li>
+<li><strong>启动训练</strong>：尝试使用 Segformer 模型。得益于 5090 充足的显存，可以将 batch size 适当调大以加速验证。</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 覆盖默认超参数配置</span></span><br><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8</span><br></pre></td></tr></table></figure>
+<p>也可以通过修改迭代参数进行一次快速测试：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k_fast \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8 train_cfg.max_iters=40000 train_cfg.val_interval=2000</span><br></pre></td></tr></table></figure>
+<h3 id="显卡状态监控"><a class="markdownIt-Anchor" href="#显卡状态监控"></a> 显卡状态监控</h3>
+<p>为了观察高负载下的硬件表现，可以在训练期间监控显卡状态：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 方法 1：系统自带</span></span><br><span class="line">watch -n 1 nvidia-smi</span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法 2：使用第三方库 nvitop</span></span><br><span class="line">conda activate base</span><br><span class="line">pip install nvitop</span><br><span class="line">nvitop</span><br></pre></td></tr></table></figure>
+<h3 id="模型验证"><a class="markdownIt-Anchor" href="#模型验证"></a> 模型验证</h3>
+<p>训练完成后，评估精度并输出预测结果：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/test.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    work_dirs/segformer_mit-b0_ade20k/best_mIoU_iter_xxx.pth \</span><br><span class="line">    --out work_dirs/segformer_mit-b0_ade20k/results \</span><br><span class="line">    --show-dir work_dirs/segformer_mit-b0_ade20k/vis_results</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="六-跑通自定义数据集以-smokeseg-为例"><a class="markdownIt-Anchor" href="#六-跑通自定义数据集以-smokeseg-为例"></a> 六、跑通自定义数据集：以 SmokeSeg 为例</h2>
+<p>结合自己课题，这里以开源的烟雾分割数据集 <strong><a href="https://github.com/LujianYao/FoSp">SmokeSeg</a></strong> 为例，记录了如何将其接入 MMSegmentation 框架。</p>
+<p>假设数据已转为标准 VOC 格式并存放在项目目录的 <code>data/SmokeSeg</code> 中。</p>
+<h3 id="1-注册新数据集"><a class="markdownIt-Anchor" href="#1-注册新数据集"></a> 1. 注册新数据集</h3>
+<p>在 MMSegmentation 1.x 规范中，自定义数据集需继承 <code>BaseSegDataset</code>。</p>
 <ul>
-<li><strong>Xid 79</strong>：GPU 掉出总线，常见于供电、链路或接触问题。</li>
-<li><strong>Xid 154</strong>：GPU 恢复需要节点重启。</li>
-<li><strong>Xid 13 / 31 / 43</strong>：更偏向显存、非法访问或软件层面问题，与这次现象不同。</li>
+<li>在 <code>mmseg/datasets/</code> 下创建 <code>smoke_voc.py</code>，编写数据集读取逻辑。</li>
+<li>在 <code>mmseg/datasets/__init__.py</code> 中导入并暴露该模块以便系统调用。</li>
 </ul>
+<h3 id="2-编写训练配置文件"><a class="markdownIt-Anchor" href="#2-编写训练配置文件"></a> 2. 编写训练配置文件</h3>
+<p>在 <code>configs/segformer/</code> 目录下新建对应 SmokeSeg 的配置文件，例如 <code>segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</code>。<br />
+<em>(注: 可以直接利用框架的 <code>_base_</code> 机制继承官方的 SegFormer-B5 配置文件，然后在此基础上仅重写类别数、数据路径等参数。)</em></p>
+<h3 id="3-执行训练与可视化"><a class="markdownIt-Anchor" href="#3-执行训练与可视化"></a> 3. 执行训练与可视化</h3>
+<p>调用新配置开始模型训练：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</span><br></pre></td></tr></table></figure>
+<p>训练结束后进行测试并可视化：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/test.py \</span><br><span class="line">    configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py \</span><br><span class="line">    你的最优权重文件路径.pth \</span><br><span class="line">    --show-dir vis_results_smokeseg/</span><br></pre></td></tr></table></figure>
+<p>到这里，整套分割库的本地化配置和运行流程基本走通了。接下来就可以在此框架上开展进一步的调参和对比实验。</p>
 ]]></content>
       <categories>
         <category>深度学习</category>
@@ -936,16 +925,5 @@ config 里列出各划分</strong>。</li>
       <categories>
         <category>深度学习</category>
       </categories>
-  </entry>
-  <entry>
-    <title>对于大气散射模型的思考</title>
-    <url>/2026/06/29/%E5%AF%B9%E4%BA%8E%E5%A4%A7%E6%B0%94%E6%95%A3%E5%B0%84%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%80%9D%E8%80%83/</url>
-    <content><![CDATA[<p>最近打算基于把大气散射模型作为论文的一个重要的理论基础</p>
-<p>也不乏有本领域的论文用到此模型，比如Trans-BVM和FoSp</p>
-<p>但是目前我仍旧怀疑其公式推导的正确性，以及使用的合理性和正确性</p>
-<p>于是搜集网络资料，找到一些<a href="https://zhuanlan.zhihu.com/p/500242098">原始推导</a>,以及<a href="https://www.cnblogs.com/rust/p/10420789.html">这篇</a></p>
-<p>等博主在研究一段时间后，本博客将主要针对大气散射模型在深度学习中的应用进行补充</p>
-<p>而且据我所知，在图像抠图领域，也有类似的模型。</p>
-]]></content>
   </entry>
 </search>
