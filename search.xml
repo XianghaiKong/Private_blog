@@ -1,6 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>CodeX/CC科研向使用经验</title>
+    <url>/2026/05/28/CodeX-CC%E7%A7%91%E7%A0%94%E5%90%91%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/</url>
+    <content><![CDATA[<p>结合最近一段时间的科研实践（主要是论文复现）以及 <a href="https://mp.weixin.qq.com/s/gyLbhAIIe67KhfrCqtWXmw">Datawhale 的公众号经验贴</a>，这里整理一些使用 CodeX / Claude Code 这类编程 Agent 辅助科研开发的经验。</p>
+<p>核心思路可以概括为一句话：<strong>模型能力固然重要，但上下文、长期规则和验收标准同样重要。</strong></p>
+<p>另外补充一点，如果是实战派，也就是工作/实习，也推荐最近看到的一篇很好的<a href="https://zhuanlan.zhihu.com/p/2009744974980331332">CC的实践指南</a></p>
+<h2 id="总工作流"><a class="markdownIt-Anchor" href="#总工作流"></a> 总工作流</h2>
+<p>比较稳定的一套流程是：</p>
+<blockquote>
+<p>读上下文 -&gt; 写计划 -&gt; 确认范围 -&gt; 小步实现 -&gt; 跑验证 -&gt; 总结结果 -&gt; <code>/new</code> 开新对话</p>
+</blockquote>
+<p>Agent 很适合做“有明确边界的工程任务”，但不适合在上下文混乱、目标模糊、验证缺失的情况下自由发挥。因此，每次让它动手之前，都要先让它理解项目、对齐任务，并明确最后如何验收。</p>
+<span id="more"></span>
+<hr />
+<h2 id="一-先让-agent-阅读项目框架"><a class="markdownIt-Anchor" href="#一-先让-agent-阅读项目框架"></a> 一、先让 Agent 阅读项目框架</h2>
+<p>进入一个新的代码仓库后，不要一上来就让 Agent 改代码。更稳妥的方式是先让它阅读项目结构，建立最基本的上下文。</p>
+<p>可以使用类似下面的 Prompt：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">先不要修改代码。请先阅读这个项目，告诉我：</span><br><span class="line"></span><br><span class="line">1. 项目结构是什么</span><br><span class="line">2. 主要入口在哪里</span><br><span class="line">3. 训练/测试/运行命令分别是什么</span><br><span class="line">4. 哪些文件最可能和当前任务有关</span><br><span class="line">5. 你不确定的地方有哪些</span><br></pre></td></tr></table></figure>
+<p>这样做的好处是，Agent 会先主动梳理工程结构，而不是凭借文件名或局部代码直接猜测实现方式。对于论文复现类项目尤其重要，因为很多仓库的训练入口、配置文件、数据集注册逻辑并不直观。</p>
+<hr />
+<h2 id="二-在-agentsmd-中写长期规则"><a class="markdownIt-Anchor" href="#二-在-agentsmd-中写长期规则"></a> 二、在 <code>AGENTS.md</code> 中写长期规则</h2>
+<p>如果一个项目会反复使用 Agent 协助开发，建议在仓库中写一个 <code>AGENTS.md</code>，用于记录长期规则。这样每次新会话都能继承基本约束，减少重复说明。</p>
+<p>例如：</p>
+<figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line"><span class="section">## 工作规则</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 默认先阅读相关代码和文档，再开始修改。</span><br><span class="line"><span class="bullet">-</span> 修改前先说明影响范围。</span><br><span class="line"><span class="bullet">-</span> 只做和当前任务相关的最小改动。</span><br><span class="line"><span class="bullet">-</span> 提交前必须运行最小验证。</span><br><span class="line"><span class="bullet">-</span> 说明用中文，代码、命令、文件名保持英文。</span><br><span class="line"><span class="bullet">-</span> 不要修改无关文件。</span><br><span class="line"></span><br><span class="line"><span class="section">## 实验原则</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 实验必须服务于明确假设或决策。</span><br><span class="line"><span class="bullet">-</span> 不要为了补齐表格而穷举低价值 ablation。</span><br></pre></td></tr></table></figure>
+<p>这类规则的价值不在于“控制模型”，而在于给 Agent 一个稳定的工作边界。特别是在科研代码中，很多修改看似只是小改动，实际可能会影响实验公平性、配置一致性或结果可复现性。</p>
+<hr />
+<h2 id="三-先对齐-plan再开始实现"><a class="markdownIt-Anchor" href="#三-先对齐-plan再开始实现"></a> 三、先对齐 Plan，再开始实现</h2>
+<p>对于稍微复杂一点的任务，不建议直接说“帮我实现某功能”。更好的方式是先进入计划阶段，让 Agent 明确问题、影响范围和验证方式。</p>
+<p>可以使用下面的 Prompt：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">先不要写代码。请进入计划模式，帮我设计实现方案：</span><br><span class="line"></span><br><span class="line">1. 明确这次要解决的问题</span><br><span class="line">2. 列出会影响哪些模块</span><br><span class="line">3. 拆成 3-7 个步骤</span><br><span class="line">4. 每一步怎么验证</span><br><span class="line">5. 哪些地方最容易出错</span><br><span class="line"></span><br><span class="line">等我确认后再开始实现。</span><br></pre></td></tr></table></figure>
+<p>这个步骤可以有效避免 Agent 在需求还没对齐时就开始大范围修改。尤其是模型训练、数据预处理、评估指标这类任务，一旦改错位置，后面排查成本会很高。</p>
+<hr />
+<h2 id="四-复现和研究类任务要先查证"><a class="markdownIt-Anchor" href="#四-复现和研究类任务要先查证"></a> 四、复现和研究类任务要先查证</h2>
+<p>论文复现、方法解释、官方实现对照这类任务，不要直接让 Agent “按论文实现”。更稳妥的做法是先让它查证论文和官方代码，再决定是否需要实现。</p>
+<p>可以使用下面的 Prompt：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">请先阅读论文和官方 repo，不要开始写代码。</span><br><span class="line"></span><br><span class="line">先输出：</span><br><span class="line"></span><br><span class="line">1. 论文核心 idea</span><br><span class="line">2. 关键公式/模块</span><br><span class="line">3. 官方实现和论文描述是否一致</span><br><span class="line">4. 复现最小路径</span><br><span class="line">5. 可能复现不出来的风险点</span><br></pre></td></tr></table></figure>
+<p>这样可以减少“为了完成而完成”的情况。很多论文的官方代码和论文描述并不完全一致，甚至有些细节只存在于配置文件或 issue 讨论中。如果不先查证，Agent 很容易生成一个看似合理但并不忠于原实现的版本。</p>
+<hr />
+<h2 id="五-任务完成后及时开新会话"><a class="markdownIt-Anchor" href="#五-任务完成后及时开新会话"></a> 五、任务完成后及时开新会话</h2>
+<p>一个任务完成后，建议让 Agent 先总结当前状态，然后开启新会话。长上下文会提高幻觉和错误假设的概率，尤其是当中间经历过多次修改、回滚、报错和调试时。</p>
+<p>可以使用下面的 Prompt：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">请用一句话总结刚完成的任务、修改过的文件、当前状态和下一步注意事项。</span><br><span class="line"></span><br><span class="line">然后 /new，在新会话里贴这个总结，再开始下一个任务。</span><br></pre></td></tr></table></figure>
+<p>这样可以保留必要信息，同时避免旧上下文中的错误判断继续影响后续任务。</p>
+<hr />
+<h2 id="六-不要只相信已完成"><a class="markdownIt-Anchor" href="#六-不要只相信已完成"></a> 六、不要只相信“已完成”</h2>
+<p>Agent 说任务完成，并不等于任务真的完成。最后一定要让它对齐修改内容和验证结果。</p>
+<p>可以让它按下面几个问题总结：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">请总结这次任务：</span><br><span class="line"></span><br><span class="line">1. 修改了哪些文件</span><br><span class="line">2. 每个文件为什么改</span><br><span class="line">3. 运行了哪些验证</span><br><span class="line">4. 还有哪些没验证</span><br><span class="line">5. 哪些地方需要我人工确认</span><br></pre></td></tr></table></figure>
+<p>这一步很重要。它可以帮助我们区分“代码已经写了”“验证已经跑了”和“结果确实可信”这三件事。科研场景里，尤其不能把能运行等同于实验正确。</p>
+<hr />
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>使用 CodeX / Claude Code 这类 Agent 做科研开发时，关键不只是选择哪个模型，而是建立一套稳定的工作方式：</p>
+<ul>
+<li>先让 Agent 理解项目，而不是直接改代码。</li>
+<li>把长期偏好和约束写进 <code>AGENTS.md</code>。</li>
+<li>复杂任务先做 Plan，再确认实现。</li>
+<li>论文复现任务先查证论文和官方实现。</li>
+<li>每个任务结束后及时总结并开新会话。</li>
+<li>最后用文件、原因和验证结果来验收，而不是只听 Agent 的完成声明。</li>
+</ul>
+<p>简单来说，Agent 更像一个执行力很强的研究助理。给它清晰的上下文、边界和验收标准，它才能稳定地产出有用结果。</p>
+]]></content>
+      <categories>
+        <category>科研工具</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>CodeX每次打开首次对话都五次Reconnecting解决办法</title>
+    <url>/2026/07/06/CodeX%E6%AF%8F%E6%AC%A1%E6%89%93%E5%BC%80%E9%A6%96%E6%AC%A1%E5%AF%B9%E8%AF%9D%E9%83%BD%E4%BA%94%E6%AC%A1Reconnecting%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/</url>
+    <content><![CDATA[<p>最近用CodeX发现一个神奇问题，不管是Mac端的桌面app，还是VSCode/Cursor里的CodeX插件（等同于终端版），开始的第一次对话，总会显示五次重新连接，这需要耗费大概一分钟，关键是在这个过程中，等待地很折磨，怀疑是不是账号有问题还是梯子没挂好，但是在五次重新连接尝试后，突然就好了，又能回答了，后续的对话不用再等那么久，上网搜索原因，找到一篇<a href="https://zhuanlan.zhihu.com/p/2042568458395726918">帖子</a>给了解决方法，但根据评论看，也会有些问题，所以还没实施，后续再找找别的办法</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>2026版：Hexo + GitHub Pages 个人博客搭建全记录</title>
+    <url>/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/</url>
+    <content><![CDATA[<p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
+<span id="more"></span>
+<h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
+<p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
+🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
+<blockquote>
+<p>💡 <strong>操作记录</strong>：<br />
+虽然这篇文章的整体逻辑很清晰，但因为发布时间较早，很多细节已经发生了变化。例如 Node.js 的版本要求、Hexo 包管理的变动，以及目前 GitHub 默认主分支已经从 <code>master</code> 变成了 <code>main</code>。这些差异很容易导致按照原教程执行时出现报错。</p>
+<p>在实际操作中，如果遇到版本不兼容导致的报错，建议直接将终端报错信息交给大语言模型去分析，通常能很快定位并解决问题，能省下不少查阅旧资料的时间。</p>
+</blockquote>
+<hr />
+<h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
+<p>默认部署到 GitHub Pages 上的域名格式通常是 <code>用户名.github.io</code>。为了方便记忆和后续的扩展，我为博客绑定了一个专属的独立域名。</p>
+<p>🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
+<p><strong>核心操作步骤</strong>：</p>
+<ol>
+<li><strong>域名购买</strong>：我在阿里云购买了一个 <code>.top</code> 后缀的域名，相对来说性价比比较高。</li>
+<li><strong>DNS 解析配置</strong>：进入阿里云控制台，添加一条 <code>CNAME</code> 记录，将其解析指向自己的 GitHub Pages 地址。</li>
+<li><strong>GitHub 仓库配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚购买的域名，并勾选开启 <code>Enforce HTTPS</code> 以保证访问安全。配置完成后，稍微等待 DNS 解析生效，就可以使用独立域名访问博客了。</li>
+</ol>
+<hr />
+<h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
+<p>原生的 Hexo 界面比较基础，为了提升页面的可读性和排版效果，通常需要对主题进行一定的自定义。</p>
+<p>🔗 <strong>参考教程</strong>：<a href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
+<p><strong>我主要进行的配置和调整包括</strong>：</p>
+<ul>
+<li>更换第三方主题（这里我尝试了经典的 NexT 等几款主流主题）。</li>
+<li>配置侧边栏的个人信息、头像以及社交平台链接。</li>
+<li>微调了博客的背景和字体配色，以改善正文内容的阅读体验。</li>
+<li>补充了专属的网站标签页小图标（Favicon）。</li>
+</ul>
+<p>整个流程走下来，算是一次比较完整的前端部署实践。一个功能完善、排版清晰的博客不仅能作为知识库，也是记录学习日常的好工具。</p>
+]]></content>
+      <categories>
+        <category>建站教程</category>
+      </categories>
+  </entry>
+  <entry>
     <title>RTX 5090 深度学习环境显卡掉线排查记录</title>
     <url>/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/</url>
     <content><![CDATA[<p>先交代一下硬件配置：</p>
@@ -146,112 +258,6 @@
       </categories>
   </entry>
   <entry>
-    <title>CodeX/CC科研向使用经验</title>
-    <url>/2026/05/28/CodeX-CC%E7%A7%91%E7%A0%94%E5%90%91%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/</url>
-    <content><![CDATA[<p>结合最近一段时间的科研实践（主要是论文复现）以及 <a href="https://mp.weixin.qq.com/s/gyLbhAIIe67KhfrCqtWXmw">Datawhale 的公众号经验贴</a>，这里整理一些使用 CodeX / Claude Code 这类编程 Agent 辅助科研开发的经验。</p>
-<p>核心思路可以概括为一句话：<strong>模型能力固然重要，但上下文、长期规则和验收标准同样重要。</strong></p>
-<p>另外补充一点，如果是实战派，也就是工作/实习，也推荐最近看到的一篇很好的<a href="https://zhuanlan.zhihu.com/p/2009744974980331332">CC的实践指南</a></p>
-<h2 id="总工作流"><a class="markdownIt-Anchor" href="#总工作流"></a> 总工作流</h2>
-<p>比较稳定的一套流程是：</p>
-<blockquote>
-<p>读上下文 -&gt; 写计划 -&gt; 确认范围 -&gt; 小步实现 -&gt; 跑验证 -&gt; 总结结果 -&gt; <code>/new</code> 开新对话</p>
-</blockquote>
-<p>Agent 很适合做“有明确边界的工程任务”，但不适合在上下文混乱、目标模糊、验证缺失的情况下自由发挥。因此，每次让它动手之前，都要先让它理解项目、对齐任务，并明确最后如何验收。</p>
-<span id="more"></span>
-<hr />
-<h2 id="一-先让-agent-阅读项目框架"><a class="markdownIt-Anchor" href="#一-先让-agent-阅读项目框架"></a> 一、先让 Agent 阅读项目框架</h2>
-<p>进入一个新的代码仓库后，不要一上来就让 Agent 改代码。更稳妥的方式是先让它阅读项目结构，建立最基本的上下文。</p>
-<p>可以使用类似下面的 Prompt：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">先不要修改代码。请先阅读这个项目，告诉我：</span><br><span class="line"></span><br><span class="line">1. 项目结构是什么</span><br><span class="line">2. 主要入口在哪里</span><br><span class="line">3. 训练/测试/运行命令分别是什么</span><br><span class="line">4. 哪些文件最可能和当前任务有关</span><br><span class="line">5. 你不确定的地方有哪些</span><br></pre></td></tr></table></figure>
-<p>这样做的好处是，Agent 会先主动梳理工程结构，而不是凭借文件名或局部代码直接猜测实现方式。对于论文复现类项目尤其重要，因为很多仓库的训练入口、配置文件、数据集注册逻辑并不直观。</p>
-<hr />
-<h2 id="二-在-agentsmd-中写长期规则"><a class="markdownIt-Anchor" href="#二-在-agentsmd-中写长期规则"></a> 二、在 <code>AGENTS.md</code> 中写长期规则</h2>
-<p>如果一个项目会反复使用 Agent 协助开发，建议在仓库中写一个 <code>AGENTS.md</code>，用于记录长期规则。这样每次新会话都能继承基本约束，减少重复说明。</p>
-<p>例如：</p>
-<figure class="highlight markdown"><table><tr><td class="code"><pre><span class="line"><span class="section">## 工作规则</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 默认先阅读相关代码和文档，再开始修改。</span><br><span class="line"><span class="bullet">-</span> 修改前先说明影响范围。</span><br><span class="line"><span class="bullet">-</span> 只做和当前任务相关的最小改动。</span><br><span class="line"><span class="bullet">-</span> 提交前必须运行最小验证。</span><br><span class="line"><span class="bullet">-</span> 说明用中文，代码、命令、文件名保持英文。</span><br><span class="line"><span class="bullet">-</span> 不要修改无关文件。</span><br><span class="line"></span><br><span class="line"><span class="section">## 实验原则</span></span><br><span class="line"></span><br><span class="line"><span class="bullet">-</span> 实验必须服务于明确假设或决策。</span><br><span class="line"><span class="bullet">-</span> 不要为了补齐表格而穷举低价值 ablation。</span><br></pre></td></tr></table></figure>
-<p>这类规则的价值不在于“控制模型”，而在于给 Agent 一个稳定的工作边界。特别是在科研代码中，很多修改看似只是小改动，实际可能会影响实验公平性、配置一致性或结果可复现性。</p>
-<hr />
-<h2 id="三-先对齐-plan再开始实现"><a class="markdownIt-Anchor" href="#三-先对齐-plan再开始实现"></a> 三、先对齐 Plan，再开始实现</h2>
-<p>对于稍微复杂一点的任务，不建议直接说“帮我实现某功能”。更好的方式是先进入计划阶段，让 Agent 明确问题、影响范围和验证方式。</p>
-<p>可以使用下面的 Prompt：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">先不要写代码。请进入计划模式，帮我设计实现方案：</span><br><span class="line"></span><br><span class="line">1. 明确这次要解决的问题</span><br><span class="line">2. 列出会影响哪些模块</span><br><span class="line">3. 拆成 3-7 个步骤</span><br><span class="line">4. 每一步怎么验证</span><br><span class="line">5. 哪些地方最容易出错</span><br><span class="line"></span><br><span class="line">等我确认后再开始实现。</span><br></pre></td></tr></table></figure>
-<p>这个步骤可以有效避免 Agent 在需求还没对齐时就开始大范围修改。尤其是模型训练、数据预处理、评估指标这类任务，一旦改错位置，后面排查成本会很高。</p>
-<hr />
-<h2 id="四-复现和研究类任务要先查证"><a class="markdownIt-Anchor" href="#四-复现和研究类任务要先查证"></a> 四、复现和研究类任务要先查证</h2>
-<p>论文复现、方法解释、官方实现对照这类任务，不要直接让 Agent “按论文实现”。更稳妥的做法是先让它查证论文和官方代码，再决定是否需要实现。</p>
-<p>可以使用下面的 Prompt：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">请先阅读论文和官方 repo，不要开始写代码。</span><br><span class="line"></span><br><span class="line">先输出：</span><br><span class="line"></span><br><span class="line">1. 论文核心 idea</span><br><span class="line">2. 关键公式/模块</span><br><span class="line">3. 官方实现和论文描述是否一致</span><br><span class="line">4. 复现最小路径</span><br><span class="line">5. 可能复现不出来的风险点</span><br></pre></td></tr></table></figure>
-<p>这样可以减少“为了完成而完成”的情况。很多论文的官方代码和论文描述并不完全一致，甚至有些细节只存在于配置文件或 issue 讨论中。如果不先查证，Agent 很容易生成一个看似合理但并不忠于原实现的版本。</p>
-<hr />
-<h2 id="五-任务完成后及时开新会话"><a class="markdownIt-Anchor" href="#五-任务完成后及时开新会话"></a> 五、任务完成后及时开新会话</h2>
-<p>一个任务完成后，建议让 Agent 先总结当前状态，然后开启新会话。长上下文会提高幻觉和错误假设的概率，尤其是当中间经历过多次修改、回滚、报错和调试时。</p>
-<p>可以使用下面的 Prompt：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">请用一句话总结刚完成的任务、修改过的文件、当前状态和下一步注意事项。</span><br><span class="line"></span><br><span class="line">然后 /new，在新会话里贴这个总结，再开始下一个任务。</span><br></pre></td></tr></table></figure>
-<p>这样可以保留必要信息，同时避免旧上下文中的错误判断继续影响后续任务。</p>
-<hr />
-<h2 id="六-不要只相信已完成"><a class="markdownIt-Anchor" href="#六-不要只相信已完成"></a> 六、不要只相信“已完成”</h2>
-<p>Agent 说任务完成，并不等于任务真的完成。最后一定要让它对齐修改内容和验证结果。</p>
-<p>可以让它按下面几个问题总结：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">请总结这次任务：</span><br><span class="line"></span><br><span class="line">1. 修改了哪些文件</span><br><span class="line">2. 每个文件为什么改</span><br><span class="line">3. 运行了哪些验证</span><br><span class="line">4. 还有哪些没验证</span><br><span class="line">5. 哪些地方需要我人工确认</span><br></pre></td></tr></table></figure>
-<p>这一步很重要。它可以帮助我们区分“代码已经写了”“验证已经跑了”和“结果确实可信”这三件事。科研场景里，尤其不能把能运行等同于实验正确。</p>
-<hr />
-<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
-<p>使用 CodeX / Claude Code 这类 Agent 做科研开发时，关键不只是选择哪个模型，而是建立一套稳定的工作方式：</p>
-<ul>
-<li>先让 Agent 理解项目，而不是直接改代码。</li>
-<li>把长期偏好和约束写进 <code>AGENTS.md</code>。</li>
-<li>复杂任务先做 Plan，再确认实现。</li>
-<li>论文复现任务先查证论文和官方实现。</li>
-<li>每个任务结束后及时总结并开新会话。</li>
-<li>最后用文件、原因和验证结果来验收，而不是只听 Agent 的完成声明。</li>
-</ul>
-<p>简单来说，Agent 更像一个执行力很强的研究助理。给它清晰的上下文、边界和验收标准，它才能稳定地产出有用结果。</p>
-]]></content>
-      <categories>
-        <category>科研工具</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>2026版：Hexo + GitHub Pages 个人博客搭建全记录</title>
-    <url>/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/</url>
-    <content><![CDATA[<p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
-<span id="more"></span>
-<h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
-<p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
-🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
-<blockquote>
-<p>💡 <strong>操作记录</strong>：<br />
-虽然这篇文章的整体逻辑很清晰，但因为发布时间较早，很多细节已经发生了变化。例如 Node.js 的版本要求、Hexo 包管理的变动，以及目前 GitHub 默认主分支已经从 <code>master</code> 变成了 <code>main</code>。这些差异很容易导致按照原教程执行时出现报错。</p>
-<p>在实际操作中，如果遇到版本不兼容导致的报错，建议直接将终端报错信息交给大语言模型去分析，通常能很快定位并解决问题，能省下不少查阅旧资料的时间。</p>
-</blockquote>
-<hr />
-<h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
-<p>默认部署到 GitHub Pages 上的域名格式通常是 <code>用户名.github.io</code>。为了方便记忆和后续的扩展，我为博客绑定了一个专属的独立域名。</p>
-<p>🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
-<p><strong>核心操作步骤</strong>：</p>
-<ol>
-<li><strong>域名购买</strong>：我在阿里云购买了一个 <code>.top</code> 后缀的域名，相对来说性价比比较高。</li>
-<li><strong>DNS 解析配置</strong>：进入阿里云控制台，添加一条 <code>CNAME</code> 记录，将其解析指向自己的 GitHub Pages 地址。</li>
-<li><strong>GitHub 仓库配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚购买的域名，并勾选开启 <code>Enforce HTTPS</code> 以保证访问安全。配置完成后，稍微等待 DNS 解析生效，就可以使用独立域名访问博客了。</li>
-</ol>
-<hr />
-<h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
-<p>原生的 Hexo 界面比较基础，为了提升页面的可读性和排版效果，通常需要对主题进行一定的自定义。</p>
-<p>🔗 <strong>参考教程</strong>：<a href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
-<p><strong>我主要进行的配置和调整包括</strong>：</p>
-<ul>
-<li>更换第三方主题（这里我尝试了经典的 NexT 等几款主流主题）。</li>
-<li>配置侧边栏的个人信息、头像以及社交平台链接。</li>
-<li>微调了博客的背景和字体配色，以改善正文内容的阅读体验。</li>
-<li>补充了专属的网站标签页小图标（Favicon）。</li>
-</ul>
-<p>整个流程走下来，算是一次比较完整的前端部署实践。一个功能完善、排版清晰的博客不仅能作为知识库，也是记录学习日常的好工具。</p>
-]]></content>
-      <categories>
-        <category>建站教程</category>
-      </categories>
-  </entry>
-  <entry>
     <title>在 RTX 5090 上配置 MMSegmentation 并跑通自定义数据集 (OneDL 版)</title>
     <url>/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/</url>
     <content><![CDATA[<p>在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。</p>
@@ -347,92 +353,185 @@
       </categories>
   </entry>
   <entry>
-    <title>Git 核心操作记录：面向日常开发的实践总结</title>
-    <url>/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/</url>
-    <content><![CDATA[<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
-<p>Git 是开发中绕不开的版本控制工具，但其包含的命令和底层概念非常多。在实际的日常代码管理中，很多时候我们只需要用到它的一小部分核心功能。</p>
-<p>为了提高工作效率，我在这里整理了一份自己平时最常用到的 Git 操作清单，主要涵盖了本地代码的暂存、提交、历史回退以及与远程仓库的交互。这份记录以实用为主，方便在忘记具体指令时随时查阅。</p>
+    <title>在VS Code的CC插件以及终端CC中接入DeepSeek-V4-Pro</title>
+    <url>/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/</url>
+    <content><![CDATA[<p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
+参考链接：<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">Deepseek接入CC的官方文档</a><br />
+<a href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
+<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
+<p>另外，CC本身是免费的，如果开通了claude的pro计划，可以在里面使用claude原生模型，最近找到了充值方式，首先你需要一个claude账号，这一步目前来说好像不是那么简单（容易封号），而我是前几年就有了，当年还是从闲鱼找人帮我注册的，花了10块，然后需要一个苹果手机，需要一个美区（或者不限制的区域）苹果账号，此时下载Claude的app，直接在app里点升级pro，自动弹出app付款，此时需要app store里面登陆美区账号付款的，在此之前使用支付宝礼品卡给美区账号充值🔪</p>
 <span id="more"></span>
 <hr />
-<h2 id="一-初始化与基础配置"><a class="markdownIt-Anchor" href="#一-初始化与基础配置"></a> 一、 初始化与基础配置</h2>
-<p>在开始管理代码前，第一步需要配置用户信息，这有助于追踪每次提交的代码作者。</p>
-<h3 id="1-配置全局信息"><a class="markdownIt-Anchor" href="#1-配置全局信息"></a> 1. 配置全局信息</h3>
-<p>打开终端，运行以下命令：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git config --global user.name <span class="string">&quot;你的名字&quot;</span></span><br><span class="line">git config --global user.email <span class="string">&quot;你的邮箱@example.com&quot;</span></span><br></pre></td></tr></table></figure>
-<h3 id="2-建立本地代码库"><a class="markdownIt-Anchor" href="#2-建立本地代码库"></a> 2. 建立本地代码库</h3>
-<p>让一个目录受到 Git 管理，通常有两种情况：</p>
-<p><strong>情况 A：初始化本地新项目</strong><br />
-在项目根目录下执行初始化，这会生成一个 <code>.git</code> 隐藏文件夹来管理版本记录：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> your_project_folder</span><br><span class="line">git init</span><br></pre></td></tr></table></figure>
-<p><strong>情况 B：克隆远程仓库</strong><br />
-如果项目已经存在于远端（如 GitHub），直接克隆下来即可，不需要再执行 <code>git init</code>：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/用户名/项目名.git</span><br></pre></td></tr></table></figure>
+<h2 id="前置准备"><a class="markdownIt-Anchor" href="#前置准备"></a> 前置准备</h2>
+<p>开始之前，需要准备好以下内容：</p>
+<ul>
+<li><strong>DeepSeek API Key</strong>：在 <a href="https://platform.deepseek.com/">DeepSeek 开放平台</a> 注册并获取，可以先充值10元试一试，目前是2.5折优惠。</li>
+<li><strong>Claude Code 已安装</strong>：终端CC和VSCode CC插件安装，此处不进行过多介绍。</li>
+</ul>
 <hr />
-<h2 id="二-代码提交流程"><a class="markdownIt-Anchor" href="#二-代码提交流程"></a> 二、 代码提交流程</h2>
-<p>写好代码后，需要将其保存到本地仓库的版本记录中。这是一个两步走的过程：先添加到暂存区，再正式提交。</p>
-<h3 id="1-暂存代码更改"><a class="markdownIt-Anchor" href="#1-暂存代码更改"></a> 1. 暂存代码更改</h3>
-<p>将当前目录下的所有文件变更放入暂存区：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 点号代表当前目录所有更改</span></span><br><span class="line">git add .</span><br></pre></td></tr></table></figure>
-<h3 id="2-生成提交版本"><a class="markdownIt-Anchor" href="#2-生成提交版本"></a> 2. 生成提交版本</h3>
-<p>为这次变更附上说明，并生成一个固定的版本记录：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git commit -m <span class="string">&quot;新增了烟雾分割的数据预处理脚本&quot;</span></span><br></pre></td></tr></table></figure>
+<h2 id="一终端-cc-接入"><a class="markdownIt-Anchor" href="#一终端-cc-接入"></a> 一：终端 CC 接入</h2>
+<p>终端 CC 通过读取 shell 环境变量来决定使用哪个模型后端。直接在你的shell配置文件中添加以下环境变量即可。</p>
+<p>对于 macOS / zsh 用户，编辑 <code>~/.zshrc</code>：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">export</span> ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_AUTH_TOKEN=&lt;你的 DeepSeek API Key&gt;</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_OPUS_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_SONNET_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_SUBAGENT_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_EFFORT_LEVEL=max</span><br></pre></td></tr></table></figure>
 <blockquote>
-<p>💡 <strong>个人体会</strong>：养成写清晰 Commit Message 的习惯在后期回顾代码或与他人协作时能省下很多沟通成本。</p>
+<p>💡 <strong>说明</strong>：CC 内部会根据任务复杂度自动选择 Opus/Sonnet/Haiku 级别的模型。通过 <code>ANTHROPIC_DEFAULT_*</code> 变量可以将这些级别分别映射到 DeepSeek 的不同模型。如果你希望所有任务都走同一个模型，全部填 <code>deepseek-v4-pro</code> 即可。</p>
 </blockquote>
+<p>配置完成后，重新加载 shell 配置：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
+<h2 id="随后在终端中启动-claudecc-便会通过-deepseek-api-运行"><a class="markdownIt-Anchor" href="#随后在终端中启动-claudecc-便会通过-deepseek-api-运行"></a> 随后在终端中启动 <code>claude</code>，CC 便会通过 DeepSeek API 运行。</h2>
+<h2 id="二vscode-cc-插件接入"><a class="markdownIt-Anchor" href="#二vscode-cc-插件接入"></a> 二：VSCode CC 插件接入</h2>
+<p>VSCode 的CC插件同样依赖环境变量，但需要通过VSCode的终端环境变量设置来注入。</p>
+<p>打开 VS Code 设置（<code>Cmd + ,</code>），搜索 <code>terminal.integrated.env.osx</code>（Windows 用户搜索 <code>terminal.integrated.env.windows</code>），点击 <strong>Edit in settings.json</strong>，添加以下内容：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;terminal.integrated.env.osx&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_BASE_URL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://api.deepseek.com/anthropic&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_AUTH_TOKEN&quot;</span><span class="punctuation">:</span> <span class="string">&quot;sk-your-deepseek-api-key&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_OPUS_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_SONNET_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_HAIKU_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-flash&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;CLAUDE_CODE_SUBAGENT_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>配置完成后，<strong>完全退出并重启 VS Code</strong>，再打开集成的 CC 插件，环境变量便会生效。</p>
 <hr />
-<h2 id="三-版本查看与回退"><a class="markdownIt-Anchor" href="#三-版本查看与回退"></a> 三、 版本查看与回退</h2>
-<p>在开发过程中经常会遇到代码改错或者需要查看过往修改逻辑的情况，这时候就需要用到版本回退功能。</p>
-<h3 id="1-查看提交历史"><a class="markdownIt-Anchor" href="#1-查看提交历史"></a> 1. 查看提交历史</h3>
-<p>获取简略的提交记录列表（主要为了获取版本对应的哈希值）：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">log</span> --oneline</span><br></pre></td></tr></table></figure>
-<h3 id="2-执行回退操作"><a class="markdownIt-Anchor" href="#2-执行回退操作"></a> 2. 执行回退操作</h3>
-<p>根据不同情况选择不同的回退指令：</p>
+<h2 id="推荐的额外配置"><a class="markdownIt-Anchor" href="#推荐的额外配置"></a> 推荐的额外配置</h2>
+<p>为了获得更好的使用体验，建议一并配置以下变量：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 超时时长（ms）：max effort 推理耗时较长，建议设长一些</span></span><br><span class="line"><span class="built_in">export</span> API_TIMEOUT_MS=<span class="string">&quot;600000&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭非必要流量（遥测、成本警告等）</span></span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_COST_WARNINGS=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_TELEMETRY=1</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="模型映射关系"><a class="markdownIt-Anchor" href="#模型映射关系"></a> 模型映射关系</h2>
+<p>配置生效后，CC 内部分配的 Claude 模型会被自动映射到 DeepSeek 模型：</p>
+<table>
+<thead>
+<tr>
+<th>Claude 原生模型</th>
+<th>映射到的 DeepSeek 模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>claude-opus-*</code></td>
+<td><code>deepseek-v4-pro</code></td>
+</tr>
+<tr>
+<td><code>claude-sonnet-*</code></td>
+<td><code>deepseek-v4-pro</code>（或 <code>deepseek-v4-flash</code>）</td>
+</tr>
+<tr>
+<td><code>claude-haiku-*</code></td>
+<td><code>deepseek-v4-flash</code></td>
+</tr>
+</tbody>
+</table>
+<p>V4-Pro 拥有 <strong>1M token 上下文窗口</strong>，足以塞入整个代码仓库，配合 CC 的代码搜索和多文件编辑能力，体验相当顺畅。</p>
+<hr />
+<h2 id="功能兼容性一览"><a class="markdownIt-Anchor" href="#功能兼容性一览"></a> 功能兼容性一览</h2>
+<p>DeepSeek 的 Anthropic 兼容端点是目前第三方供应商中<strong>支持最完整</strong>的，但仍有几个重要差距需要了解：</p>
+<h3 id="完全支持"><a class="markdownIt-Anchor" href="#完全支持"></a> ✅ 完全支持</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文本对话与流式输出</td>
+<td>日常编码问答完全正常</td>
+</tr>
+<tr>
+<td>Tool Use / 函数调用</td>
+<td>文件读写、命令执行、工具链调用均稳定</td>
+</tr>
+<tr>
+<td><strong>Subagent（子代理）</strong></td>
+<td>✅ DeepSeek 原生支持，Agent 级任务可正常调度</td>
+</tr>
+<tr>
+<td>System Prompt</td>
+<td>系统指令完全兼容</td>
+</tr>
+<tr>
+<td>128K～1M 上下文</td>
+<td>V4-Pro 支持 1M tokens，远超 Claude 的 200K</td>
+</tr>
+</tbody>
+</table>
+<h3 id="️-部分支持-被忽略"><a class="markdownIt-Anchor" href="#️-部分支持-被忽略"></a> ⚠️ 部分支持 / 被忽略</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>thinking</code>（推理模式）</td>
+<td>V4-Pro 自身具备推理能力，但 Anthropic API 的 <code>budget_tokens</code> 参数会被忽略</td>
+</tr>
+<tr>
+<td><code>disable_parallel_tool_use</code></td>
+<td>被忽略，DeepSeek 的并行工具调用策略与 Claude 不同</td>
+</tr>
+<tr>
+<td><code>cache_control</code></td>
+<td>不支持 Anthropic 的 prompt caching 机制</td>
+</tr>
+</tbody>
+</table>
+<h3 id="不支持"><a class="markdownIt-Anchor" href="#不支持"></a> ❌ 不支持</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>图片 / 多模态</strong></td>
+<td><strong>最大短板</strong>。V4-Pro 当前是纯文本模型，截图、UI 设计稿、终端截图等无法被识别——只会收到占位符 <code>[Image #1]</code></td>
+</tr>
+<tr>
+<td>文档上传</td>
+<td>不支持直接上传 PDF、图片等文件作为输入</td>
+</tr>
+<tr>
+<td>MCP 工具类型</td>
+<td>不支持 <code>server_tool_use</code>、<code>mcp_tool_result</code> 等 MCP 原生工具调用类型</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="实际使用中需要注意的问题"><a class="markdownIt-Anchor" href="#实际使用中需要注意的问题"></a> 实际使用中需要注意的问题</h2>
+<h3 id="1-图片不可用是硬伤"><a class="markdownIt-Anchor" href="#1-图片不可用是硬伤"></a> 1. 图片不可用是硬伤</h3>
+<p>虽然 V4-Pro 有 1M 上下文——&quot;能塞进去整个代码仓库，但塞不进去一张 PNG。&quot;遇到以下场景时需要<strong>临时切回 Anthropic 原生 API</strong>：</p>
 <ul>
-<li>
-<p><strong>撤销当前工作区尚未 commit 的更改</strong>（放弃最近的修改，恢复到上一次提交时的状态）：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 危险操作，未提交的代码将直接覆盖</span></span><br><span class="line">git checkout .</span><br><span class="line"><span class="comment"># 或者使用新版本推荐的命令</span></span><br><span class="line">git restore .</span><br></pre></td></tr></table></figure>
-</li>
-<li>
-<p><strong>彻底回退到历史的某个特定版本</strong>：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 回退到指定的 commit_id，并抛弃该版本之后的所有记录（需谨慎使用）</span></span><br><span class="line">git reset --hard &lt;commit_id&gt;</span><br></pre></td></tr></table></figure>
-</li>
+<li>CC 自动截取终端截图进行 debug</li>
+<li>需要基于 UI 设计稿生成前端代码</li>
+<li>分析报错截图或日志截屏</li>
 </ul>
+<p><strong>切换方法</strong>：在终端中取消 <code>ANTHROPIC_BASE_URL</code> 环境变量即可回退：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">unset</span> ANTHROPIC_BASE_URL</span><br><span class="line"><span class="comment"># 或者重新打开一个未配置 ANTHROPIC_BASE_URL 的终端窗口</span></span><br></pre></td></tr></table></figure>
+<h3 id="2-速度与成本的权衡"><a class="markdownIt-Anchor" href="#2-速度与成本的权衡"></a> 2. 速度与成本的权衡</h3>
+<p>DeepSeek V4-Pro 在 max effort 模式下推理时间较长（可能超过 1 分钟），这也是建议将 <code>API_TIMEOUT_MS</code> 设为 600000 的原因。但相比原生 Claude API <strong>约 90%+ 的成本节省</strong>，这点等待完全值得。</p>
+<h3 id="3-不同订阅方案的区别"><a class="markdownIt-Anchor" href="#3-不同订阅方案的区别"></a> 3. 不同订阅方案的区别</h3>
+<p>如果同时持有 Anthropic 的付费订阅（Max 计划），注意环境变量的配置会覆盖订阅的原生模型路由。建议为 DeepSeek 接入专门准备一个终端配置别名，方便在不同后端之间快速切换。</p>
 <hr />
-<h2 id="四-分支管理与代码合并"><a class="markdownIt-Anchor" href="#四-分支管理与代码合并"></a> 四、 分支管理与代码合并</h2>
-<p>当开发一个独立的新功能，或者需要修复一个特定的 Bug 时，新建分支可以有效防止未经验证的代码污染主线环境。</p>
-<h3 id="1-创建并切换分支"><a class="markdownIt-Anchor" href="#1-创建并切换分支"></a> 1. 创建并切换分支</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 新建 dev-feature 分支并立刻切换</span></span><br><span class="line">git checkout -b dev-feature</span><br><span class="line"></span><br><span class="line"><span class="comment"># 在较新的 Git 版本中，更推荐使用 switch 语义</span></span><br><span class="line">git switch -c dev-feature</span><br></pre></td></tr></table></figure>
-<h3 id="2-在分支中提交代码"><a class="markdownIt-Anchor" href="#2-在分支中提交代码"></a> 2. 在分支中提交代码</h3>
-<p>在独立分支中的操作和主分支一致：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m <span class="string">&quot;完成了验证集代码的编写&quot;</span></span><br></pre></td></tr></table></figure>
-<h3 id="3-将分支合并到主线"><a class="markdownIt-Anchor" href="#3-将分支合并到主线"></a> 3. 将分支合并到主线</h3>
-<p>新功能开发并测试稳定后，需要将其合并回主线分支（通常为 <code>main</code> 或 <code>master</code>）：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 切换回主分支</span></span><br><span class="line">git checkout main</span><br><span class="line"></span><br><span class="line"><span class="comment"># 将指定开发分支的代码合并到当前分支</span></span><br><span class="line">git merge dev-feature</span><br></pre></td></tr></table></figure>
-<hr />
-<h2 id="五-与远程云端同步"><a class="markdownIt-Anchor" href="#五-与远程云端同步"></a> 五、 与远程云端同步</h2>
-<p>本地代码完成迭代后，通常需要推送到远程仓库进行备份或协作。</p>
-<h3 id="1-关联远程仓库-针对-git-init-的项目"><a class="markdownIt-Anchor" href="#1-关联远程仓库-针对-git-init-的项目"></a> 1. 关联远程仓库 (针对 git init 的项目)</h3>
-<p>如果是手动初始化的项目，需要先跟 GitHub 等平台的空仓库绑定关系：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git remote add origin https://github.com/用户名/你的仓库名.git</span><br></pre></td></tr></table></figure>
-<h3 id="2-推送本地代码到远端"><a class="markdownIt-Anchor" href="#2-推送本地代码到远端"></a> 2. 推送本地代码到远端</h3>
-<p>初次推送一个新分支时，需要加上 <code>-u</code> 参数来建立本地和远程分支的关联：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git push -u origin main</span><br></pre></td></tr></table></figure>
-<p>绑定完成后，后续的常规推送就变得非常简单了：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git commit -m <span class="string">&quot;日常代码更新&quot;</span></span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
-<p>掌握了这套基础操作，基本就能应对单人开发以及小规模团队协作的大部分版本控制需求了。找到你想回去的那个版本的“哈希值（一串黄色字符）”：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">log</span> --oneline</span><br></pre></td></tr></table></figure>
-<h3 id="2-代码回退"><a class="markdownIt-Anchor" href="#2-代码回退"></a> 2. 代码回退</h3>
-<p>通常有两种回退需求：</p>
+<h2 id="个人使用体验"><a class="markdownIt-Anchor" href="#个人使用体验"></a> 个人使用体验</h2>
+<h3 id="成本真的便宜"><a class="markdownIt-Anchor" href="#成本真的便宜"></a> 成本：真的便宜</h3>
+<p>最近 DeepSeek 的 Token 价格打 <strong>2.5 折</strong>，我往账户里充了 10 块钱。到目前为止，用它完成了：</p>
 <ul>
-<li>
-<p><strong>撤销还没有 commit 的修改</strong>（让代码回到上一次提交的状态）：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 丢弃工作区所有的修改（危险操作，未保存的代码将丢失！）</span></span><br><span class="line">git checkout .</span><br><span class="line"><span class="comment"># 或者更现代的命令</span></span><br><span class="line">git restore .</span><br></pre></td></tr></table></figure>
-</li>
-<li>
-<p><strong>彻底回退到历史的某个 commit</strong>：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 回退到指定的 commit_id，并且丢弃这之后的所有修改（极度危险，确认无误再用）</span></span><br><span class="line">git reset --hard &lt;commit_id&gt;</span><br></pre></td></tr></table></figure>
-</li>
+<li><strong>两个深度学习论文的复现工作</strong>（涉及大量代码编写和调试）</li>
+<li><strong>几篇博客文章</strong>（包括本文）的撰写与 Hexo 自动部署脚本调试</li>
 </ul>
+<p>总共花掉了大约 <strong>3.5 元</strong>。也就是说 10 块钱的额度还剩下近三分之二。这个价格放在任何同类工具面前都是降维打击。</p>
+<h3 id="与-cursor-pro-的对比"><a class="markdownIt-Anchor" href="#与-cursor-pro-的对比"></a> 与 Cursor Pro 的对比</h3>
+<p>在此之前，我一直在用 Cursor 的 Pro 订阅，20 美元一个月。说实话，体验算不上差，但有一个致命问题——<strong>Opus 的额度太少</strong>，高强度用不了几天就没了。额度耗尽之后只能降级用 Cursor 自研的 Composer 2.5（底层其实是 Kimi 2.5 套壳），虽然也不至于难用，但模型能力明显掉了一个档次。GPT 的额度同样少得可怜。</p>
+<p>20 美元一个月，大部分时间用的只是一个二线模型——性价比实在太低了。</p>
+<p>相比之下，DeepSeek V4-Pro 按量计费、单价极低，而且<strong>不限制调用频率</strong>，不用担心&quot;额度用完&quot;这件事。花多少钱用多少量，完全在自己掌控范围内。</p>
+<h3 id="实际能力感受"><a class="markdownIt-Anchor" href="#实际能力感受"></a> 实际能力感受</h3>
+<p>讲实话，DeepSeek V4-Pro 的<strong>代码能力和中文能力都不错</strong>。代码方面，在两个复现项目中处理了训练脚本、数据预处理、配置文件的编写和调试，基本没有遇到模型能力不足导致的阻塞性问题。中文方面，写博客、整理技术文档时的语言表达自然流畅，比大多数纯英文训练的模型接地气得多。</p>
+<p>当然，前面提到的图片不支持确实时有碰到——比如想让 CC 看看终端报错截图或者模型输出的可视化结果，这时候只能临时切回原生 API。但纯文本场景下，V4-Pro 完全够用。</p>
+<hr />
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>DeepSeek V4-Pro + Claude Code 的组合在<strong>纯文本编码场景</strong>下体验几乎无差异——Tool Use 和 Subagent 均原生可用，配合极低的 API 成本和 1M 超长上下文，是日常开发中极具性价比的选择。唯一的软肋是图片/多模态不支持，遇到需要视觉理解的场景时需要切回 Anthropic 原生 API。</p>
+<blockquote>
+<p>📌 <strong>适用场景</strong>：后端开发、脚本编写、代码重构、项目搭建、文档生成</p>
+<p>📌 <strong>不适用场景</strong>：前端 UI 开发（需要看图）、截图 Debug、多模态分析</p>
+</blockquote>
 <hr />
 ]]></content>
       <categories>
@@ -741,185 +840,92 @@ config 里列出各划分</strong>。</li>
       </categories>
   </entry>
   <entry>
-    <title>在VS Code的CC插件以及终端CC中接入DeepSeek-V4-Pro</title>
-    <url>/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/</url>
-    <content><![CDATA[<p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
-参考链接：<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">Deepseek接入CC的官方文档</a><br />
-<a href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
-<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
-<p>另外，CC本身是免费的，如果开通了claude的pro计划，可以在里面使用claude原生模型，最近找到了充值方式，首先你需要一个claude账号，这一步目前来说好像不是那么简单（容易封号），而我是前几年就有了，当年还是从闲鱼找人帮我注册的，花了10块，然后需要一个苹果手机，需要一个美区（或者不限制的区域）苹果账号，此时下载Claude的app，直接在app里点升级pro，自动弹出app付款，此时需要app store里面登陆美区账号付款的，在此之前使用支付宝礼品卡给美区账号充值🔪</p>
+    <title>Git 核心操作记录：面向日常开发的实践总结</title>
+    <url>/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/</url>
+    <content><![CDATA[<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
+<p>Git 是开发中绕不开的版本控制工具，但其包含的命令和底层概念非常多。在实际的日常代码管理中，很多时候我们只需要用到它的一小部分核心功能。</p>
+<p>为了提高工作效率，我在这里整理了一份自己平时最常用到的 Git 操作清单，主要涵盖了本地代码的暂存、提交、历史回退以及与远程仓库的交互。这份记录以实用为主，方便在忘记具体指令时随时查阅。</p>
 <span id="more"></span>
 <hr />
-<h2 id="前置准备"><a class="markdownIt-Anchor" href="#前置准备"></a> 前置准备</h2>
-<p>开始之前，需要准备好以下内容：</p>
-<ul>
-<li><strong>DeepSeek API Key</strong>：在 <a href="https://platform.deepseek.com/">DeepSeek 开放平台</a> 注册并获取，可以先充值10元试一试，目前是2.5折优惠。</li>
-<li><strong>Claude Code 已安装</strong>：终端CC和VSCode CC插件安装，此处不进行过多介绍。</li>
-</ul>
+<h2 id="一-初始化与基础配置"><a class="markdownIt-Anchor" href="#一-初始化与基础配置"></a> 一、 初始化与基础配置</h2>
+<p>在开始管理代码前，第一步需要配置用户信息，这有助于追踪每次提交的代码作者。</p>
+<h3 id="1-配置全局信息"><a class="markdownIt-Anchor" href="#1-配置全局信息"></a> 1. 配置全局信息</h3>
+<p>打开终端，运行以下命令：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git config --global user.name <span class="string">&quot;你的名字&quot;</span></span><br><span class="line">git config --global user.email <span class="string">&quot;你的邮箱@example.com&quot;</span></span><br></pre></td></tr></table></figure>
+<h3 id="2-建立本地代码库"><a class="markdownIt-Anchor" href="#2-建立本地代码库"></a> 2. 建立本地代码库</h3>
+<p>让一个目录受到 Git 管理，通常有两种情况：</p>
+<p><strong>情况 A：初始化本地新项目</strong><br />
+在项目根目录下执行初始化，这会生成一个 <code>.git</code> 隐藏文件夹来管理版本记录：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> your_project_folder</span><br><span class="line">git init</span><br></pre></td></tr></table></figure>
+<p><strong>情况 B：克隆远程仓库</strong><br />
+如果项目已经存在于远端（如 GitHub），直接克隆下来即可，不需要再执行 <code>git init</code>：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/用户名/项目名.git</span><br></pre></td></tr></table></figure>
 <hr />
-<h2 id="一终端-cc-接入"><a class="markdownIt-Anchor" href="#一终端-cc-接入"></a> 一：终端 CC 接入</h2>
-<p>终端 CC 通过读取 shell 环境变量来决定使用哪个模型后端。直接在你的shell配置文件中添加以下环境变量即可。</p>
-<p>对于 macOS / zsh 用户，编辑 <code>~/.zshrc</code>：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">export</span> ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_AUTH_TOKEN=&lt;你的 DeepSeek API Key&gt;</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_OPUS_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_SONNET_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_SUBAGENT_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_EFFORT_LEVEL=max</span><br></pre></td></tr></table></figure>
+<h2 id="二-代码提交流程"><a class="markdownIt-Anchor" href="#二-代码提交流程"></a> 二、 代码提交流程</h2>
+<p>写好代码后，需要将其保存到本地仓库的版本记录中。这是一个两步走的过程：先添加到暂存区，再正式提交。</p>
+<h3 id="1-暂存代码更改"><a class="markdownIt-Anchor" href="#1-暂存代码更改"></a> 1. 暂存代码更改</h3>
+<p>将当前目录下的所有文件变更放入暂存区：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 点号代表当前目录所有更改</span></span><br><span class="line">git add .</span><br></pre></td></tr></table></figure>
+<h3 id="2-生成提交版本"><a class="markdownIt-Anchor" href="#2-生成提交版本"></a> 2. 生成提交版本</h3>
+<p>为这次变更附上说明，并生成一个固定的版本记录：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git commit -m <span class="string">&quot;新增了烟雾分割的数据预处理脚本&quot;</span></span><br></pre></td></tr></table></figure>
 <blockquote>
-<p>💡 <strong>说明</strong>：CC 内部会根据任务复杂度自动选择 Opus/Sonnet/Haiku 级别的模型。通过 <code>ANTHROPIC_DEFAULT_*</code> 变量可以将这些级别分别映射到 DeepSeek 的不同模型。如果你希望所有任务都走同一个模型，全部填 <code>deepseek-v4-pro</code> 即可。</p>
+<p>💡 <strong>个人体会</strong>：养成写清晰 Commit Message 的习惯在后期回顾代码或与他人协作时能省下很多沟通成本。</p>
 </blockquote>
-<p>配置完成后，重新加载 shell 配置：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
-<h2 id="随后在终端中启动-claudecc-便会通过-deepseek-api-运行"><a class="markdownIt-Anchor" href="#随后在终端中启动-claudecc-便会通过-deepseek-api-运行"></a> 随后在终端中启动 <code>claude</code>，CC 便会通过 DeepSeek API 运行。</h2>
-<h2 id="二vscode-cc-插件接入"><a class="markdownIt-Anchor" href="#二vscode-cc-插件接入"></a> 二：VSCode CC 插件接入</h2>
-<p>VSCode 的CC插件同样依赖环境变量，但需要通过VSCode的终端环境变量设置来注入。</p>
-<p>打开 VS Code 设置（<code>Cmd + ,</code>），搜索 <code>terminal.integrated.env.osx</code>（Windows 用户搜索 <code>terminal.integrated.env.windows</code>），点击 <strong>Edit in settings.json</strong>，添加以下内容：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;terminal.integrated.env.osx&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_BASE_URL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://api.deepseek.com/anthropic&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_AUTH_TOKEN&quot;</span><span class="punctuation">:</span> <span class="string">&quot;sk-your-deepseek-api-key&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_OPUS_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_SONNET_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_HAIKU_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-flash&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;CLAUDE_CODE_SUBAGENT_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-<p>配置完成后，<strong>完全退出并重启 VS Code</strong>，再打开集成的 CC 插件，环境变量便会生效。</p>
 <hr />
-<h2 id="推荐的额外配置"><a class="markdownIt-Anchor" href="#推荐的额外配置"></a> 推荐的额外配置</h2>
-<p>为了获得更好的使用体验，建议一并配置以下变量：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 超时时长（ms）：max effort 推理耗时较长，建议设长一些</span></span><br><span class="line"><span class="built_in">export</span> API_TIMEOUT_MS=<span class="string">&quot;600000&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭非必要流量（遥测、成本警告等）</span></span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_COST_WARNINGS=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_TELEMETRY=1</span><br></pre></td></tr></table></figure>
-<hr />
-<h2 id="模型映射关系"><a class="markdownIt-Anchor" href="#模型映射关系"></a> 模型映射关系</h2>
-<p>配置生效后，CC 内部分配的 Claude 模型会被自动映射到 DeepSeek 模型：</p>
-<table>
-<thead>
-<tr>
-<th>Claude 原生模型</th>
-<th>映射到的 DeepSeek 模型</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>claude-opus-*</code></td>
-<td><code>deepseek-v4-pro</code></td>
-</tr>
-<tr>
-<td><code>claude-sonnet-*</code></td>
-<td><code>deepseek-v4-pro</code>（或 <code>deepseek-v4-flash</code>）</td>
-</tr>
-<tr>
-<td><code>claude-haiku-*</code></td>
-<td><code>deepseek-v4-flash</code></td>
-</tr>
-</tbody>
-</table>
-<p>V4-Pro 拥有 <strong>1M token 上下文窗口</strong>，足以塞入整个代码仓库，配合 CC 的代码搜索和多文件编辑能力，体验相当顺畅。</p>
-<hr />
-<h2 id="功能兼容性一览"><a class="markdownIt-Anchor" href="#功能兼容性一览"></a> 功能兼容性一览</h2>
-<p>DeepSeek 的 Anthropic 兼容端点是目前第三方供应商中<strong>支持最完整</strong>的，但仍有几个重要差距需要了解：</p>
-<h3 id="完全支持"><a class="markdownIt-Anchor" href="#完全支持"></a> ✅ 完全支持</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>文本对话与流式输出</td>
-<td>日常编码问答完全正常</td>
-</tr>
-<tr>
-<td>Tool Use / 函数调用</td>
-<td>文件读写、命令执行、工具链调用均稳定</td>
-</tr>
-<tr>
-<td><strong>Subagent（子代理）</strong></td>
-<td>✅ DeepSeek 原生支持，Agent 级任务可正常调度</td>
-</tr>
-<tr>
-<td>System Prompt</td>
-<td>系统指令完全兼容</td>
-</tr>
-<tr>
-<td>128K～1M 上下文</td>
-<td>V4-Pro 支持 1M tokens，远超 Claude 的 200K</td>
-</tr>
-</tbody>
-</table>
-<h3 id="️-部分支持-被忽略"><a class="markdownIt-Anchor" href="#️-部分支持-被忽略"></a> ⚠️ 部分支持 / 被忽略</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>thinking</code>（推理模式）</td>
-<td>V4-Pro 自身具备推理能力，但 Anthropic API 的 <code>budget_tokens</code> 参数会被忽略</td>
-</tr>
-<tr>
-<td><code>disable_parallel_tool_use</code></td>
-<td>被忽略，DeepSeek 的并行工具调用策略与 Claude 不同</td>
-</tr>
-<tr>
-<td><code>cache_control</code></td>
-<td>不支持 Anthropic 的 prompt caching 机制</td>
-</tr>
-</tbody>
-</table>
-<h3 id="不支持"><a class="markdownIt-Anchor" href="#不支持"></a> ❌ 不支持</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>图片 / 多模态</strong></td>
-<td><strong>最大短板</strong>。V4-Pro 当前是纯文本模型，截图、UI 设计稿、终端截图等无法被识别——只会收到占位符 <code>[Image #1]</code></td>
-</tr>
-<tr>
-<td>文档上传</td>
-<td>不支持直接上传 PDF、图片等文件作为输入</td>
-</tr>
-<tr>
-<td>MCP 工具类型</td>
-<td>不支持 <code>server_tool_use</code>、<code>mcp_tool_result</code> 等 MCP 原生工具调用类型</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="实际使用中需要注意的问题"><a class="markdownIt-Anchor" href="#实际使用中需要注意的问题"></a> 实际使用中需要注意的问题</h2>
-<h3 id="1-图片不可用是硬伤"><a class="markdownIt-Anchor" href="#1-图片不可用是硬伤"></a> 1. 图片不可用是硬伤</h3>
-<p>虽然 V4-Pro 有 1M 上下文——&quot;能塞进去整个代码仓库，但塞不进去一张 PNG。&quot;遇到以下场景时需要<strong>临时切回 Anthropic 原生 API</strong>：</p>
+<h2 id="三-版本查看与回退"><a class="markdownIt-Anchor" href="#三-版本查看与回退"></a> 三、 版本查看与回退</h2>
+<p>在开发过程中经常会遇到代码改错或者需要查看过往修改逻辑的情况，这时候就需要用到版本回退功能。</p>
+<h3 id="1-查看提交历史"><a class="markdownIt-Anchor" href="#1-查看提交历史"></a> 1. 查看提交历史</h3>
+<p>获取简略的提交记录列表（主要为了获取版本对应的哈希值）：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">log</span> --oneline</span><br></pre></td></tr></table></figure>
+<h3 id="2-执行回退操作"><a class="markdownIt-Anchor" href="#2-执行回退操作"></a> 2. 执行回退操作</h3>
+<p>根据不同情况选择不同的回退指令：</p>
 <ul>
-<li>CC 自动截取终端截图进行 debug</li>
-<li>需要基于 UI 设计稿生成前端代码</li>
-<li>分析报错截图或日志截屏</li>
+<li>
+<p><strong>撤销当前工作区尚未 commit 的更改</strong>（放弃最近的修改，恢复到上一次提交时的状态）：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 危险操作，未提交的代码将直接覆盖</span></span><br><span class="line">git checkout .</span><br><span class="line"><span class="comment"># 或者使用新版本推荐的命令</span></span><br><span class="line">git restore .</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>彻底回退到历史的某个特定版本</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 回退到指定的 commit_id，并抛弃该版本之后的所有记录（需谨慎使用）</span></span><br><span class="line">git reset --hard &lt;commit_id&gt;</span><br></pre></td></tr></table></figure>
+</li>
 </ul>
-<p><strong>切换方法</strong>：在终端中取消 <code>ANTHROPIC_BASE_URL</code> 环境变量即可回退：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">unset</span> ANTHROPIC_BASE_URL</span><br><span class="line"><span class="comment"># 或者重新打开一个未配置 ANTHROPIC_BASE_URL 的终端窗口</span></span><br></pre></td></tr></table></figure>
-<h3 id="2-速度与成本的权衡"><a class="markdownIt-Anchor" href="#2-速度与成本的权衡"></a> 2. 速度与成本的权衡</h3>
-<p>DeepSeek V4-Pro 在 max effort 模式下推理时间较长（可能超过 1 分钟），这也是建议将 <code>API_TIMEOUT_MS</code> 设为 600000 的原因。但相比原生 Claude API <strong>约 90%+ 的成本节省</strong>，这点等待完全值得。</p>
-<h3 id="3-不同订阅方案的区别"><a class="markdownIt-Anchor" href="#3-不同订阅方案的区别"></a> 3. 不同订阅方案的区别</h3>
-<p>如果同时持有 Anthropic 的付费订阅（Max 计划），注意环境变量的配置会覆盖订阅的原生模型路由。建议为 DeepSeek 接入专门准备一个终端配置别名，方便在不同后端之间快速切换。</p>
 <hr />
-<h2 id="个人使用体验"><a class="markdownIt-Anchor" href="#个人使用体验"></a> 个人使用体验</h2>
-<h3 id="成本真的便宜"><a class="markdownIt-Anchor" href="#成本真的便宜"></a> 成本：真的便宜</h3>
-<p>最近 DeepSeek 的 Token 价格打 <strong>2.5 折</strong>，我往账户里充了 10 块钱。到目前为止，用它完成了：</p>
+<h2 id="四-分支管理与代码合并"><a class="markdownIt-Anchor" href="#四-分支管理与代码合并"></a> 四、 分支管理与代码合并</h2>
+<p>当开发一个独立的新功能，或者需要修复一个特定的 Bug 时，新建分支可以有效防止未经验证的代码污染主线环境。</p>
+<h3 id="1-创建并切换分支"><a class="markdownIt-Anchor" href="#1-创建并切换分支"></a> 1. 创建并切换分支</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 新建 dev-feature 分支并立刻切换</span></span><br><span class="line">git checkout -b dev-feature</span><br><span class="line"></span><br><span class="line"><span class="comment"># 在较新的 Git 版本中，更推荐使用 switch 语义</span></span><br><span class="line">git switch -c dev-feature</span><br></pre></td></tr></table></figure>
+<h3 id="2-在分支中提交代码"><a class="markdownIt-Anchor" href="#2-在分支中提交代码"></a> 2. 在分支中提交代码</h3>
+<p>在独立分支中的操作和主分支一致：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m <span class="string">&quot;完成了验证集代码的编写&quot;</span></span><br></pre></td></tr></table></figure>
+<h3 id="3-将分支合并到主线"><a class="markdownIt-Anchor" href="#3-将分支合并到主线"></a> 3. 将分支合并到主线</h3>
+<p>新功能开发并测试稳定后，需要将其合并回主线分支（通常为 <code>main</code> 或 <code>master</code>）：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 切换回主分支</span></span><br><span class="line">git checkout main</span><br><span class="line"></span><br><span class="line"><span class="comment"># 将指定开发分支的代码合并到当前分支</span></span><br><span class="line">git merge dev-feature</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="五-与远程云端同步"><a class="markdownIt-Anchor" href="#五-与远程云端同步"></a> 五、 与远程云端同步</h2>
+<p>本地代码完成迭代后，通常需要推送到远程仓库进行备份或协作。</p>
+<h3 id="1-关联远程仓库-针对-git-init-的项目"><a class="markdownIt-Anchor" href="#1-关联远程仓库-针对-git-init-的项目"></a> 1. 关联远程仓库 (针对 git init 的项目)</h3>
+<p>如果是手动初始化的项目，需要先跟 GitHub 等平台的空仓库绑定关系：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git remote add origin https://github.com/用户名/你的仓库名.git</span><br></pre></td></tr></table></figure>
+<h3 id="2-推送本地代码到远端"><a class="markdownIt-Anchor" href="#2-推送本地代码到远端"></a> 2. 推送本地代码到远端</h3>
+<p>初次推送一个新分支时，需要加上 <code>-u</code> 参数来建立本地和远程分支的关联：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git push -u origin main</span><br></pre></td></tr></table></figure>
+<p>绑定完成后，后续的常规推送就变得非常简单了：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git commit -m <span class="string">&quot;日常代码更新&quot;</span></span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+<p>掌握了这套基础操作，基本就能应对单人开发以及小规模团队协作的大部分版本控制需求了。找到你想回去的那个版本的“哈希值（一串黄色字符）”：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">log</span> --oneline</span><br></pre></td></tr></table></figure>
+<h3 id="2-代码回退"><a class="markdownIt-Anchor" href="#2-代码回退"></a> 2. 代码回退</h3>
+<p>通常有两种回退需求：</p>
 <ul>
-<li><strong>两个深度学习论文的复现工作</strong>（涉及大量代码编写和调试）</li>
-<li><strong>几篇博客文章</strong>（包括本文）的撰写与 Hexo 自动部署脚本调试</li>
+<li>
+<p><strong>撤销还没有 commit 的修改</strong>（让代码回到上一次提交的状态）：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 丢弃工作区所有的修改（危险操作，未保存的代码将丢失！）</span></span><br><span class="line">git checkout .</span><br><span class="line"><span class="comment"># 或者更现代的命令</span></span><br><span class="line">git restore .</span><br></pre></td></tr></table></figure>
+</li>
+<li>
+<p><strong>彻底回退到历史的某个 commit</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 回退到指定的 commit_id，并且丢弃这之后的所有修改（极度危险，确认无误再用）</span></span><br><span class="line">git reset --hard &lt;commit_id&gt;</span><br></pre></td></tr></table></figure>
+</li>
 </ul>
-<p>总共花掉了大约 <strong>3.5 元</strong>。也就是说 10 块钱的额度还剩下近三分之二。这个价格放在任何同类工具面前都是降维打击。</p>
-<h3 id="与-cursor-pro-的对比"><a class="markdownIt-Anchor" href="#与-cursor-pro-的对比"></a> 与 Cursor Pro 的对比</h3>
-<p>在此之前，我一直在用 Cursor 的 Pro 订阅，20 美元一个月。说实话，体验算不上差，但有一个致命问题——<strong>Opus 的额度太少</strong>，高强度用不了几天就没了。额度耗尽之后只能降级用 Cursor 自研的 Composer 2.5（底层其实是 Kimi 2.5 套壳），虽然也不至于难用，但模型能力明显掉了一个档次。GPT 的额度同样少得可怜。</p>
-<p>20 美元一个月，大部分时间用的只是一个二线模型——性价比实在太低了。</p>
-<p>相比之下，DeepSeek V4-Pro 按量计费、单价极低，而且<strong>不限制调用频率</strong>，不用担心&quot;额度用完&quot;这件事。花多少钱用多少量，完全在自己掌控范围内。</p>
-<h3 id="实际能力感受"><a class="markdownIt-Anchor" href="#实际能力感受"></a> 实际能力感受</h3>
-<p>讲实话，DeepSeek V4-Pro 的<strong>代码能力和中文能力都不错</strong>。代码方面，在两个复现项目中处理了训练脚本、数据预处理、配置文件的编写和调试，基本没有遇到模型能力不足导致的阻塞性问题。中文方面，写博客、整理技术文档时的语言表达自然流畅，比大多数纯英文训练的模型接地气得多。</p>
-<p>当然，前面提到的图片不支持确实时有碰到——比如想让 CC 看看终端报错截图或者模型输出的可视化结果，这时候只能临时切回原生 API。但纯文本场景下，V4-Pro 完全够用。</p>
-<hr />
-<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
-<p>DeepSeek V4-Pro + Claude Code 的组合在<strong>纯文本编码场景</strong>下体验几乎无差异——Tool Use 和 Subagent 均原生可用，配合极低的 API 成本和 1M 超长上下文，是日常开发中极具性价比的选择。唯一的软肋是图片/多模态不支持，遇到需要视觉理解的场景时需要切回 Anthropic 原生 API。</p>
-<blockquote>
-<p>📌 <strong>适用场景</strong>：后端开发、脚本编写、代码重构、项目搭建、文档生成</p>
-<p>📌 <strong>不适用场景</strong>：前端 UI 开发（需要看图）、截图 Debug、多模态分析</p>
-</blockquote>
 <hr />
 ]]></content>
       <categories>
