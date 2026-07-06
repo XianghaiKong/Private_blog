@@ -252,6 +252,101 @@
       </categories>
   </entry>
   <entry>
+    <title>在 RTX 5090 上配置 MMSegmentation 并跑通自定义数据集 (OneDL 版)</title>
+    <url>/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/</url>
+    <content><![CDATA[<p>在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。</p>
+<span id="more"></span>
+<h2 id="一-基础环境配置"><a class="markdownIt-Anchor" href="#一-基础环境配置"></a> 一、基础环境配置</h2>
+<p>RTX 5090 对 CUDA 版本有一定要求，经过测试，以下版本组合运行较为稳定：</p>
+<ul>
+<li><strong>CUDA</strong>: 12.8 (5090 最低支持 12.8 版本的 CUDA)</li>
+<li><strong>PyTorch</strong>: 2.8.0</li>
+<li><strong>Python</strong>: 3.10 (建议 3.10.x 或 3.12.x)</li>
+</ul>
+<blockquote>
+<p>💡 <strong>个人习惯：建立基础克隆环境</strong><br />
+由于目前部分国内镜像源可能还没有完全同步最新的 GPU 版 PyTorch，我通常会先建一个只包含上述核心组件的“基础环境”。后续新建项目时直接克隆这个基础环境，可以避免重复下载和安装。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda create -n new_env_name --<span class="built_in">clone</span> base_5090_env</span><br></pre></td></tr></table></figure>
+</blockquote>
+<hr />
+<h2 id="二-框架选择使用-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#二-框架选择使用-onedl-mmsegmentation"></a> 二、框架选择：使用 OneDL-MMSegmentation</h2>
+<p>官方的 OpenMMLab 库 <code>mmsegmentation</code> 已经有较长一段时间未更新，最新的 1.x 版本在适配最新的硬件环境（如 CUDA 12.8）和 PyTorch 2.x 时会遇到不少兼容性问题。虽然可以通过手动修改配置、从源码编译 <code>mmcv</code> 来强行适配，但维护成本较高。</p>
+<p>在调研后，我选择了第三方维护的复刻版本：<strong><a href="https://github.com/VBTI-development/onedl-mmsegmentation">onedl-mmsegmentation</a></strong>。该库对最新的 PyTorch 2.x 提供了较好的支持。</p>
+<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/1.png" class="" title="官方说明: onedl-mmsegmentation 重要提示"></p>
+*图 1：官方主页中的相关兼容性说明。*
+<hr />
+<h2 id="三-完整的安装与配置流程"><a class="markdownIt-Anchor" href="#三-完整的安装与配置流程"></a> 三、完整的安装与配置流程</h2>
+<h3 id="1-创建环境与安装-pytorch"><a class="markdownIt-Anchor" href="#1-创建环境与安装-pytorch"></a> 1. 创建环境与安装 PyTorch</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda create -n mmseg python=3.10 -y</span><br><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 注意：需通过官方源安装指定 CUDA 12.8 版本的 PyTorch</span></span><br><span class="line">pip install torch==2.8.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128</span><br></pre></td></tr></table></figure>
+<h3 id="2-安装基础依赖包"><a class="markdownIt-Anchor" href="#2-安装基础依赖包"></a> 2. 安装基础依赖包</h3>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install -U onedl-mim</span><br><span class="line">mim install onedl-mmengine</span><br></pre></td></tr></table></figure>
+<h3 id="3-安装-mmcv"><a class="markdownIt-Anchor" href="#3-安装-mmcv"></a> 3. 安装 MMCV</h3>
+<p>在整个配置过程中，<code>mmcv</code> 的安装是比较容易出错的一步。主要有两种方案：</p>
+<h4 id="方案-a使用预编译-wheel-包安装-推荐"><a class="markdownIt-Anchor" href="#方案-a使用预编译-wheel-包安装-推荐"></a> 方案 A：使用预编译 Wheel 包安装 (推荐)</h4>
+<p>最理想的方式是使用 <code>mim</code> 自动安装预编译包：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mim install onedl-mmcv==2.3.2</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>⚠️ <strong>编译提示</strong>：<br />
+如果在终端日志中看到 <code>Building wheel from source</code>，说明系统未能匹配到合适的预构建包，正在尝试本地编译。这种情况往往由于缺少 C++ 扩展编译环境，导致后续调用 <code>mmcv._ext</code> 时报错。</p>
+</blockquote>
+<p>为了避免编译错误，可以根据 <a href="https://onedl-mmcv.readthedocs.io/en/latest/get_started/installation.html">OneDL-MMCV 官方文档</a> 寻找对应的预编译包（如 Python 3.10 + CUDA 12.8 + PyTorch 2.8.0）。如果自动匹配失败，建议直接通过获取到的 .whl 链接进行安装：</p>
+<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/3.png" class="" title="预编译包列表"></p>
+*图 2：官方发布的预编译包列表。*
+<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/4.png" class=""></p>
+*图 3：复制对应版本的下载链接。*
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 示例：通过复制的 .whl 文件绝对链接直接安装</span></span><br><span class="line">pip install https://mmwheels-bucket.onedl.ai/cu128-torch280/onedl-mmcv/onedl_mmcv-2.3.3-cp310-cp310-manylinux_2_34_x86_64.whl</span><br></pre></td></tr></table></figure>
+<h4 id="方案-b从源代码编译"><a class="markdownIt-Anchor" href="#方案-b从源代码编译"></a> 方案 B：从源代码编译</h4>
+<p>如果无法使用预编译包，也可以从源码编译，建议将代码克隆到工程的同级目录：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/open-mmlab/mmcv.git</span><br><span class="line"><span class="built_in">cd</span> mmcv</span><br><span class="line">git checkout v2.1.0  <span class="comment"># 切换到所需的分支</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 配置环境变量以编译 C++ 算子</span></span><br><span class="line"><span class="built_in">export</span> FORCE_CUDA=1</span><br><span class="line"><span class="built_in">export</span> MMCV_WITH_OPS=1</span><br><span class="line"></span><br><span class="line">pip install -r requirements.txt</span><br><span class="line">python setup.py build_ext --inplace</span><br><span class="line">pip install -e .</span><br></pre></td></tr></table></figure>
+<h3 id="4-从源码安装-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#4-从源码安装-onedl-mmsegmentation"></a> 4. 从源码安装 OneDL-MMSegmentation</h3>
+<p>确认 <code>mmcv</code> 正确安装并能导入 <code>mmcv._ext</code> 后，即可安装主框架：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> -b main https://github.com/vbti-development/onedl-mmsegmentation.git</span><br><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line">pip install -v -e .</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="四-测试与验证环境"><a class="markdownIt-Anchor" href="#四-测试与验证环境"></a> 四、测试与验证环境</h2>
+<p>完成上述步骤后，可以使用官方提供的 Demo 进行推理测试，以验证环境是否正常配置：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取测试用的配置和模型权重</span></span><br><span class="line">mim download mmsegmentation --config pspnet_r50-d8_4xb2-40k_cityscapes-512x1024 --dest .</span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行单张图片推理</span></span><br><span class="line">python demo/image_demo.py demo/demo.png \</span><br><span class="line">    configs/pspnet/pspnet_r50-d8_4xb2-40k_cityscapes-512x1024.py \</span><br><span class="line">    pspnet_r50-d8_512x1024_40k_cityscapes_20200605_003338-2966598c.pth \</span><br><span class="line">    --device cuda:0 --out-file result.jpg</span><br></pre></td></tr></table></figure>
+<p>如果当前目录生成了带有分割蒙版的 <code>result.jpg</code>，说明环境的安装配置已经初步完成。</p>
+<hr />
+<h2 id="五-在内置数据集-ade20k-上的训练尝试"><a class="markdownIt-Anchor" href="#五-在内置数据集-ade20k-上的训练尝试"></a> 五、在内置数据集 (ADE20K) 上的训练尝试</h2>
+<p>在切入自定义数据前，我先尝试用内置的 ADE20K 数据集走了一遍完整的训练和测试流程，以熟悉框架的调用逻辑。</p>
+<ol>
+<li><strong>准备数据</strong>：按照官方文档指引，解压 ADE20K 并放至 <code>data/ade</code> 目录。</li>
+<li><strong>启动训练</strong>：尝试使用 Segformer 模型。得益于 5090 充足的显存，可以将 batch size 适当调大以加速验证。</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 覆盖默认超参数配置</span></span><br><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8</span><br></pre></td></tr></table></figure>
+<p>也可以通过修改迭代参数进行一次快速测试：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k_fast \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8 train_cfg.max_iters=40000 train_cfg.val_interval=2000</span><br></pre></td></tr></table></figure>
+<h3 id="显卡状态监控"><a class="markdownIt-Anchor" href="#显卡状态监控"></a> 显卡状态监控</h3>
+<p>为了观察高负载下的硬件表现，可以在训练期间监控显卡状态：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 方法 1：系统自带</span></span><br><span class="line">watch -n 1 nvidia-smi</span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法 2：使用第三方库 nvitop</span></span><br><span class="line">conda activate base</span><br><span class="line">pip install nvitop</span><br><span class="line">nvitop</span><br></pre></td></tr></table></figure>
+<h3 id="模型验证"><a class="markdownIt-Anchor" href="#模型验证"></a> 模型验证</h3>
+<p>训练完成后，评估精度并输出预测结果：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/test.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    work_dirs/segformer_mit-b0_ade20k/best_mIoU_iter_xxx.pth \</span><br><span class="line">    --out work_dirs/segformer_mit-b0_ade20k/results \</span><br><span class="line">    --show-dir work_dirs/segformer_mit-b0_ade20k/vis_results</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="六-跑通自定义数据集以-smokeseg-为例"><a class="markdownIt-Anchor" href="#六-跑通自定义数据集以-smokeseg-为例"></a> 六、跑通自定义数据集：以 SmokeSeg 为例</h2>
+<p>结合自己课题，这里以开源的烟雾分割数据集 <strong><a href="https://github.com/LujianYao/FoSp">SmokeSeg</a></strong> 为例，记录了如何将其接入 MMSegmentation 框架。</p>
+<p>假设数据已转为标准 VOC 格式并存放在项目目录的 <code>data/SmokeSeg</code> 中。</p>
+<h3 id="1-注册新数据集"><a class="markdownIt-Anchor" href="#1-注册新数据集"></a> 1. 注册新数据集</h3>
+<p>在 MMSegmentation 1.x 规范中，自定义数据集需继承 <code>BaseSegDataset</code>。</p>
+<ul>
+<li>在 <code>mmseg/datasets/</code> 下创建 <code>smoke_voc.py</code>，编写数据集读取逻辑。</li>
+<li>在 <code>mmseg/datasets/__init__.py</code> 中导入并暴露该模块以便系统调用。</li>
+</ul>
+<h3 id="2-编写训练配置文件"><a class="markdownIt-Anchor" href="#2-编写训练配置文件"></a> 2. 编写训练配置文件</h3>
+<p>在 <code>configs/segformer/</code> 目录下新建对应 SmokeSeg 的配置文件，例如 <code>segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</code>。<br />
+<em>(注: 可以直接利用框架的 <code>_base_</code> 机制继承官方的 SegFormer-B5 配置文件，然后在此基础上仅重写类别数、数据路径等参数。)</em></p>
+<h3 id="3-执行训练与可视化"><a class="markdownIt-Anchor" href="#3-执行训练与可视化"></a> 3. 执行训练与可视化</h3>
+<p>调用新配置开始模型训练：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</span><br></pre></td></tr></table></figure>
+<p>训练结束后进行测试并可视化：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/test.py \</span><br><span class="line">    configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py \</span><br><span class="line">    你的最优权重文件路径.pth \</span><br><span class="line">    --show-dir vis_results_smokeseg/</span><br></pre></td></tr></table></figure>
+<p>到这里，整套分割库的本地化配置和运行流程基本走通了。接下来就可以在此框架上开展进一步的调参和对比实验。</p>
+]]></content>
+      <categories>
+        <category>深度学习</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Git 核心操作记录：面向日常开发的实践总结</title>
     <url>/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/</url>
     <content><![CDATA[<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
@@ -338,192 +433,6 @@
 <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 回退到指定的 commit_id，并且丢弃这之后的所有修改（极度危险，确认无误再用）</span></span><br><span class="line">git reset --hard &lt;commit_id&gt;</span><br></pre></td></tr></table></figure>
 </li>
 </ul>
-<hr />
-]]></content>
-      <categories>
-        <category>工具教程</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>在VS Code的CC插件以及终端CC中接入DeepSeek-V4-Pro</title>
-    <url>/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/</url>
-    <content><![CDATA[<p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
-参考链接：<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">Deepseek接入CC的官方文档</a><br />
-<a href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
-<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
-<p>另外，CC本身是免费的，如果开通了claude的pro计划，可以在里面使用claude原生模型，最近找到了充值方式，首先你需要一个claude账号，这一步目前来说好像不是那么简单（容易封号），而我是前几年就有了，当年还是从闲鱼找人帮我注册的，花了10块，然后需要一个苹果手机，需要一个美区（或者不限制的区域）苹果账号，此时下载Claude的app，直接在app里点升级pro，自动弹出app付款，此时需要app store里面登陆美区账号付款的，在此之前使用支付宝礼品卡给美区账号充值🔪</p>
-<span id="more"></span>
-<hr />
-<h2 id="前置准备"><a class="markdownIt-Anchor" href="#前置准备"></a> 前置准备</h2>
-<p>开始之前，需要准备好以下内容：</p>
-<ul>
-<li><strong>DeepSeek API Key</strong>：在 <a href="https://platform.deepseek.com/">DeepSeek 开放平台</a> 注册并获取，可以先充值10元试一试，目前是2.5折优惠。</li>
-<li><strong>Claude Code 已安装</strong>：终端CC和VSCode CC插件安装，此处不进行过多介绍。</li>
-</ul>
-<hr />
-<h2 id="一终端-cc-接入"><a class="markdownIt-Anchor" href="#一终端-cc-接入"></a> 一：终端 CC 接入</h2>
-<p>终端 CC 通过读取 shell 环境变量来决定使用哪个模型后端。直接在你的shell配置文件中添加以下环境变量即可。</p>
-<p>对于 macOS / zsh 用户，编辑 <code>~/.zshrc</code>：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">export</span> ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_AUTH_TOKEN=&lt;你的 DeepSeek API Key&gt;</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_OPUS_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_SONNET_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_SUBAGENT_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_EFFORT_LEVEL=max</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>💡 <strong>说明</strong>：CC 内部会根据任务复杂度自动选择 Opus/Sonnet/Haiku 级别的模型。通过 <code>ANTHROPIC_DEFAULT_*</code> 变量可以将这些级别分别映射到 DeepSeek 的不同模型。如果你希望所有任务都走同一个模型，全部填 <code>deepseek-v4-pro</code> 即可。</p>
-</blockquote>
-<p>配置完成后，重新加载 shell 配置：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
-<h2 id="随后在终端中启动-claudecc-便会通过-deepseek-api-运行"><a class="markdownIt-Anchor" href="#随后在终端中启动-claudecc-便会通过-deepseek-api-运行"></a> 随后在终端中启动 <code>claude</code>，CC 便会通过 DeepSeek API 运行。</h2>
-<h2 id="二vscode-cc-插件接入"><a class="markdownIt-Anchor" href="#二vscode-cc-插件接入"></a> 二：VSCode CC 插件接入</h2>
-<p>VSCode 的CC插件同样依赖环境变量，但需要通过VSCode的终端环境变量设置来注入。</p>
-<p>打开 VS Code 设置（<code>Cmd + ,</code>），搜索 <code>terminal.integrated.env.osx</code>（Windows 用户搜索 <code>terminal.integrated.env.windows</code>），点击 <strong>Edit in settings.json</strong>，添加以下内容：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;terminal.integrated.env.osx&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_BASE_URL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://api.deepseek.com/anthropic&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_AUTH_TOKEN&quot;</span><span class="punctuation">:</span> <span class="string">&quot;sk-your-deepseek-api-key&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_OPUS_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_SONNET_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_HAIKU_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-flash&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;CLAUDE_CODE_SUBAGENT_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-<p>配置完成后，<strong>完全退出并重启 VS Code</strong>，再打开集成的 CC 插件，环境变量便会生效。</p>
-<hr />
-<h2 id="推荐的额外配置"><a class="markdownIt-Anchor" href="#推荐的额外配置"></a> 推荐的额外配置</h2>
-<p>为了获得更好的使用体验，建议一并配置以下变量：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 超时时长（ms）：max effort 推理耗时较长，建议设长一些</span></span><br><span class="line"><span class="built_in">export</span> API_TIMEOUT_MS=<span class="string">&quot;600000&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭非必要流量（遥测、成本警告等）</span></span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_COST_WARNINGS=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_TELEMETRY=1</span><br></pre></td></tr></table></figure>
-<hr />
-<h2 id="模型映射关系"><a class="markdownIt-Anchor" href="#模型映射关系"></a> 模型映射关系</h2>
-<p>配置生效后，CC 内部分配的 Claude 模型会被自动映射到 DeepSeek 模型：</p>
-<table>
-<thead>
-<tr>
-<th>Claude 原生模型</th>
-<th>映射到的 DeepSeek 模型</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>claude-opus-*</code></td>
-<td><code>deepseek-v4-pro</code></td>
-</tr>
-<tr>
-<td><code>claude-sonnet-*</code></td>
-<td><code>deepseek-v4-pro</code>（或 <code>deepseek-v4-flash</code>）</td>
-</tr>
-<tr>
-<td><code>claude-haiku-*</code></td>
-<td><code>deepseek-v4-flash</code></td>
-</tr>
-</tbody>
-</table>
-<p>V4-Pro 拥有 <strong>1M token 上下文窗口</strong>，足以塞入整个代码仓库，配合 CC 的代码搜索和多文件编辑能力，体验相当顺畅。</p>
-<hr />
-<h2 id="功能兼容性一览"><a class="markdownIt-Anchor" href="#功能兼容性一览"></a> 功能兼容性一览</h2>
-<p>DeepSeek 的 Anthropic 兼容端点是目前第三方供应商中<strong>支持最完整</strong>的，但仍有几个重要差距需要了解：</p>
-<h3 id="完全支持"><a class="markdownIt-Anchor" href="#完全支持"></a> ✅ 完全支持</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>文本对话与流式输出</td>
-<td>日常编码问答完全正常</td>
-</tr>
-<tr>
-<td>Tool Use / 函数调用</td>
-<td>文件读写、命令执行、工具链调用均稳定</td>
-</tr>
-<tr>
-<td><strong>Subagent（子代理）</strong></td>
-<td>✅ DeepSeek 原生支持，Agent 级任务可正常调度</td>
-</tr>
-<tr>
-<td>System Prompt</td>
-<td>系统指令完全兼容</td>
-</tr>
-<tr>
-<td>128K～1M 上下文</td>
-<td>V4-Pro 支持 1M tokens，远超 Claude 的 200K</td>
-</tr>
-</tbody>
-</table>
-<h3 id="️-部分支持-被忽略"><a class="markdownIt-Anchor" href="#️-部分支持-被忽略"></a> ⚠️ 部分支持 / 被忽略</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>thinking</code>（推理模式）</td>
-<td>V4-Pro 自身具备推理能力，但 Anthropic API 的 <code>budget_tokens</code> 参数会被忽略</td>
-</tr>
-<tr>
-<td><code>disable_parallel_tool_use</code></td>
-<td>被忽略，DeepSeek 的并行工具调用策略与 Claude 不同</td>
-</tr>
-<tr>
-<td><code>cache_control</code></td>
-<td>不支持 Anthropic 的 prompt caching 机制</td>
-</tr>
-</tbody>
-</table>
-<h3 id="不支持"><a class="markdownIt-Anchor" href="#不支持"></a> ❌ 不支持</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>图片 / 多模态</strong></td>
-<td><strong>最大短板</strong>。V4-Pro 当前是纯文本模型，截图、UI 设计稿、终端截图等无法被识别——只会收到占位符 <code>[Image #1]</code></td>
-</tr>
-<tr>
-<td>文档上传</td>
-<td>不支持直接上传 PDF、图片等文件作为输入</td>
-</tr>
-<tr>
-<td>MCP 工具类型</td>
-<td>不支持 <code>server_tool_use</code>、<code>mcp_tool_result</code> 等 MCP 原生工具调用类型</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="实际使用中需要注意的问题"><a class="markdownIt-Anchor" href="#实际使用中需要注意的问题"></a> 实际使用中需要注意的问题</h2>
-<h3 id="1-图片不可用是硬伤"><a class="markdownIt-Anchor" href="#1-图片不可用是硬伤"></a> 1. 图片不可用是硬伤</h3>
-<p>虽然 V4-Pro 有 1M 上下文——&quot;能塞进去整个代码仓库，但塞不进去一张 PNG。&quot;遇到以下场景时需要<strong>临时切回 Anthropic 原生 API</strong>：</p>
-<ul>
-<li>CC 自动截取终端截图进行 debug</li>
-<li>需要基于 UI 设计稿生成前端代码</li>
-<li>分析报错截图或日志截屏</li>
-</ul>
-<p><strong>切换方法</strong>：在终端中取消 <code>ANTHROPIC_BASE_URL</code> 环境变量即可回退：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">unset</span> ANTHROPIC_BASE_URL</span><br><span class="line"><span class="comment"># 或者重新打开一个未配置 ANTHROPIC_BASE_URL 的终端窗口</span></span><br></pre></td></tr></table></figure>
-<h3 id="2-速度与成本的权衡"><a class="markdownIt-Anchor" href="#2-速度与成本的权衡"></a> 2. 速度与成本的权衡</h3>
-<p>DeepSeek V4-Pro 在 max effort 模式下推理时间较长（可能超过 1 分钟），这也是建议将 <code>API_TIMEOUT_MS</code> 设为 600000 的原因。但相比原生 Claude API <strong>约 90%+ 的成本节省</strong>，这点等待完全值得。</p>
-<h3 id="3-不同订阅方案的区别"><a class="markdownIt-Anchor" href="#3-不同订阅方案的区别"></a> 3. 不同订阅方案的区别</h3>
-<p>如果同时持有 Anthropic 的付费订阅（Max 计划），注意环境变量的配置会覆盖订阅的原生模型路由。建议为 DeepSeek 接入专门准备一个终端配置别名，方便在不同后端之间快速切换。</p>
-<hr />
-<h2 id="个人使用体验"><a class="markdownIt-Anchor" href="#个人使用体验"></a> 个人使用体验</h2>
-<h3 id="成本真的便宜"><a class="markdownIt-Anchor" href="#成本真的便宜"></a> 成本：真的便宜</h3>
-<p>最近 DeepSeek 的 Token 价格打 <strong>2.5 折</strong>，我往账户里充了 10 块钱。到目前为止，用它完成了：</p>
-<ul>
-<li><strong>两个深度学习论文的复现工作</strong>（涉及大量代码编写和调试）</li>
-<li><strong>几篇博客文章</strong>（包括本文）的撰写与 Hexo 自动部署脚本调试</li>
-</ul>
-<p>总共花掉了大约 <strong>3.5 元</strong>。也就是说 10 块钱的额度还剩下近三分之二。这个价格放在任何同类工具面前都是降维打击。</p>
-<h3 id="与-cursor-pro-的对比"><a class="markdownIt-Anchor" href="#与-cursor-pro-的对比"></a> 与 Cursor Pro 的对比</h3>
-<p>在此之前，我一直在用 Cursor 的 Pro 订阅，20 美元一个月。说实话，体验算不上差，但有一个致命问题——<strong>Opus 的额度太少</strong>，高强度用不了几天就没了。额度耗尽之后只能降级用 Cursor 自研的 Composer 2.5（底层其实是 Kimi 2.5 套壳），虽然也不至于难用，但模型能力明显掉了一个档次。GPT 的额度同样少得可怜。</p>
-<p>20 美元一个月，大部分时间用的只是一个二线模型——性价比实在太低了。</p>
-<p>相比之下，DeepSeek V4-Pro 按量计费、单价极低，而且<strong>不限制调用频率</strong>，不用担心&quot;额度用完&quot;这件事。花多少钱用多少量，完全在自己掌控范围内。</p>
-<h3 id="实际能力感受"><a class="markdownIt-Anchor" href="#实际能力感受"></a> 实际能力感受</h3>
-<p>讲实话，DeepSeek V4-Pro 的<strong>代码能力和中文能力都不错</strong>。代码方面，在两个复现项目中处理了训练脚本、数据预处理、配置文件的编写和调试，基本没有遇到模型能力不足导致的阻塞性问题。中文方面，写博客、整理技术文档时的语言表达自然流畅，比大多数纯英文训练的模型接地气得多。</p>
-<p>当然，前面提到的图片不支持确实时有碰到——比如想让 CC 看看终端报错截图或者模型输出的可视化结果，这时候只能临时切回原生 API。但纯文本场景下，V4-Pro 完全够用。</p>
-<hr />
-<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
-<p>DeepSeek V4-Pro + Claude Code 的组合在<strong>纯文本编码场景</strong>下体验几乎无差异——Tool Use 和 Subagent 均原生可用，配合极低的 API 成本和 1M 超长上下文，是日常开发中极具性价比的选择。唯一的软肋是图片/多模态不支持，遇到需要视觉理解的场景时需要切回 Anthropic 原生 API。</p>
-<blockquote>
-<p>📌 <strong>适用场景</strong>：后端开发、脚本编写、代码重构、项目搭建、文档生成</p>
-<p>📌 <strong>不适用场景</strong>：前端 UI 开发（需要看图）、截图 Debug、多模态分析</p>
-</blockquote>
 <hr />
 ]]></content>
       <categories>
@@ -734,101 +643,6 @@ config 里列出各划分</strong>。</li>
 ]]></content>
   </entry>
   <entry>
-    <title>在 RTX 5090 上配置 MMSegmentation 并跑通自定义数据集 (OneDL 版)</title>
-    <url>/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/</url>
-    <content><![CDATA[<p>在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。</p>
-<span id="more"></span>
-<h2 id="一-基础环境配置"><a class="markdownIt-Anchor" href="#一-基础环境配置"></a> 一、基础环境配置</h2>
-<p>RTX 5090 对 CUDA 版本有一定要求，经过测试，以下版本组合运行较为稳定：</p>
-<ul>
-<li><strong>CUDA</strong>: 12.8 (5090 最低支持 12.8 版本的 CUDA)</li>
-<li><strong>PyTorch</strong>: 2.8.0</li>
-<li><strong>Python</strong>: 3.10 (建议 3.10.x 或 3.12.x)</li>
-</ul>
-<blockquote>
-<p>💡 <strong>个人习惯：建立基础克隆环境</strong><br />
-由于目前部分国内镜像源可能还没有完全同步最新的 GPU 版 PyTorch，我通常会先建一个只包含上述核心组件的“基础环境”。后续新建项目时直接克隆这个基础环境，可以避免重复下载和安装。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda create -n new_env_name --<span class="built_in">clone</span> base_5090_env</span><br></pre></td></tr></table></figure>
-</blockquote>
-<hr />
-<h2 id="二-框架选择使用-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#二-框架选择使用-onedl-mmsegmentation"></a> 二、框架选择：使用 OneDL-MMSegmentation</h2>
-<p>官方的 OpenMMLab 库 <code>mmsegmentation</code> 已经有较长一段时间未更新，最新的 1.x 版本在适配最新的硬件环境（如 CUDA 12.8）和 PyTorch 2.x 时会遇到不少兼容性问题。虽然可以通过手动修改配置、从源码编译 <code>mmcv</code> 来强行适配，但维护成本较高。</p>
-<p>在调研后，我选择了第三方维护的复刻版本：<strong><a href="https://github.com/VBTI-development/onedl-mmsegmentation">onedl-mmsegmentation</a></strong>。该库对最新的 PyTorch 2.x 提供了较好的支持。</p>
-<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/1.png" class="" title="官方说明: onedl-mmsegmentation 重要提示"></p>
-*图 1：官方主页中的相关兼容性说明。*
-<hr />
-<h2 id="三-完整的安装与配置流程"><a class="markdownIt-Anchor" href="#三-完整的安装与配置流程"></a> 三、完整的安装与配置流程</h2>
-<h3 id="1-创建环境与安装-pytorch"><a class="markdownIt-Anchor" href="#1-创建环境与安装-pytorch"></a> 1. 创建环境与安装 PyTorch</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda create -n mmseg python=3.10 -y</span><br><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 注意：需通过官方源安装指定 CUDA 12.8 版本的 PyTorch</span></span><br><span class="line">pip install torch==2.8.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128</span><br></pre></td></tr></table></figure>
-<h3 id="2-安装基础依赖包"><a class="markdownIt-Anchor" href="#2-安装基础依赖包"></a> 2. 安装基础依赖包</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install -U onedl-mim</span><br><span class="line">mim install onedl-mmengine</span><br></pre></td></tr></table></figure>
-<h3 id="3-安装-mmcv"><a class="markdownIt-Anchor" href="#3-安装-mmcv"></a> 3. 安装 MMCV</h3>
-<p>在整个配置过程中，<code>mmcv</code> 的安装是比较容易出错的一步。主要有两种方案：</p>
-<h4 id="方案-a使用预编译-wheel-包安装-推荐"><a class="markdownIt-Anchor" href="#方案-a使用预编译-wheel-包安装-推荐"></a> 方案 A：使用预编译 Wheel 包安装 (推荐)</h4>
-<p>最理想的方式是使用 <code>mim</code> 自动安装预编译包：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">mim install onedl-mmcv==2.3.2</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>⚠️ <strong>编译提示</strong>：<br />
-如果在终端日志中看到 <code>Building wheel from source</code>，说明系统未能匹配到合适的预构建包，正在尝试本地编译。这种情况往往由于缺少 C++ 扩展编译环境，导致后续调用 <code>mmcv._ext</code> 时报错。</p>
-</blockquote>
-<p>为了避免编译错误，可以根据 <a href="https://onedl-mmcv.readthedocs.io/en/latest/get_started/installation.html">OneDL-MMCV 官方文档</a> 寻找对应的预编译包（如 Python 3.10 + CUDA 12.8 + PyTorch 2.8.0）。如果自动匹配失败，建议直接通过获取到的 .whl 链接进行安装：</p>
-<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/3.png" class="" title="预编译包列表"></p>
-*图 2：官方发布的预编译包列表。*
-<p><img src="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/4.png" class=""></p>
-*图 3：复制对应版本的下载链接。*
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 示例：通过复制的 .whl 文件绝对链接直接安装</span></span><br><span class="line">pip install https://mmwheels-bucket.onedl.ai/cu128-torch280/onedl-mmcv/onedl_mmcv-2.3.3-cp310-cp310-manylinux_2_34_x86_64.whl</span><br></pre></td></tr></table></figure>
-<h4 id="方案-b从源代码编译"><a class="markdownIt-Anchor" href="#方案-b从源代码编译"></a> 方案 B：从源代码编译</h4>
-<p>如果无法使用预编译包，也可以从源码编译，建议将代码克隆到工程的同级目录：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/open-mmlab/mmcv.git</span><br><span class="line"><span class="built_in">cd</span> mmcv</span><br><span class="line">git checkout v2.1.0  <span class="comment"># 切换到所需的分支</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 配置环境变量以编译 C++ 算子</span></span><br><span class="line"><span class="built_in">export</span> FORCE_CUDA=1</span><br><span class="line"><span class="built_in">export</span> MMCV_WITH_OPS=1</span><br><span class="line"></span><br><span class="line">pip install -r requirements.txt</span><br><span class="line">python setup.py build_ext --inplace</span><br><span class="line">pip install -e .</span><br></pre></td></tr></table></figure>
-<h3 id="4-从源码安装-onedl-mmsegmentation"><a class="markdownIt-Anchor" href="#4-从源码安装-onedl-mmsegmentation"></a> 4. 从源码安装 OneDL-MMSegmentation</h3>
-<p>确认 <code>mmcv</code> 正确安装并能导入 <code>mmcv._ext</code> 后，即可安装主框架：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">git <span class="built_in">clone</span> -b main https://github.com/vbti-development/onedl-mmsegmentation.git</span><br><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line">pip install -v -e .</span><br></pre></td></tr></table></figure>
-<hr />
-<h2 id="四-测试与验证环境"><a class="markdownIt-Anchor" href="#四-测试与验证环境"></a> 四、测试与验证环境</h2>
-<p>完成上述步骤后，可以使用官方提供的 Demo 进行推理测试，以验证环境是否正常配置：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> onedl-mmsegmentation</span><br><span class="line"></span><br><span class="line"><span class="comment"># 获取测试用的配置和模型权重</span></span><br><span class="line">mim download mmsegmentation --config pspnet_r50-d8_4xb2-40k_cityscapes-512x1024 --dest .</span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行单张图片推理</span></span><br><span class="line">python demo/image_demo.py demo/demo.png \</span><br><span class="line">    configs/pspnet/pspnet_r50-d8_4xb2-40k_cityscapes-512x1024.py \</span><br><span class="line">    pspnet_r50-d8_512x1024_40k_cityscapes_20200605_003338-2966598c.pth \</span><br><span class="line">    --device cuda:0 --out-file result.jpg</span><br></pre></td></tr></table></figure>
-<p>如果当前目录生成了带有分割蒙版的 <code>result.jpg</code>，说明环境的安装配置已经初步完成。</p>
-<hr />
-<h2 id="五-在内置数据集-ade20k-上的训练尝试"><a class="markdownIt-Anchor" href="#五-在内置数据集-ade20k-上的训练尝试"></a> 五、在内置数据集 (ADE20K) 上的训练尝试</h2>
-<p>在切入自定义数据前，我先尝试用内置的 ADE20K 数据集走了一遍完整的训练和测试流程，以熟悉框架的调用逻辑。</p>
-<ol>
-<li><strong>准备数据</strong>：按照官方文档指引，解压 ADE20K 并放至 <code>data/ade</code> 目录。</li>
-<li><strong>启动训练</strong>：尝试使用 Segformer 模型。得益于 5090 充足的显存，可以将 batch size 适当调大以加速验证。</li>
-</ol>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">conda activate mmseg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 覆盖默认超参数配置</span></span><br><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8</span><br></pre></td></tr></table></figure>
-<p>也可以通过修改迭代参数进行一次快速测试：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    --work-dir work_dirs/segformer_mit-b0_ade20k_fast \</span><br><span class="line">    --cfg-options train_dataloader.batch_size=16 val_dataloader.batch_size=1 train_dataloader.num_workers=8 train_cfg.max_iters=40000 train_cfg.val_interval=2000</span><br></pre></td></tr></table></figure>
-<h3 id="显卡状态监控"><a class="markdownIt-Anchor" href="#显卡状态监控"></a> 显卡状态监控</h3>
-<p>为了观察高负载下的硬件表现，可以在训练期间监控显卡状态：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 方法 1：系统自带</span></span><br><span class="line">watch -n 1 nvidia-smi</span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法 2：使用第三方库 nvitop</span></span><br><span class="line">conda activate base</span><br><span class="line">pip install nvitop</span><br><span class="line">nvitop</span><br></pre></td></tr></table></figure>
-<h3 id="模型验证"><a class="markdownIt-Anchor" href="#模型验证"></a> 模型验证</h3>
-<p>训练完成后，评估精度并输出预测结果：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/test.py configs/segformer/segformer_mit-b0_8xb2-160k_ade20k-512x512.py \</span><br><span class="line">    work_dirs/segformer_mit-b0_ade20k/best_mIoU_iter_xxx.pth \</span><br><span class="line">    --out work_dirs/segformer_mit-b0_ade20k/results \</span><br><span class="line">    --show-dir work_dirs/segformer_mit-b0_ade20k/vis_results</span><br></pre></td></tr></table></figure>
-<hr />
-<h2 id="六-跑通自定义数据集以-smokeseg-为例"><a class="markdownIt-Anchor" href="#六-跑通自定义数据集以-smokeseg-为例"></a> 六、跑通自定义数据集：以 SmokeSeg 为例</h2>
-<p>结合自己课题，这里以开源的烟雾分割数据集 <strong><a href="https://github.com/LujianYao/FoSp">SmokeSeg</a></strong> 为例，记录了如何将其接入 MMSegmentation 框架。</p>
-<p>假设数据已转为标准 VOC 格式并存放在项目目录的 <code>data/SmokeSeg</code> 中。</p>
-<h3 id="1-注册新数据集"><a class="markdownIt-Anchor" href="#1-注册新数据集"></a> 1. 注册新数据集</h3>
-<p>在 MMSegmentation 1.x 规范中，自定义数据集需继承 <code>BaseSegDataset</code>。</p>
-<ul>
-<li>在 <code>mmseg/datasets/</code> 下创建 <code>smoke_voc.py</code>，编写数据集读取逻辑。</li>
-<li>在 <code>mmseg/datasets/__init__.py</code> 中导入并暴露该模块以便系统调用。</li>
-</ul>
-<h3 id="2-编写训练配置文件"><a class="markdownIt-Anchor" href="#2-编写训练配置文件"></a> 2. 编写训练配置文件</h3>
-<p>在 <code>configs/segformer/</code> 目录下新建对应 SmokeSeg 的配置文件，例如 <code>segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</code>。<br />
-<em>(注: 可以直接利用框架的 <code>_base_</code> 机制继承官方的 SegFormer-B5 配置文件，然后在此基础上仅重写类别数、数据路径等参数。)</em></p>
-<h3 id="3-执行训练与可视化"><a class="markdownIt-Anchor" href="#3-执行训练与可视化"></a> 3. 执行训练与可视化</h3>
-<p>调用新配置开始模型训练：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/train.py configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py</span><br></pre></td></tr></table></figure>
-<p>训练结束后进行测试并可视化：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">python tools/test.py \</span><br><span class="line">    configs/segformer/segformer_mit-b5_8xb4-160k_smokeseg-515x512.py \</span><br><span class="line">    你的最优权重文件路径.pth \</span><br><span class="line">    --show-dir vis_results_smokeseg/</span><br></pre></td></tr></table></figure>
-<p>到这里，整套分割库的本地化配置和运行流程基本走通了。接下来就可以在此框架上开展进一步的调参和对比实验。</p>
-]]></content>
-      <categories>
-        <category>深度学习</category>
-      </categories>
-  </entry>
-  <entry>
     <title>语义分割评价指标梳理与代码实现记录</title>
     <url>/2026/04/13/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87/</url>
     <content><![CDATA[<p>最近在处理烟雾分割任务时，发现现有的语义分割评估指标在应对特定分布（如目标极其微小、类别极度不平衡）时存在一些统计上的盲区。为了更客观地衡量模型性能，我对常用的评价指标进行了梳理，并记录了在 MMSegmentation 框架下实现自定义烟雾分割评价指标的过程。</p>
@@ -924,6 +738,192 @@ config 里列出各划分</strong>。</li>
 ]]></content>
       <categories>
         <category>深度学习</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>在VS Code的CC插件以及终端CC中接入DeepSeek-V4-Pro</title>
+    <url>/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/</url>
+    <content><![CDATA[<p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
+参考链接：<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">Deepseek接入CC的官方文档</a><br />
+<a href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
+<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
+<p>另外，CC本身是免费的，如果开通了claude的pro计划，可以在里面使用claude原生模型，最近找到了充值方式，首先你需要一个claude账号，这一步目前来说好像不是那么简单（容易封号），而我是前几年就有了，当年还是从闲鱼找人帮我注册的，花了10块，然后需要一个苹果手机，需要一个美区（或者不限制的区域）苹果账号，此时下载Claude的app，直接在app里点升级pro，自动弹出app付款，此时需要app store里面登陆美区账号付款的，在此之前使用支付宝礼品卡给美区账号充值🔪</p>
+<span id="more"></span>
+<hr />
+<h2 id="前置准备"><a class="markdownIt-Anchor" href="#前置准备"></a> 前置准备</h2>
+<p>开始之前，需要准备好以下内容：</p>
+<ul>
+<li><strong>DeepSeek API Key</strong>：在 <a href="https://platform.deepseek.com/">DeepSeek 开放平台</a> 注册并获取，可以先充值10元试一试，目前是2.5折优惠。</li>
+<li><strong>Claude Code 已安装</strong>：终端CC和VSCode CC插件安装，此处不进行过多介绍。</li>
+</ul>
+<hr />
+<h2 id="一终端-cc-接入"><a class="markdownIt-Anchor" href="#一终端-cc-接入"></a> 一：终端 CC 接入</h2>
+<p>终端 CC 通过读取 shell 环境变量来决定使用哪个模型后端。直接在你的shell配置文件中添加以下环境变量即可。</p>
+<p>对于 macOS / zsh 用户，编辑 <code>~/.zshrc</code>：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">export</span> ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_AUTH_TOKEN=&lt;你的 DeepSeek API Key&gt;</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_OPUS_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_SONNET_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_SUBAGENT_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_EFFORT_LEVEL=max</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>💡 <strong>说明</strong>：CC 内部会根据任务复杂度自动选择 Opus/Sonnet/Haiku 级别的模型。通过 <code>ANTHROPIC_DEFAULT_*</code> 变量可以将这些级别分别映射到 DeepSeek 的不同模型。如果你希望所有任务都走同一个模型，全部填 <code>deepseek-v4-pro</code> 即可。</p>
+</blockquote>
+<p>配置完成后，重新加载 shell 配置：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
+<h2 id="随后在终端中启动-claudecc-便会通过-deepseek-api-运行"><a class="markdownIt-Anchor" href="#随后在终端中启动-claudecc-便会通过-deepseek-api-运行"></a> 随后在终端中启动 <code>claude</code>，CC 便会通过 DeepSeek API 运行。</h2>
+<h2 id="二vscode-cc-插件接入"><a class="markdownIt-Anchor" href="#二vscode-cc-插件接入"></a> 二：VSCode CC 插件接入</h2>
+<p>VSCode 的CC插件同样依赖环境变量，但需要通过VSCode的终端环境变量设置来注入。</p>
+<p>打开 VS Code 设置（<code>Cmd + ,</code>），搜索 <code>terminal.integrated.env.osx</code>（Windows 用户搜索 <code>terminal.integrated.env.windows</code>），点击 <strong>Edit in settings.json</strong>，添加以下内容：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;terminal.integrated.env.osx&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_BASE_URL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://api.deepseek.com/anthropic&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_AUTH_TOKEN&quot;</span><span class="punctuation">:</span> <span class="string">&quot;sk-your-deepseek-api-key&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_OPUS_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_SONNET_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_HAIKU_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-flash&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;CLAUDE_CODE_SUBAGENT_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>配置完成后，<strong>完全退出并重启 VS Code</strong>，再打开集成的 CC 插件，环境变量便会生效。</p>
+<hr />
+<h2 id="推荐的额外配置"><a class="markdownIt-Anchor" href="#推荐的额外配置"></a> 推荐的额外配置</h2>
+<p>为了获得更好的使用体验，建议一并配置以下变量：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 超时时长（ms）：max effort 推理耗时较长，建议设长一些</span></span><br><span class="line"><span class="built_in">export</span> API_TIMEOUT_MS=<span class="string">&quot;600000&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭非必要流量（遥测、成本警告等）</span></span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_COST_WARNINGS=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_TELEMETRY=1</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="模型映射关系"><a class="markdownIt-Anchor" href="#模型映射关系"></a> 模型映射关系</h2>
+<p>配置生效后，CC 内部分配的 Claude 模型会被自动映射到 DeepSeek 模型：</p>
+<table>
+<thead>
+<tr>
+<th>Claude 原生模型</th>
+<th>映射到的 DeepSeek 模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>claude-opus-*</code></td>
+<td><code>deepseek-v4-pro</code></td>
+</tr>
+<tr>
+<td><code>claude-sonnet-*</code></td>
+<td><code>deepseek-v4-pro</code>（或 <code>deepseek-v4-flash</code>）</td>
+</tr>
+<tr>
+<td><code>claude-haiku-*</code></td>
+<td><code>deepseek-v4-flash</code></td>
+</tr>
+</tbody>
+</table>
+<p>V4-Pro 拥有 <strong>1M token 上下文窗口</strong>，足以塞入整个代码仓库，配合 CC 的代码搜索和多文件编辑能力，体验相当顺畅。</p>
+<hr />
+<h2 id="功能兼容性一览"><a class="markdownIt-Anchor" href="#功能兼容性一览"></a> 功能兼容性一览</h2>
+<p>DeepSeek 的 Anthropic 兼容端点是目前第三方供应商中<strong>支持最完整</strong>的，但仍有几个重要差距需要了解：</p>
+<h3 id="完全支持"><a class="markdownIt-Anchor" href="#完全支持"></a> ✅ 完全支持</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文本对话与流式输出</td>
+<td>日常编码问答完全正常</td>
+</tr>
+<tr>
+<td>Tool Use / 函数调用</td>
+<td>文件读写、命令执行、工具链调用均稳定</td>
+</tr>
+<tr>
+<td><strong>Subagent（子代理）</strong></td>
+<td>✅ DeepSeek 原生支持，Agent 级任务可正常调度</td>
+</tr>
+<tr>
+<td>System Prompt</td>
+<td>系统指令完全兼容</td>
+</tr>
+<tr>
+<td>128K～1M 上下文</td>
+<td>V4-Pro 支持 1M tokens，远超 Claude 的 200K</td>
+</tr>
+</tbody>
+</table>
+<h3 id="️-部分支持-被忽略"><a class="markdownIt-Anchor" href="#️-部分支持-被忽略"></a> ⚠️ 部分支持 / 被忽略</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>thinking</code>（推理模式）</td>
+<td>V4-Pro 自身具备推理能力，但 Anthropic API 的 <code>budget_tokens</code> 参数会被忽略</td>
+</tr>
+<tr>
+<td><code>disable_parallel_tool_use</code></td>
+<td>被忽略，DeepSeek 的并行工具调用策略与 Claude 不同</td>
+</tr>
+<tr>
+<td><code>cache_control</code></td>
+<td>不支持 Anthropic 的 prompt caching 机制</td>
+</tr>
+</tbody>
+</table>
+<h3 id="不支持"><a class="markdownIt-Anchor" href="#不支持"></a> ❌ 不支持</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>图片 / 多模态</strong></td>
+<td><strong>最大短板</strong>。V4-Pro 当前是纯文本模型，截图、UI 设计稿、终端截图等无法被识别——只会收到占位符 <code>[Image #1]</code></td>
+</tr>
+<tr>
+<td>文档上传</td>
+<td>不支持直接上传 PDF、图片等文件作为输入</td>
+</tr>
+<tr>
+<td>MCP 工具类型</td>
+<td>不支持 <code>server_tool_use</code>、<code>mcp_tool_result</code> 等 MCP 原生工具调用类型</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="实际使用中需要注意的问题"><a class="markdownIt-Anchor" href="#实际使用中需要注意的问题"></a> 实际使用中需要注意的问题</h2>
+<h3 id="1-图片不可用是硬伤"><a class="markdownIt-Anchor" href="#1-图片不可用是硬伤"></a> 1. 图片不可用是硬伤</h3>
+<p>虽然 V4-Pro 有 1M 上下文——&quot;能塞进去整个代码仓库，但塞不进去一张 PNG。&quot;遇到以下场景时需要<strong>临时切回 Anthropic 原生 API</strong>：</p>
+<ul>
+<li>CC 自动截取终端截图进行 debug</li>
+<li>需要基于 UI 设计稿生成前端代码</li>
+<li>分析报错截图或日志截屏</li>
+</ul>
+<p><strong>切换方法</strong>：在终端中取消 <code>ANTHROPIC_BASE_URL</code> 环境变量即可回退：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">unset</span> ANTHROPIC_BASE_URL</span><br><span class="line"><span class="comment"># 或者重新打开一个未配置 ANTHROPIC_BASE_URL 的终端窗口</span></span><br></pre></td></tr></table></figure>
+<h3 id="2-速度与成本的权衡"><a class="markdownIt-Anchor" href="#2-速度与成本的权衡"></a> 2. 速度与成本的权衡</h3>
+<p>DeepSeek V4-Pro 在 max effort 模式下推理时间较长（可能超过 1 分钟），这也是建议将 <code>API_TIMEOUT_MS</code> 设为 600000 的原因。但相比原生 Claude API <strong>约 90%+ 的成本节省</strong>，这点等待完全值得。</p>
+<h3 id="3-不同订阅方案的区别"><a class="markdownIt-Anchor" href="#3-不同订阅方案的区别"></a> 3. 不同订阅方案的区别</h3>
+<p>如果同时持有 Anthropic 的付费订阅（Max 计划），注意环境变量的配置会覆盖订阅的原生模型路由。建议为 DeepSeek 接入专门准备一个终端配置别名，方便在不同后端之间快速切换。</p>
+<hr />
+<h2 id="个人使用体验"><a class="markdownIt-Anchor" href="#个人使用体验"></a> 个人使用体验</h2>
+<h3 id="成本真的便宜"><a class="markdownIt-Anchor" href="#成本真的便宜"></a> 成本：真的便宜</h3>
+<p>最近 DeepSeek 的 Token 价格打 <strong>2.5 折</strong>，我往账户里充了 10 块钱。到目前为止，用它完成了：</p>
+<ul>
+<li><strong>两个深度学习论文的复现工作</strong>（涉及大量代码编写和调试）</li>
+<li><strong>几篇博客文章</strong>（包括本文）的撰写与 Hexo 自动部署脚本调试</li>
+</ul>
+<p>总共花掉了大约 <strong>3.5 元</strong>。也就是说 10 块钱的额度还剩下近三分之二。这个价格放在任何同类工具面前都是降维打击。</p>
+<h3 id="与-cursor-pro-的对比"><a class="markdownIt-Anchor" href="#与-cursor-pro-的对比"></a> 与 Cursor Pro 的对比</h3>
+<p>在此之前，我一直在用 Cursor 的 Pro 订阅，20 美元一个月。说实话，体验算不上差，但有一个致命问题——<strong>Opus 的额度太少</strong>，高强度用不了几天就没了。额度耗尽之后只能降级用 Cursor 自研的 Composer 2.5（底层其实是 Kimi 2.5 套壳），虽然也不至于难用，但模型能力明显掉了一个档次。GPT 的额度同样少得可怜。</p>
+<p>20 美元一个月，大部分时间用的只是一个二线模型——性价比实在太低了。</p>
+<p>相比之下，DeepSeek V4-Pro 按量计费、单价极低，而且<strong>不限制调用频率</strong>，不用担心&quot;额度用完&quot;这件事。花多少钱用多少量，完全在自己掌控范围内。</p>
+<h3 id="实际能力感受"><a class="markdownIt-Anchor" href="#实际能力感受"></a> 实际能力感受</h3>
+<p>讲实话，DeepSeek V4-Pro 的<strong>代码能力和中文能力都不错</strong>。代码方面，在两个复现项目中处理了训练脚本、数据预处理、配置文件的编写和调试，基本没有遇到模型能力不足导致的阻塞性问题。中文方面，写博客、整理技术文档时的语言表达自然流畅，比大多数纯英文训练的模型接地气得多。</p>
+<p>当然，前面提到的图片不支持确实时有碰到——比如想让 CC 看看终端报错截图或者模型输出的可视化结果，这时候只能临时切回原生 API。但纯文本场景下，V4-Pro 完全够用。</p>
+<hr />
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>DeepSeek V4-Pro + Claude Code 的组合在<strong>纯文本编码场景</strong>下体验几乎无差异——Tool Use 和 Subagent 均原生可用，配合极低的 API 成本和 1M 超长上下文，是日常开发中极具性价比的选择。唯一的软肋是图片/多模态不支持，遇到需要视觉理解的场景时需要切回 Anthropic 原生 API。</p>
+<blockquote>
+<p>📌 <strong>适用场景</strong>：后端开发、脚本编写、代码重构、项目搭建、文档生成</p>
+<p>📌 <strong>不适用场景</strong>：前端 UI 开发（需要看图）、截图 Debug、多模态分析</p>
+</blockquote>
+<hr />
+]]></content>
+      <categories>
+        <category>工具教程</category>
       </categories>
   </entry>
 </search>
