@@ -20,13 +20,15 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"3hree5ive.top","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"always","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"atom-one-dark","dark":"atom-one-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":"mac"},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":2,"unescape":true,"preload":false}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
-<meta property="og:type" content="website">
-<meta property="og:title" content="3hree5ive - 个人树洞，欢迎探访">
-<meta property="og:url" content="https://3hree5ive.top/index.html">
+    <meta name="description" content="RTX 5090 高负载黑屏与 Xid 79 系统排查手册 最后更新：2026-07-15 适用机器：  GPU：技嘉 RTX 5090 CPU：AMD Ryzen 9 9950X 主板：华硕 TUF GAMING X870E-PLUS WIFI7 电源：安钛克 NE 1300 金牌，ATX 3.0，原生 12V-2x6 系统：Ubuntu 24.04.4 LTS 当前驱动：NVIDIA 580">
+<meta property="og:type" content="article">
+<meta property="og:title" content="5090显卡Xid79错误排查报告">
+<meta property="og:url" content="https://3hree5ive.top/2026/07/15/5090%E6%98%BE%E5%8D%A1Xid79%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5%E6%8A%A5%E5%91%8A/index.html">
 <meta property="og:site_name" content="3hree5ive - 个人树洞，欢迎探访">
-<meta property="og:description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
+<meta property="og:description" content="RTX 5090 高负载黑屏与 Xid 79 系统排查手册 最后更新：2026-07-15 适用机器：  GPU：技嘉 RTX 5090 CPU：AMD Ryzen 9 9950X 主板：华硕 TUF GAMING X870E-PLUS WIFI7 电源：安钛克 NE 1300 金牌，ATX 3.0，原生 12V-2x6 系统：Ubuntu 24.04.4 LTS 当前驱动：NVIDIA 580">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-07-15T09:12:52.000Z">
+<meta property="article:modified_time" content="2026-07-15T09:13:51.435Z">
 <meta property="article:author" content="KK">
 <meta property="article:tag" content="工程工具">
 <meta property="article:tag" content="深度学习">
@@ -36,13 +38,13 @@
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="https://3hree5ive.top/">
+<link rel="canonical" href="https://3hree5ive.top/2026/07/15/5090%E6%98%BE%E5%8D%A1Xid79%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5%E6%8A%A5%E5%91%8A/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":true,"isPost":false,"lang":"zh-CN","comments":"","permalink":"","path":"index.html","title":""}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://3hree5ive.top/2026/07/15/5090%E6%98%BE%E5%8D%A1Xid79%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5%E6%8A%A5%E5%91%8A/","path":"2026/07/15/5090显卡Xid79错误排查报告/","title":"5090显卡Xid79错误排查报告"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>3hree5ive - 个人树洞，欢迎探访</title>
+<title>5090显卡Xid79错误排查报告 | 3hree5ive - 个人树洞，欢迎探访</title>
   
 
 
@@ -101,7 +103,7 @@
 
     <a href="/" class="brand" rel="start">
       <i class="logo-line"></i>
-      <h1 class="site-title">3hree5ive - 个人树洞，欢迎探访</h1>
+      <p class="site-title">3hree5ive - 个人树洞，欢迎探访</p>
       <i class="logo-line"></i>
     </a>
   </div>
@@ -154,7 +156,7 @@
   
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -167,6 +169,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#rtx-5090-%E9%AB%98%E8%B4%9F%E8%BD%BD%E9%BB%91%E5%B1%8F%E4%B8%8E-xid-79-%E7%B3%BB%E7%BB%9F%E6%8E%92%E6%9F%A5%E6%89%8B%E5%86%8C"><span class="nav-number">1.</span> <span class="nav-text"> RTX 5090 高负载黑屏与 Xid 79 系统排查手册</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%BD%93%E5%89%8D%E7%BB%93%E8%AE%BA"><span class="nav-number">1.1.</span> <span class="nav-text"> 1. 当前结论</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#11-%E5%B7%B2%E6%9C%89%E8%AF%81%E6%8D%AE"><span class="nav-number">1.1.1.</span> <span class="nav-text"> 1.1 已有证据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#12-%E5%BD%93%E5%89%8D%E5%B9%B3%E5%8F%B0%E5%BF%AB%E7%85%A7"><span class="nav-number">1.1.2.</span> <span class="nav-text"> 1.2 当前平台快照</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E6%8E%92%E6%9F%A5%E5%8E%9F%E5%88%99"><span class="nav-number">1.2.</span> <span class="nav-text"> 2. 排查原则</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#21-%E6%9C%80%E7%BB%88%E7%9B%AE%E6%A0%87"><span class="nav-number">1.2.1.</span> <span class="nav-text"> 2.1 最终目标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#22-%E6%93%8D%E4%BD%9C%E5%8E%9F%E5%88%99"><span class="nav-number">1.2.2.</span> <span class="nav-text"> 2.2 操作原则</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%AE%89%E5%85%A8%E6%A3%80%E6%9F%A5"><span class="nav-number">1.3.</span> <span class="nav-text"> 3. 安全检查</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%E4%B8%8D%E6%8B%86%E6%9C%BA%E6%AF%94%E8%BE%83%E4%B8%A4%E5%8F%B0%E7%94%B5%E8%84%91"><span class="nav-number">1.4.</span> <span class="nav-text"> 4. 第一阶段：不拆机比较两台电脑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E7%AC%AC%E4%BA%8C%E9%98%B6%E6%AE%B5%E6%A3%80%E6%9F%A5%E4%BE%9B%E7%94%B5%E5%92%8C%E5%AE%89%E8%A3%85"><span class="nav-number">1.5.</span> <span class="nav-text"> 5. 第二阶段：检查供电和安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E7%AC%AC%E4%B8%89%E9%98%B6%E6%AE%B5%E8%AE%A9-rtx-5090-%E8%84%B1%E7%A6%BB%E5%9B%BE%E5%BD%A2%E6%A1%8C%E9%9D%A2"><span class="nav-number">1.6.</span> <span class="nav-text"> 6. 第三阶段：让 RTX 5090 脱离图形桌面</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#61-%E6%8E%A8%E8%8D%90%E6%96%B9%E6%A1%88%E4%BD%BF%E7%94%A8-9950x-%E6%A0%B8%E6%98%BE"><span class="nav-number">1.6.1.</span> <span class="nav-text"> 6.1 推荐方案：使用 9950X 核显</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#62-%E5%A4%87%E9%80%89%E6%96%B9%E6%A1%88%E4%B8%B4%E6%97%B6%E8%BF%9B%E5%85%A5%E7%BA%AF%E5%91%BD%E4%BB%A4%E8%A1%8C%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.6.2.</span> <span class="nav-text"> 6.2 备选方案：临时进入纯命令行模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-%E7%AC%AC%E5%9B%9B%E9%98%B6%E6%AE%B5%E5%BB%BA%E7%AB%8B%E6%8C%81%E4%B9%85%E7%9B%91%E6%8E%A7"><span class="nav-number">1.7.</span> <span class="nav-text"> 7. 第四阶段：建立持久监控</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#71-%E5%86%85%E6%A0%B8%E6%97%A5%E5%BF%97"><span class="nav-number">1.7.1.</span> <span class="nav-text"> 7.1 内核日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#72-gpu-%E9%81%A5%E6%B5%8B"><span class="nav-number">1.7.2.</span> <span class="nav-text"> 7.2 GPU 遥测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#73-%E5%A6%82%E4%BD%95%E8%A7%A3%E9%87%8A%E9%BB%91%E5%B1%8F%E6%97%B6%E7%9A%84%E7%B3%BB%E7%BB%9F%E7%8A%B6%E6%80%81"><span class="nav-number">1.7.3.</span> <span class="nav-text"> 7.3 如何解释黑屏时的系统状态</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-%E7%AC%AC%E4%BA%94%E9%98%B6%E6%AE%B5gpu-only-%E5%8A%9F%E7%8E%87%E9%98%B6%E6%A2%AF%E6%B5%8B%E8%AF%95"><span class="nav-number">1.8.</span> <span class="nav-text"> 8. 第五阶段：GPU-only 功率阶梯测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#81-%E6%97%A0%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E7%9A%84%E5%88%A4%E5%AE%9A"><span class="nav-number">1.8.1.</span> <span class="nav-text"> 8.1 无图形界面的判定</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-%E7%AC%AC%E5%85%AD%E9%98%B6%E6%AE%B5%E6%9B%B4%E6%96%B0%E4%B8%BB%E6%9D%BF-bios"><span class="nav-number">1.9.</span> <span class="nav-text"> 9. 第六阶段：更新主板 BIOS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-%E7%AC%AC%E4%B8%83%E9%98%B6%E6%AE%B5%E9%A9%B1%E5%8A%A8%E7%89%88%E6%9C%AC%E5%AF%B9%E7%85%A7%E5%B7%B2%E5%AE%8C%E6%88%90"><span class="nav-number">1.10.</span> <span class="nav-text"> 10. 第七阶段：驱动版本对照（已完成）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-%E7%AC%AC%E5%85%AB%E9%98%B6%E6%AE%B5%E5%9B%BA%E5%AE%9A-pcie-gen4-%E5%AF%B9%E7%85%A7"><span class="nav-number">1.11.</span> <span class="nav-text"> 11. 第八阶段：固定 PCIe Gen4 对照</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#12-%E7%AC%AC%E4%B9%9D%E9%98%B6%E6%AE%B5%E4%BA%A4%E5%8F%89%E6%8D%A2%E5%8D%A1"><span class="nav-number">1.12.</span> <span class="nav-text"> 12. 第九阶段：交叉换卡</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#13-%E6%95%85%E9%9A%9C%E5%88%86%E6%94%AF%E4%B8%8E%E4%B8%8B%E4%B8%80%E6%AD%A5"><span class="nav-number">1.13.</span> <span class="nav-text"> 13. 故障分支与下一步</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#131-%E4%BE%9B%E7%94%B5%E6%88%96%E6%8E%A5%E5%8F%A3%E6%96%B9%E5%90%91"><span class="nav-number">1.13.1.</span> <span class="nav-text"> 13.1 供电或接口方向</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#132-gpu-%E6%9C%AC%E4%BD%93%E6%96%B9%E5%90%91"><span class="nav-number">1.13.2.</span> <span class="nav-text"> 13.2 GPU 本体方向</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#133-%E4%B8%BB%E6%9D%BF%E6%88%96-pcie-%E6%96%B9%E5%90%91"><span class="nav-number">1.13.3.</span> <span class="nav-text"> 13.3 主板或 PCIe 方向</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#134-%E9%A9%B1%E5%8A%A8%E6%88%96%E6%98%BE%E7%A4%BA%E8%B7%AF%E5%BE%84%E6%96%B9%E5%90%91"><span class="nav-number">1.13.4.</span> <span class="nav-text"> 13.4 驱动或显示路径方向</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#135-%E5%B1%80%E9%83%A8%E6%95%A3%E7%83%AD%E6%96%B9%E5%90%91"><span class="nav-number">1.13.5.</span> <span class="nav-text"> 13.5 局部散热方向</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#14-%E6%81%A2%E5%A4%8D%E7%A8%B3%E5%AE%9A%E7%9A%84%E9%AA%8C%E6%94%B6%E6%A0%87%E5%87%86"><span class="nav-number">1.14.</span> <span class="nav-text"> 14. 恢复稳定的验收标准</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#15-%E5%94%AE%E5%90%8E%E8%AF%81%E6%8D%AE%E5%8C%85"><span class="nav-number">1.15.</span> <span class="nav-text"> 15. 售后证据包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#16-%E7%9B%B8%E5%85%B3%E7%A4%BE%E5%8C%BA%E8%AE%A8%E8%AE%BA%E4%B8%8E%E4%BD%BF%E7%94%A8%E6%96%B9%E5%BC%8F"><span class="nav-number">1.16.</span> <span class="nav-text"> 16. 相关社区讨论与使用方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#17-%E6%8E%A8%E8%8D%90%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F%E6%91%98%E8%A6%81"><span class="nav-number">1.17.</span> <span class="nav-text"> 17. 推荐执行顺序摘要</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -206,16 +209,17 @@
 
     </div>
 
-    <div class="main-inner index posts-expand">
+    <div class="main-inner post posts-expand">
 
-    
+
+  
 
 
 <div class="post-block">
   
   
 
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/07/15/5090%E6%98%BE%E5%8D%A1Xid79%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5%E6%8A%A5%E5%91%8A/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -229,13 +233,13 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
+      <meta itemprop="name" content="5090显卡Xid79错误排查报告 | 3hree5ive - 个人树洞，欢迎探访">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/07/15/5090%E6%98%BE%E5%8D%A1Xid79%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5%E6%8A%A5%E5%91%8A/" class="post-title-link" itemprop="url">5090显卡Xid79错误排查报告</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          5090显卡Xid79错误排查报告
+        </h1>
 
         <div class="post-meta-container">
           <div class="post-meta">
@@ -258,8 +262,7 @@
     
     
     
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="rtx-5090-高负载黑屏与-xid-79-系统排查手册"><a class="markdownIt-Anchor" href="#rtx-5090-高负载黑屏与-xid-79-系统排查手册"></a> RTX 5090 高负载黑屏与 Xid 79 系统排查手册</h1>
+    <div class="post-body" itemprop="articleBody"><h1 id="rtx-5090-高负载黑屏与-xid-79-系统排查手册"><a class="markdownIt-Anchor" href="#rtx-5090-高负载黑屏与-xid-79-系统排查手册"></a> RTX 5090 高负载黑屏与 Xid 79 系统排查手册</h1>
 <p>最后更新：2026-07-15</p>
 <p>适用机器：</p>
 <ul>
@@ -930,7 +933,6 @@
 <li>根据 Gen4/Gen5、双向换卡和完整 PSU 对照矩阵决定联系技嘉、安钛克或华硕售后。</li>
 </ol>
 
-      
     </div>
 
     
@@ -938,367 +940,35 @@
     
 
     <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
+          
 
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/07/06/CodeX%E6%AF%8F%E6%AC%A1%E6%89%93%E5%BC%80%E9%A6%96%E6%AC%A1%E5%AF%B9%E8%AF%9D%E9%83%BD%E4%BA%94%E6%AC%A1Reconnecting%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="KK">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/07/06/CodeX%E6%AF%8F%E6%AC%A1%E6%89%93%E5%BC%80%E9%A6%96%E6%AC%A1%E5%AF%B9%E8%AF%9D%E9%83%BD%E4%BA%94%E6%AC%A1Reconnecting%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" class="post-title-link" itemprop="url">CodeX每次打开首次对话都五次Reconnecting解决办法/Linux沙箱报错问题/跨平台使用</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-07-06 14:36:45" itemprop="dateCreated datePublished" datetime="2026-07-06T14:36:45+08:00">2026-07-06</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-15 12:10:10" itemprop="dateModified" datetime="2026-07-15T12:10:10+08:00">2026-07-15</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>最近用CodeX发现一个神奇问题，不管是Mac端的桌面app，还是VSCode/Cursor里的CodeX插件（等同于终端版），开始的第一次对话，总会显示五次重新连接，这需要耗费大概一分钟，关键是在这个过程中，等待地很折磨，怀疑是不是账号有问题还是梯子没挂好，但是在五次重新连接尝试后，突然就好了，又能回答了，后续的对话不用再等那么久，上网搜索原因，找到一篇<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/2042568458395726918">帖子</a>给了解决方法，但根据评论看，也会有些问题，所以还没实施，后续再找找别的办法</p>
-<p>另外还有一个<a target="_blank" rel="noopener" href="https://aiot.csdn.net/6a41fe0e10ee7a33f283a04d.html">经验贴</a>，也收藏一下</p>
-<p>另外现在更新后，codex和chatgpt合并，区分性没那么大，基本可以不再使用网页端；但我发现，在同一台电脑上，比如我的Mac和5090，无论是终端，还是插件，还是桌面app（Linux还没有桌面app），在同一台电脑上，都是共享对话的，共享codex设置的，比如Mac上，桌面app中的codex任务对话框，可以在vscode插件里面完整看到，但是插件和终端中功能不如app完整，app甚至还可以看到5090中的codex任务对话框，后面会跟着一个网络小图标，代表不在mac本地，可能因为我之前尝试过在mac的codex任务对话框中让它用ssh连接过5090，确实能连接上，而且能看到5090的文件，但没那么稳定，有时候点开可能会卡住</p>
-<p>mac的桌面app现在改名叫chatgpt，已经没有codex桌面app了，二者融合，现在打开app，默认是codex的任务对话框，在这里面聊天目前，我认为跟网页chatgpt没有区别，都是用的5.6sol模型，回答差不多；而点击app中的聊天，可以看到跟chatgpt的聊天，这里的聊天是可以显示在网页端的，这不属于任务对话，这样的聊天可以在app中导入到codex任务对话中，比较方便，实现了之前我说的，跟网页端chatgpt对话进行头脑风暴，但是还得把这个复制给codex才能实现这个想法，现在可以直接导入，但是现在其实也不用再跟chatgpt在网页端进行对话了，直接在codex任务对话框进行对话，进行头脑风暴，完了之后再同一个对话框内直接让它实现</p>
-<p>桌面app还有一个项目功能，可以选择将普通的任务对话框放进项目中，好处其实是方便管理，可以自己看到哪些对话跟这个项目有关，在插件/终端那边是看不到区分的，都属于历史任务对话</p>
-<p>这又让我发现，Mac桌面app确实好用，我平常携带，使用，写论文按理说都是用mac，只有跑代码才用5090，甚至写代码都可以用mac进行远程连接ssh（但稳定性是个问题），但有个问题，在mac上与codex进行头脑风暴，想要将其实现的时候，最优解当然是直接在对话里让它ssh连接5090，我还没试过，但根据之前的尝试，能连上，那么说明应该能操作，但还是那句话，由于ssh我目前用的是免费的TailScale，不是那么的迅速稳定，然后转到项目文件夹，让它开始实现；第二个办法是，想办法复制/转述给5090这边到codex插件/终端（即使同一个账号，不是同一台电脑是不共享对话的，只是mac桌面app功能比较强大，能看到5090上的任务对话），这就比较麻烦了</p>
-<p>那么，这启发了我，为什么不考虑全部在5090的codex插件/终端里面进行头脑风暴+想法实现呢？这好像更加方便，模型都一样，不用折腾ssh，可以直接本地实现，远程的话可以在mac上用todesk控制。唯一的问题就是，工作流的改变，这样的话，5090其实应该作为主力机了，至少创新/头脑风暴/写代码/跑代码/debug都在这上面，而mac可以做的事是ppt画图/写论文/todesk/看论文（但其实如果在代码本地文件夹直接让ai写是不是更方便，这个暂时保留mac上写），然而5090上也有zotero，同步配置已经完善，只能说后续可以多考虑，现在越来越方便了。</p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/06/29/%E5%AF%B9%E4%BA%8E%E5%A4%A7%E6%B0%94%E6%95%A3%E5%B0%84%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%80%9D%E8%80%83/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="KK">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/06/29/%E5%AF%B9%E4%BA%8E%E5%A4%A7%E6%B0%94%E6%95%A3%E5%B0%84%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%80%9D%E8%80%83/" class="post-title-link" itemprop="url">对于大气散射模型的思考</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-      
-
-      <time title="创建时间：2026-06-29 11:12:48 / 修改时间：11:16:45" itemprop="dateCreated datePublished" datetime="2026-06-29T11:12:48+08:00">2026-06-29</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>最近打算基于把大气散射模型作为论文的一个重要的理论基础</p>
-<p>也不乏有本领域的论文用到此模型，比如Trans-BVM和FoSp</p>
-<p>但是目前我仍旧怀疑其公式推导的正确性，以及使用的合理性和正确性</p>
-<p>于是搜集网络资料，找到一些<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/500242098">原始推导</a>,以及<a target="_blank" rel="noopener" href="https://www.cnblogs.com/rust/p/10420789.html">这篇</a></p>
-<p>等博主在研究一段时间后，本博客将主要针对大气散射模型在深度学习中的应用进行补充</p>
-<p>而且据我所知，在图像抠图领域，也有类似的模型。</p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="KK">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/" class="post-title-link" itemprop="url">在VS Code的CC插件以及终端CC中接入DeepSeek-V4-Pro</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-06-05 14:27:17" itemprop="dateCreated datePublished" datetime="2026-06-05T14:27:17+08:00">2026-06-05</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-15 11:49:02" itemprop="dateModified" datetime="2026-07-15T11:49:02+08:00">2026-07-15</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E5%B7%A5%E5%85%B7%E6%95%99%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">工具教程</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
-参考链接：<a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">Deepseek接入CC的官方文档</a><br />
-<a target="_blank" rel="noopener" href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
-<a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
-<p>另外，CC本身是免费的，如果开通了claude的pro计划，可以在里面使用claude原生模型，最近找到了充值方式，首先你需要一个claude账号，这一步目前来说好像不是那么简单（容易封号），而我是前几年就有了，当年还是从闲鱼找人帮我注册的，花了10块，然后需要一个苹果手机，需要一个美区（或者不限制的区域）苹果账号，此时下载Claude的app，直接在app里点升级pro，自动弹出app付款，此时需要app store里面登陆美区账号付款的，在此之前使用支付宝礼品卡给美区账号充值🔪</p>
-<p>碰到了问题，由于接入这个DeepSeek后，本人开通了付费的Claude，我怀疑正是因为之前手动改了CC的接口地址，导致被他们官方查到了IP，目前我的三年稳定的Claude账号被封了，本人已经转向codex。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/06/01/%E5%AE%9E%E9%AA%8C%E7%AE%A1%E7%90%86%E4%B8%8E%E8%AF%84%E6%B5%8B%E8%84%9A%E6%9C%AC%E8%AF%B4%E6%98%8E%EF%BC%88mmseg-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B7%A5%E5%85%B7%E9%93%BE%EF%BC%89/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="KK">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/06/01/%E5%AE%9E%E9%AA%8C%E7%AE%A1%E7%90%86%E4%B8%8E%E8%AF%84%E6%B5%8B%E8%84%9A%E6%9C%AC%E8%AF%B4%E6%98%8E%EF%BC%88mmseg-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B7%A5%E5%85%B7%E9%93%BE%EF%BC%89/" class="post-title-link" itemprop="url">实验管理与评测脚本说明（mmseg 自定义工具链）</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-06-01 16:46:40" itemprop="dateCreated datePublished" datetime="2026-06-01T16:46:40+08:00">2026-06-01</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-06-04 16:47:55" itemprop="dateModified" datetime="2026-06-04T16:47:55+08:00">2026-06-04</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">深度学习</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="实验管理与评测脚本说明mmseg-自定义工具链"><a class="markdownIt-Anchor" href="#实验管理与评测脚本说明mmseg-自定义工具链"></a> 实验管理与评测脚本说明（mmseg 自定义工具链）</h1>
-<blockquote>
-<p>本文介绍在本项目（基于 MMSegmentation 1.x）里自建的一套<strong>实验管理 + 评测</strong>工具，<br />
-用于解决&quot;多次跑同一模型不同超参会互相覆盖&quot;“结果难以横向对比”“评测要分尺寸/分子集”<br />
-等问题。全部改动只在 <code>my_configs/paths.py</code> 与 <code>tools/*.py</code>，<strong>不触碰 mmseg 内核</strong>，<br />
-训练/评测的数值与官方 <code>tools/train.py</code> / <code>tools/test.py</code> 完全一致。</p>
-</blockquote>
-<p>涉及文件：</p>
+<div class="post-copyright">
 <ul>
-<li><code>my_configs/paths.py</code>：路径与台账核心逻辑（<code>tools/experiment_paths.py</code> 转出供脚本用）</li>
-<li><code>tools/train.py</code>：训练（带运行隔离 + 台账）</li>
-<li><code>tools/smoke_test.py</code>：单次测试（指标 + 可视化 + 台账）</li>
-<li><code>tools/smoke_test_multiscale.py</code>：分划分一键测试（自动发现，数据集无关）</li>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>KK
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://3hree5ive.top/2026/07/15/5090%E6%98%BE%E5%8D%A1Xid79%E9%94%99%E8%AF%AF%E6%8E%92%E6%9F%A5%E6%8A%A5%E5%91%8A/" title="5090显卡Xid79错误排查报告">https://3hree5ive.top/2026/07/15/5090显卡Xid79错误排查报告/</a>
+  </li>
+  <li class="post-copyright-license">
+      <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
 </ul>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/06/01/%E5%AE%9E%E9%AA%8C%E7%AE%A1%E7%90%86%E4%B8%8E%E8%AF%84%E6%B5%8B%E8%84%9A%E6%9C%AC%E8%AF%B4%E6%98%8E%EF%BC%88mmseg-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B7%A5%E5%85%B7%E9%93%BE%EF%BC%89/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
+</div>
+
+
         
-      
-    </div>
 
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/07/06/CodeX%E6%AF%8F%E6%AC%A1%E6%89%93%E5%BC%80%E9%A6%96%E6%AC%A1%E5%AF%B9%E8%AF%9D%E9%83%BD%E4%BA%94%E6%AC%A1Reconnecting%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" rel="prev" title="CodeX每次打开首次对话都五次Reconnecting解决办法&#x2F;Linux沙箱报错问题&#x2F;跨平台使用">
+                  <i class="fa fa-angle-left"></i> CodeX每次打开首次对话都五次Reconnecting解决办法/Linux沙箱报错问题/跨平台使用
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
     </footer>
   </article>
 </div>
@@ -1306,493 +976,7 @@
 
 
 
-    
 
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/05/28/CodeX-CC%E7%A7%91%E7%A0%94%E5%90%91%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="KK">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/05/28/CodeX-CC%E7%A7%91%E7%A0%94%E5%90%91%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/" class="post-title-link" itemprop="url">CodeX/CC科研向使用经验</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-05-28 10:31:03" itemprop="dateCreated datePublished" datetime="2026-05-28T10:31:03+08:00">2026-05-28</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-06-29 10:07:09" itemprop="dateModified" datetime="2026-06-29T10:07:09+08:00">2026-06-29</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E7%A7%91%E7%A0%94%E5%B7%A5%E5%85%B7/" itemprop="url" rel="index"><span itemprop="name">科研工具</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>结合最近一段时间的科研实践（主要是论文复现）以及 <a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/gyLbhAIIe67KhfrCqtWXmw">Datawhale 的公众号经验贴</a>，这里整理一些使用 CodeX / Claude Code 这类编程 Agent 辅助科研开发的经验。</p>
-<p>核心思路可以概括为一句话：<strong>模型能力固然重要，但上下文、长期规则和验收标准同样重要。</strong></p>
-<p>另外补充一点，如果是实战派，也就是工作/实习，也推荐最近看到的一篇很好的<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/2009744974980331332">CC的实践指南</a></p>
-<h2 id="总工作流"><a class="markdownIt-Anchor" href="#总工作流"></a> 总工作流</h2>
-<p>比较稳定的一套流程是：</p>
-<blockquote>
-<p>读上下文 -&gt; 写计划 -&gt; 确认范围 -&gt; 小步实现 -&gt; 跑验证 -&gt; 总结结果 -&gt; <code>/new</code> 开新对话</p>
-</blockquote>
-<p>Agent 很适合做“有明确边界的工程任务”，但不适合在上下文混乱、目标模糊、验证缺失的情况下自由发挥。因此，每次让它动手之前，都要先让它理解项目、对齐任务，并明确最后如何验收。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/05/28/CodeX-CC%E7%A7%91%E7%A0%94%E5%90%91%E4%BD%BF%E7%94%A8%E7%BB%8F%E9%AA%8C/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/04/29/5090%E6%98%BE%E5%8D%A1Xid79%E9%94%99%E8%AF%AF/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="KK">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/04/29/5090%E6%98%BE%E5%8D%A1Xid79%E9%94%99%E8%AF%AF/" class="post-title-link" itemprop="url">技嘉5090遇到Xid79显卡掉线</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-04-29 14:47:49" itemprop="dateCreated datePublished" datetime="2026-04-29T14:47:49+08:00">2026-04-29</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-15 17:13:38" itemprop="dateModified" datetime="2026-07-15T17:13:38+08:00">2026-07-15</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">深度学习</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>先交代一下硬件配置：</p>
-<ul>
-<li><strong>显卡</strong>：技嘉 RTX 5090 纯血版</li>
-<li><strong>CPU</strong>：AMD 9950X</li>
-<li><strong>主板</strong>：华硕 X870E-PLUS WIFI7</li>
-<li><strong>固态</strong>：三星 990 Pro 2TB</li>
-<li><strong>机械硬盘</strong>：西部数据紫盘 2TB</li>
-<li><strong>机箱</strong>：安钛克 FLUX SE</li>
-<li><strong>电源</strong>：安钛克 NE 1300 金牌（1300W，ATX 3.0，原生 12V-2x6）</li>
-<li><strong>风冷散热</strong>：九州风神 阿萨辛4</li>
-<li><strong>内存</strong>：美商海盗船 DDR5 5200 32G×2</li>
-<li><strong>系统</strong>：Ubuntu 24.04.4 LTS，内核 6.17.0-29-generic</li>
-<li><strong>驱动</strong>：NVIDIA 590.48.01（开源内核模块 + GSP），CUDA Runtime 13.1/12.8</li>
-</ul>
-<p>最近在跑深度学习训练时，接连遇到几类不同表现的黑屏和 GPU 掉盘问题。起初我以为在 BIOS 里禁用核显就能解决，但实际测试下来发现问题仍然存在。经过日志排查和限功耗验证，最终确认：这不是显存不足，也不是代码问题，而是 <strong>RTX 5090 满功耗下的瞬时功耗尖峰触发供电保护，导致 GPU 掉出 PCIe 总线（Xid 79）</strong>，简单来说就是开始跑代码的一瞬间功率过大，触发供电保护。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/04/29/5090%E6%98%BE%E5%8D%A1Xid79%E9%94%99%E8%AF%AF/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="KK">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/" class="post-title-link" itemprop="url">Git 核心操作记录：面向日常开发的实践总结</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-04-14 10:54:44" itemprop="dateCreated datePublished" datetime="2026-04-14T10:54:44+08:00">2026-04-14</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 09:43:03" itemprop="dateModified" datetime="2026-07-02T09:43:03+08:00">2026-07-02</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E5%B7%A5%E5%85%B7%E6%95%99%E7%A8%8B/" itemprop="url" rel="index"><span itemprop="name">工具教程</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
-<p>Git 是开发中绕不开的版本控制工具，但其包含的命令和底层概念非常多。在实际的日常代码管理中，很多时候我们只需要用到它的一小部分核心功能。</p>
-<p>为了提高工作效率，我在这里整理了一份自己平时最常用到的 Git 操作清单，主要涵盖了本地代码的暂存、提交、历史回退以及与远程仓库的交互。这份记录以实用为主，方便在忘记具体指令时随时查阅。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/04/13/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="KK">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/04/13/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87/" class="post-title-link" itemprop="url">语义分割评价指标梳理与代码实现记录</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-04-13 16:35:14" itemprop="dateCreated datePublished" datetime="2026-04-13T16:35:14+08:00">2026-04-13</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-06-28 11:05:17" itemprop="dateModified" datetime="2026-06-28T11:05:17+08:00">2026-06-28</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">深度学习</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>最近在处理烟雾分割任务时，发现现有的语义分割评估指标在应对特定分布（如目标极其微小、类别极度不平衡）时存在一些统计上的盲区。为了更客观地衡量模型性能，我对常用的评价指标进行了梳理，并记录了在 MMSegmentation 框架下实现自定义烟雾分割评价指标的过程。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/04/13/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://3hree5ive.top/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="KK">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="记录深度学习、计算机视觉、科研写作、工程工具与个人折腾经验。">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | 3hree5ive - 个人树洞，欢迎探访">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/" class="post-title-link" itemprop="url">在 RTX 5090 上配置 MMSegmentation 并跑通自定义数据集 (OneDL 版)</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-04-04 15:11:02" itemprop="dateCreated datePublished" datetime="2026-04-04T15:11:02+08:00">2026-04-04</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-05-31 16:24:31" itemprop="dateModified" datetime="2026-05-31T16:24:31+08:00">2026-05-31</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/" itemprop="url" rel="index"><span itemprop="name">深度学习</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>在配置基于 RTX 5090 的深度学习环境时，由于底层硬件架构较新，框架版本的匹配需要特别注意。本文主要记录了在 RTX 5090 上配置 MMSegmentation 环境的过程，以及如何使用自定义数据集跑通基础的训练和测试流程。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/04/04/MMSegmentation%E5%9C%A85090%E4%B8%8A%E7%9A%84%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E5%8F%8A%E8%B7%91%E9%80%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9B%86/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-  <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" title="下一页" aria-label="下一页" href="/page/2/"><i class="fa fa-angle-right"></i></a>
-  </nav>
 
 </div>
   </main>
