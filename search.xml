@@ -145,548 +145,8 @@
 <p>1.做了CPU压力测试，显然CPU风冷在压力测试下，发出一些不好听的动静，问了客服，大概是有东西卡住了风扇，但整体没有什么问题，通过完整测试，温度也正常，跑完后冷却也正常，也没有黑屏，CPU可以排除</p>
 <p>2.接下来师兄建议直接关闭Linux图形界面，用命令行跑代码尝试会发生什么</p>
 <p>3.装机师傅建议，第一补齐32GB内存双通道，并不是不够用，而是AM5平台单通道内存会带来非常多的平台稳定性隐患，第二，他建议我直接把5090显卡换到师姐那边，运行代码尝试，这样可以隔离环境，单独测试GPU,毕竟师姐那边跟我的配置一模一样，而他没有这个功率和黑屏的问题，这确实合理，但麻烦点在于要手动拆两个显卡，还要再装显卡，我怕自己拆装不熟练，先暂时不考虑，放到最后优先级</p>
-<p>4.gpt-5.6sol建议之一，更新驱动到最推荐的595-open，我已经更新了，以下是跟完整的gpt建议</p>
-<p>5.直接京东预约师傅上门维修</p>
-<h1 id="rtx-5090-高负载黑屏与-xid-79-系统排查手册"><a class="markdownIt-Anchor" href="#rtx-5090-高负载黑屏与-xid-79-系统排查手册"></a> RTX 5090 高负载黑屏与 Xid 79 系统排查手册</h1>
-<p>最后更新：2026-07-15</p>
-<p>适用机器：</p>
-<ul>
-<li>GPU：技嘉 RTX 5090</li>
-<li>CPU：AMD Ryzen 9 9950X</li>
-<li>主板：华硕 TUF GAMING X870E-PLUS WIFI7</li>
-<li>电源：安钛克 NE 1300 金牌，ATX 3.0，原生 12V-2x6</li>
-<li>系统：Ubuntu 24.04.4 LTS</li>
-<li>当前驱动：NVIDIA 590.48.01 open kernel module + GSP</li>
-</ul>
-<h2 id="1-当前结论"><a class="markdownIt-Anchor" href="#1-当前结论"></a> 1. 当前结论</h2>
-<p>目前应把排查重点放在以下链路，而不是继续优先怀疑 CPU：</p>
-<ol>
-<li>RTX 5090 本体。</li>
-<li>12V-2x6 插头、线材和 PSU 供电路径。</li>
-<li>PCIe Gen5 链路、显卡插槽和主板 BIOS。</li>
-<li>NVIDIA 驱动与图形显示路径。</li>
-</ol>
-<p>不建议现在直接拆卡，也不建议继续反复以 600W 跑完整 SmokeSeg 训练。应先完成低成本检查和受控测试，最后再做交叉换卡。</p>
-<h3 id="11-已有证据"><a class="markdownIt-Anchor" href="#11-已有证据"></a> 1.1 已有证据</h3>
-<ul>
-<li>32/32 线程 CPU-only 压力测试持续 600 秒，CPU 达到 100% 使用率，所有 worker 正常退出。</li>
-<li>CPU 测试峰值温度为：
-<ul>
-<li>Tctl：85.9°C</li>
-<li>Tccd1：88.1°C</li>
-<li>Tccd2：85.2°C</li>
-</ul>
-</li>
-<li>CPU 测试未复现黑屏、死机或重启。</li>
-<li>CPU 测试日志位于：
-<ul>
-<li>work_dirs/diagnostics/cpu_only_stress_20260715_111025.log</li>
-</ul>
-</li>
-<li>发生训练黑屏的上一启动周期中，内核明确记录：
-<ul>
-<li>Xid 79: GPU has fallen off the bus</li>
-<li>GPU lost from the bus [NV_ERR_GPU_IS_LOST]</li>
-<li>Xid 154: Node Reboot Required</li>
-<li>多个 GSP RPC 清理失败</li>
-</ul>
-</li>
-<li>400W 最大功率下可以稳定训练；恢复 600W 后再次复现。</li>
-</ul>
-<p>因此，CPU 不能在逻辑上被百分之百排除，但已经可以显著降级为低优先级。现有证据更符合 GPU 在高负载下从 PCIe 总线上失联。</p>
-<p>NVIDIA 官方对 Xid 79 的解释是：驱动尝试通过 PCIe 访问 GPU 时，GPU 已不可访问；常见方向包括 PCIe 链路、硬件连接、GPU 故障，也不能完全排除驱动问题：</p>
-<ul>
-<li><a href="https://docs.nvidia.com/deploy/xid-errors/archive/index.html">https://docs.nvidia.com/deploy/xid-errors/archive/index.html</a></li>
-<li><a href="https://docs.nvidia.com/deploy/gpu-debug-guidelines/">https://docs.nvidia.com/deploy/gpu-debug-guidelines/</a></li>
-</ul>
-<p>日志中的 pid/name=cursor 只表示 Cursor 恰好是发现 GPU 已经失联的客户端，不能据此认定 Cursor 是故障原因。GPU 失去驱动控制后风扇进入高转速保护状态，也不等于单纯过热。</p>
-<h3 id="12-当前平台快照"><a class="markdownIt-Anchor" href="#12-当前平台快照"></a> 1.2 当前平台快照</h3>
-<ul>
-<li>GPU 当前运行在 PCIe Gen5 x16。</li>
-<li>GPU 默认及最大功率限制为 600W，最小可设功率为 400W。</li>
-<li>GPU VBIOS：98.02.2E.80.39。</li>
-<li>主板 BIOS：0208，日期 2025-04-24。</li>
-<li>当前 Linux 内核：6.17.0-40-generic。</li>
-<li>当前 NVIDIA 驱动：590.48.01-open。</li>
-<li>本机 ubuntu-drivers devices 当前推荐 595-open。</li>
-<li>当前图形桌面的 Xorg、GNOME Shell 和 Cursor 均使用 RTX 5090。</li>
-</ul>
-<p>以上只是 2026-07-15 的诊断快照。以后继续排查前，应重新采集并记录，避免软件升级后混淆结果。</p>
-<h2 id="2-排查原则"><a class="markdownIt-Anchor" href="#2-排查原则"></a> 2. 排查原则</h2>
-<h3 id="21-最终目标"><a class="markdownIt-Anchor" href="#21-最终目标"></a> 2.1 最终目标</h3>
-<p>最终目标是在显卡默认 600W 条件下稳定运行，而不是长期依靠 400W 限功率掩盖故障。</p>
-<p>400W 在排查期间仍然有价值：</p>
-<ul>
-<li>作为已知安全基线。</li>
-<li>用于确认系统和测试工具可以正常运行。</li>
-<li>用于建立故障功率阈值。</li>
-</ul>
-<h3 id="22-操作原则"><a class="markdownIt-Anchor" href="#22-操作原则"></a> 2.2 操作原则</h3>
-<ul>
-<li>除了必要的安全处理，一次只改变一个变量。</li>
-<li>每一步都记录时间、硬件设置、软件版本和结果。</li>
-<li>优先运行短时间、确定性的 GPU-only 测试，不直接启动完整实验队列。</li>
-<li>测试 600W 前必须确保 SSH 可用，最好让显示器由 9950X 核显驱动。</li>
-<li>一次通过不能作为结论；关键条件至少重复 2～3 次。</li>
-<li>一旦出现 Xid 79、烧焦味、接口变色、熔化或异常高温，立即停止继续加压。</li>
-</ul>
-<h2 id="3-安全检查"><a class="markdownIt-Anchor" href="#3-安全检查"></a> 3. 安全检查</h2>
-<p>在重新插拔显卡供电线或显卡前：</p>
-<ol>
-<li>正常关机。</li>
-<li>关闭 PSU 后部开关。</li>
-<li>拔掉交流电源线。</li>
-<li>等待残余电量释放。</li>
-<li>不熟悉拆装时，请师姐、师兄或熟悉装机的人现场协助。</li>
-</ol>
-<p>禁止事项：</p>
-<ul>
-<li>不要带电插拔 12V-2x6。</li>
-<li>不要拆开 PSU 外壳。</li>
-<li>不要把另一台模块化电源的线接到本机 PSU。</li>
-<li>不要因为接口难插而强行扭曲、斜插。</li>
-<li>不要使用来源不明的延长线、转接线或 90 度转接器。</li>
-</ul>
-<p>NVIDIA 官方线材说明：</p>
-<ul>
-<li><a href="https://docs.nvidia.com/nvidia-cable-management-guidelines-and-faq.pdf">https://docs.nvidia.com/nvidia-cable-management-guidelines-and-faq.pdf</a></li>
-</ul>
-<h2 id="4-第一阶段不拆机比较两台电脑"><a class="markdownIt-Anchor" href="#4-第一阶段不拆机比较两台电脑"></a> 4. 第一阶段：不拆机比较两台电脑</h2>
-<p>目标：确认“配置一样”是否真的包括 BIOS、VBIOS、驱动、内核和功率限制。</p>
-<p>在本机和师姐电脑上分别执行：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">uname</span> -r</span><br><span class="line"><span class="built_in">sudo</span> dmidecode -s bios-version</span><br><span class="line"><span class="built_in">sudo</span> dmidecode -s bios-release-date</span><br><span class="line"></span><br><span class="line">nvidia-smi --query-gpu=name,pci.bus_id,vbios_version,driver_version,power.default_limit,power.max_limit \</span><br><span class="line">  --format=csv</span><br><span class="line"></span><br><span class="line">ubuntu-drivers devices</span><br></pre></td></tr></table></figure>
-<p>填写对照表：</p>
-<table>
-<thead>
-<tr>
-<th>项目</th>
-<th>本机</th>
-<th>师姐电脑</th>
-<th>是否一致</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>RTX 5090 完整型号</td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>GPU VBIOS</td>
-<td>98.02.2E.80.39</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>主板 BIOS</td>
-<td>0208</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>Linux 内核</td>
-<td>6.17.0-40</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>NVIDIA 驱动</td>
-<td>590.48.01-open</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>默认/最大功率</td>
-<td>600W / 600W</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>PSU 完整型号及批次</td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>12V-2x6 线材</td>
-<td>原装</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>插座、排插或 UPS</td>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>重点检查：</p>
-<ul>
-<li>两张卡是否真的是同一具体子型号。</li>
-<li>VBIOS 是否相同。</li>
-<li>师姐主板 BIOS 是否明显更新。</li>
-<li>师姐使用的是否是另一个 NVIDIA 驱动或内核。</li>
-<li>两台电脑是否使用不同插座、排插或 UPS。</li>
-</ul>
-<h2 id="5-第二阶段检查供电和安装"><a class="markdownIt-Anchor" href="#5-第二阶段检查供电和安装"></a> 5. 第二阶段：检查供电和安装</h2>
-<p>这一阶段比直接交叉换卡工作量小，而且直接针对 Xid 79 和功率相关性。</p>
-<p>由熟悉装机的人协助检查：</p>
-<ul>
-<li>[ ] GPU 侧 12V-2x6 完全插到底。</li>
-<li>[ ] 卡扣已经锁紧，没有肉眼可见的缝隙。</li>
-<li>[ ] 如果 PSU 侧是模块化接口，PSU 侧也完全插紧。</li>
-<li>[ ] 使用该 PSU 自带的原装线材。</li>
-<li>[ ] 没有延长线、转接头或第三方 90 度转接器。</li>
-<li>[ ] 接口附近没有急弯，也没有被机箱侧板强压。</li>
-<li>[ ] 插头和插座没有发黄、变色、熔化、焦味或针脚异常。</li>
-<li>[ ] 显卡 PCIe 金手指完全进入主板插槽。</li>
-<li>[ ] 显卡挡板螺丝没有将显卡拉歪。</li>
-<li>[ ] 显卡支架有效，显卡没有明显下垂。</li>
-<li>[ ] 主板插槽和显卡周围没有异物。</li>
-</ul>
-<p>如果发现变色、熔化或烧焦味，不要再次开机，应直接联系显卡、电源或整机售后。</p>
-<p>还应进行一次低成本交流供电对照：</p>
-<ul>
-<li>使用已知正常、容量合适的墙上插座或高质量排插。</li>
-<li>暂时绕开来源不明的排插或 UPS。</li>
-<li>不要与大功率设备共用明显过载的插座。</li>
-</ul>
-<p>1300W 额定功率在规格上足够，并不能排除电源个体故障、线材问题、接触不良或瞬态响应异常。</p>
-<h2 id="6-第三阶段让-rtx-5090-脱离图形桌面"><a class="markdownIt-Anchor" href="#6-第三阶段让-rtx-5090-脱离图形桌面"></a> 6. 第三阶段：让 RTX 5090 脱离图形桌面</h2>
-<p>关闭 Linux 图形界面有诊断价值，但它不是修复方案。它要回答的问题是：</p>
-<blockquote>
-<p>RTX 5090 只做 CUDA 计算时，是否仍然出现相同的 Xid 79？</p>
-</blockquote>
-<h3 id="61-推荐方案使用-9950x-核显"><a class="markdownIt-Anchor" href="#61-推荐方案使用-9950x-核显"></a> 6.1 推荐方案：使用 9950X 核显</h3>
-<ol>
-<li>将显示器连接到主板 HDMI 或 DP。</li>
-<li>在 BIOS 中启用集成显卡，并将其设置为主要显示设备。</li>
-<li>启动系统。</li>
-<li>执行 nvidia-smi。</li>
-<li>确认进程列表中没有 Xorg、GNOME Shell、Cursor 等图形进程占用 RTX 5090。</li>
-</ol>
-<p>这比单纯关闭图形界面更有价值：即使 5090 再次掉线，核显和 SSH 仍有机会保留系统控制权。</p>
-<h3 id="62-备选方案临时进入纯命令行模式"><a class="markdownIt-Anchor" href="#62-备选方案临时进入纯命令行模式"></a> 6.2 备选方案：临时进入纯命令行模式</h3>
-<p>先从另一台电脑测试 SSH 登录，并在 tmux 中操作。不要直接在即将被关闭的 GNOME Terminal 中启动测试。</p>
-<p>临时关闭图形界面：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl isolate multi-user.target</span><br><span class="line">nvidia-smi</span><br></pre></td></tr></table></figure>
-<p>确认 nvidia-smi 中已经没有 Xorg、GNOME Shell、Cursor 等图形进程。</p>
-<p>测试完成后恢复：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl isolate graphical.target</span><br></pre></td></tr></table></figure>
-<p>此阶段不要永久修改默认启动目标，即暂时不要执行：</p>
-<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">systemctl set-default multi-user.target</span><br></pre></td></tr></table></figure>
-<h2 id="7-第四阶段建立持久监控"><a class="markdownIt-Anchor" href="#7-第四阶段建立持久监控"></a> 7. 第四阶段：建立持久监控</h2>
-<p>至少使用两个 SSH/tmux 窗口。</p>
-<h3 id="71-内核日志"><a class="markdownIt-Anchor" href="#71-内核日志"></a> 7.1 内核日志</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> journalctl -kf -o short-precise</span><br></pre></td></tr></table></figure>
-<h3 id="72-gpu-遥测"><a class="markdownIt-Anchor" href="#72-gpu-遥测"></a> 7.2 GPU 遥测</h3>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p work_dirs/diagnostics/rtx5090</span><br><span class="line"></span><br><span class="line">nvidia-smi \</span><br><span class="line">  --query-gpu=timestamp,power.draw,power.limit,temperature.gpu,utilization.gpu,clocks.sm,clocks.mem \</span><br><span class="line">  --format=csv -l 1 \</span><br><span class="line">  | <span class="built_in">tee</span> work_dirs/diagnostics/rtx5090/gpu_telemetry.csv</span><br></pre></td></tr></table></figure>
-<p>如果发生物理重启，重新开机后立即提取上一启动周期：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> journalctl -b -1 -k -o short-precise \</span><br><span class="line">  | rg -i <span class="string">&quot;NVRM|Xid|GPU has fallen|GPU_IS_LOST|AER|PCIe|GSP&quot;</span> \</span><br><span class="line">  | <span class="built_in">tee</span> work_dirs/diagnostics/rtx5090/previous_boot_gpu_errors.log</span><br></pre></td></tr></table></figure>
-<p>如果黑屏后 SSH 仍可用，尽快尝试：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">timeout</span> 120 nvidia-bug-report.sh</span><br></pre></td></tr></table></figure>
-<h3 id="73-如何解释黑屏时的系统状态"><a class="markdownIt-Anchor" href="#73-如何解释黑屏时的系统状态"></a> 7.3 如何解释黑屏时的系统状态</h3>
-<table>
-<thead>
-<tr>
-<th>现象</th>
-<th>解释方向</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>显示器黑屏，但 SSH 仍能登录</td>
-<td>GPU 或显示路径掉线，系统主体可能仍存活</td>
-</tr>
-<tr>
-<td>SSH 同时断开，整机死机或重启</td>
-<td>更关注 PSU 保护、主板、PCIe 或整机供电</td>
-</tr>
-<tr>
-<td>出现 Xid 79 和 Xid 154</td>
-<td>GPU 已经从 PCIe 总线失联，需要重启</td>
-</tr>
-<tr>
-<td>只有应用异常退出，没有 Xid</td>
-<td>再检查 CUDA、PyTorch、显存和训练代码</td>
-</tr>
-</tbody>
-</table>
-<h2 id="8-第五阶段gpu-only-功率阶梯测试"><a class="markdownIt-Anchor" href="#8-第五阶段gpu-only-功率阶梯测试"></a> 8. 第五阶段：GPU-only 功率阶梯测试</h2>
-<p>不要先跑完整 SmokeSeg/BD 队列。应使用同一个确定性的 GPU-only 负载，排除数据加载、训练代码和 CPU 负载的干扰。</p>
-<p>说明：</p>
-<ul>
-<li>tools/stress_cpu_only.py 不能用于本阶段。</li>
-<li>建议另行准备 tools/stress_gpu_only.py。</li>
-<li>GPU-only 工具应支持固定时长、预热、温度保护、遥测日志和异常退出码。</li>
-<li>在该工具完成之前，不应把完整训练队列当作压力测试工具。</li>
-</ul>
-<p>建议阶梯：</p>
-<table>
-<thead>
-<tr>
-<th>阶段</th>
-<th style="text-align:right">功率限制</th>
-<th style="text-align:right">单次时长</th>
-<th style="text-align:right">建议重复次数</th>
-<th>结果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>基线</td>
-<td style="text-align:right">400W</td>
-<td style="text-align:right">5 分钟</td>
-<td style="text-align:right">2</td>
-<td></td>
-</tr>
-<tr>
-<td>阶梯 1</td>
-<td style="text-align:right">450W</td>
-<td style="text-align:right">5 分钟</td>
-<td style="text-align:right">2</td>
-<td></td>
-</tr>
-<tr>
-<td>阶梯 2</td>
-<td style="text-align:right">500W</td>
-<td style="text-align:right">5 分钟</td>
-<td style="text-align:right">2</td>
-<td></td>
-</tr>
-<tr>
-<td>阶梯 3</td>
-<td style="text-align:right">550W</td>
-<td style="text-align:right">5 分钟</td>
-<td style="text-align:right">2</td>
-<td></td>
-</tr>
-<tr>
-<td>目标</td>
-<td style="text-align:right">600W</td>
-<td style="text-align:right">5 分钟</td>
-<td style="text-align:right">2～3</td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>设置功率限制：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 400</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 450</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 500</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 550</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 600</span><br></pre></td></tr></table></figure>
-<p>每个功率档位都应记录：</p>
-<ul>
-<li>实际最高 power.draw。</li>
-<li>GPU 最高温度。</li>
-<li>GPU 利用率。</li>
-<li>是否出现 Xid。</li>
-<li>SSH 是否仍可用。</li>
-<li>是否需要物理重启。</li>
-<li>第几秒发生故障。</li>
-</ul>
-<p>一旦某档位出现 Xid 79，不再继续更高档位。</p>
-<h3 id="81-无图形界面的判定"><a class="markdownIt-Anchor" href="#81-无图形界面的判定"></a> 8.1 无图形界面的判定</h3>
-<table>
-<thead>
-<tr>
-<th>测试结果</th>
-<th>结论倾向</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>无图形界面仍复现相同 Xid 79</td>
-<td>基本排除桌面环境，继续查供电、GPU、PCIe、BIOS</td>
-</tr>
-<tr>
-<td>无图形界面多次通过，开启桌面后稳定复现</td>
-<td>驱动/显示路径或 5090 同时承担显示与计算的问题</td>
-</tr>
-<tr>
-<td>400W 稳定，某个更高档位稳定失败</td>
-<td>存在清晰功率阈值，关注 GPU、线材、PSU 和高负载链路</td>
-</tr>
-<tr>
-<td>各功率档位都通过</td>
-<td>再使用相同环境短跑 SmokeSeg，检查是否为特定训练路径触发</td>
-</tr>
-</tbody>
-</table>
-<p>一次无图形界面通过不能排除图形路径问题，关键档位至少重复 2～3 次。</p>
-<h2 id="9-第六阶段更新主板-bios"><a class="markdownIt-Anchor" href="#9-第六阶段更新主板-bios"></a> 9. 第六阶段：更新主板 BIOS</h2>
-<p>当前 BIOS 0208 较旧。华硕官方页面在 2026-07-15 可见：</p>
-<ul>
-<li>稳定版 2306，发布日期 2026-06-17。</li>
-<li>测试版 2401，发布日期 2026-06-26。</li>
-</ul>
-<p>官方页面：</p>
-<ul>
-<li><a href="https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-x870e-plus-wifi7/helpdesk_bios?model2Name=TUF-GAMING-X870E-PLUS-WIFI7">https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-x870e-plus-wifi7/helpdesk_bios?model2Name=TUF-GAMING-X870E-PLUS-WIFI7</a></li>
-</ul>
-<p>建议：</p>
-<ol>
-<li>记录或拍照保存当前 BIOS 设置。</li>
-<li>下载稳定版 2306，不使用测试版 2401。</li>
-<li>在供电稳定、系统空闲状态下使用华硕官方方法升级。</li>
-<li>升级后加载默认设置。</li>
-<li>暂时保持 PBO、Curve Optimizer、EXPO/内存超频关闭或 Auto。</li>
-<li>先保持 PCIe Auto/Gen5。</li>
-<li>驱动暂时保持不变，重新运行无图形界面的功率阶梯测试。</li>
-</ol>
-<p>注意：部分新版 BIOS 可能限制回退。升级前必须阅读华硕页面的版本说明。</p>
-<h2 id="10-第七阶段更新-nvidia-驱动"><a class="markdownIt-Anchor" href="#10-第七阶段更新-nvidia-驱动"></a> 10. 第七阶段：更新 NVIDIA 驱动</h2>
-<p>如果更新 BIOS 后仍失败，再单独更新 NVIDIA 驱动。</p>
-<p>先确认软件源提供的版本：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ubuntu-drivers devices</span><br><span class="line">apt policy nvidia-driver-595-open</span><br></pre></td></tr></table></figure>
-<p>如果仍明确推荐并提供 595-open，可通过 Ubuntu 软件包安装：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install nvidia-driver-595-open</span><br><span class="line"><span class="built_in">sudo</span> reboot</span><br></pre></td></tr></table></figure>
-<p>重启后确认：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">nvidia-smi</span><br><span class="line"><span class="built_in">uname</span> -r</span><br></pre></td></tr></table></figure>
-<p>然后在相同 BIOS、相同 PCIe 模式和相同 GPU-only 负载下重复功率阶梯。</p>
-<p>不要同时更换 BIOS、驱动、内核和多个 BIOS 参数。否则即使恢复正常，也无法定位是哪一项产生影响。</p>
-<h2 id="11-第八阶段固定-pcie-gen4-对照"><a class="markdownIt-Anchor" href="#11-第八阶段固定-pcie-gen4-对照"></a> 11. 第八阶段：固定 PCIe Gen4 对照</h2>
-<p>如果完成供电检查、BIOS 更新和驱动更新后，PCIe Gen5 下仍出现 Xid 79：</p>
-<ol>
-<li>在 BIOS 中把显卡主插槽从 Auto/Gen5 固定为 Gen4 x16。</li>
-<li>其他条件保持不变。</li>
-<li>重复无图形界面 GPU-only 功率阶梯。</li>
-</ol>
-<p>判定：</p>
-<table>
-<thead>
-<tr>
-<th>结果</th>
-<th>结论倾向</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Gen4 稳定、Gen5 失败</td>
-<td>PCIe Gen5 信号完整性、主板 BIOS/插槽或 GPU PCIe 接口</td>
-</tr>
-<tr>
-<td>Gen4 和 Gen5 都在高功率失败</td>
-<td>更关注 GPU 本体、12V-2x6、PSU</td>
-</tr>
-<tr>
-<td>Gen4 和 Gen5 都稳定</td>
-<td>再检查图形桌面和特定 SmokeSeg 训练路径</td>
-</tr>
-</tbody>
-</table>
-<p>Gen4 是诊断手段，不代表最终必须长期使用 Gen4。</p>
-<p>不要在这一阶段盲目加入 pcie_aspm=off、pci=nommconf 等内核参数；这些参数会同时改变多个行为，并可能掩盖真正的问题。</p>
-<h2 id="12-第九阶段交叉换卡"><a class="markdownIt-Anchor" href="#12-第九阶段交叉换卡"></a> 12. 第九阶段：交叉换卡</h2>
-<p>只有前面的低成本排查仍无法定位时，才进行交叉换卡。由熟悉装机的人协助。</p>
-<p>最有价值的是双向矩阵：</p>
-<ol>
-<li>把本机 RTX 5090 装到师姐电脑，使用师姐电脑自己的 PSU 和原装线。</li>
-<li>把师姐已知正常的 RTX 5090 装到本机，使用本机自己的 PSU 和原装线。</li>
-<li>两边使用相同的功率档位、相同 GPU-only 负载和相同时长。</li>
-</ol>
-<table>
-<thead>
-<tr>
-<th>结果</th>
-<th>结论倾向</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>本机显卡在师姐电脑也失败；师姐显卡在本机正常</td>
-<td>本机 RTX 5090 本体，优先联系技嘉售后</td>
-</tr>
-<tr>
-<td>本机显卡在师姐电脑正常；师姐显卡在本机也失败</td>
-<td>本机 PSU、供电线、主板或 PCIe 插槽</td>
-</tr>
-<tr>
-<td>两张卡都只在本机 600W 失败</td>
-<td>本机供电或主板平台</td>
-</tr>
-<tr>
-<td>重新插线或升级 BIOS 后两张卡均正常</td>
-<td>原连接或固件兼容性问题</td>
-</tr>
-</tbody>
-</table>
-<p>只做“本机显卡装到师姐电脑”的单向测试也有价值，但结论不如双向矩阵完整。</p>
-<p>再次强调：任何情况下都不要在两台模块化电源之间混用 PSU 线材。</p>
-<h2 id="13-故障分支与下一步"><a class="markdownIt-Anchor" href="#13-故障分支与下一步"></a> 13. 故障分支与下一步</h2>
-<h3 id="131-供电或接口方向"><a class="markdownIt-Anchor" href="#131-供电或接口方向"></a> 13.1 供电或接口方向</h3>
-<p>满足以下任一条件时，优先检查/替换整套 PSU 与其原装线：</p>
-<ul>
-<li>故障功率阈值非常稳定。</li>
-<li>两张已知正常显卡都只在本机失败。</li>
-<li>更换墙上插座没有改善。</li>
-<li>PCIe Gen4/Gen5 都失败。</li>
-<li>显卡在另一台机器稳定。</li>
-</ul>
-<p>如果要测试另一只 PSU，应更换“完整 PSU + 该 PSU 自己的原装线”，不能只换 PSU 而继续使用旧模块线。</p>
-<h3 id="132-gpu-本体方向"><a class="markdownIt-Anchor" href="#132-gpu-本体方向"></a> 13.2 GPU 本体方向</h3>
-<p>满足以下组合时，应准备显卡 RMA：</p>
-<ul>
-<li>本机显卡在另一台已知正常机器也复现。</li>
-<li>另一张已知正常显卡在本机通过。</li>
-<li>BIOS、驱动、PCIe Gen4/Gen5 和线材检查都不能解决。</li>
-<li>600W 稳定复现 Xid 79，而 400W 稳定。</li>
-</ul>
-<h3 id="133-主板或-pcie-方向"><a class="markdownIt-Anchor" href="#133-主板或-pcie-方向"></a> 13.3 主板或 PCIe 方向</h3>
-<p>满足以下条件时，优先联系主板售后或继续检查插槽：</p>
-<ul>
-<li>Gen4 稳定而 Gen5 稳定失败。</li>
-<li>两张显卡都只在本机 Gen5 失败。</li>
-<li>更新 BIOS 后现象发生明显变化。</li>
-</ul>
-<h3 id="134-驱动或显示路径方向"><a class="markdownIt-Anchor" href="#134-驱动或显示路径方向"></a> 13.4 驱动或显示路径方向</h3>
-<p>满足以下条件时，继续排查驱动/桌面组合：</p>
-<ul>
-<li>5090 作为纯计算卡时多次通过。</li>
-<li>让 Xorg/GNOME 使用 5090 后可以稳定复现。</li>
-<li>切换驱动版本后现象随驱动版本变化。</li>
-</ul>
-<p>此时可以长期让核显负责桌面、5090 专用于 CUDA，作为进一步验证；但仍应确认默认 600W 计算负载本身稳定。</p>
-<h2 id="14-恢复稳定的验收标准"><a class="markdownIt-Anchor" href="#14-恢复稳定的验收标准"></a> 14. 恢复稳定的验收标准</h2>
-<p>不能因为一次 5 分钟测试通过就宣布解决。建议满足：</p>
-<ul>
-<li>[ ] 600W GPU-only 测试连续通过至少 3 次。</li>
-<li>[ ] 每次均达到高 GPU 利用率和足够高的实际功耗。</li>
-<li>[ ] 内核没有 Xid、AER 或 GSP 致命错误。</li>
-<li>[ ] SSH、桌面和系统响应正常。</li>
-<li>[ ] 开启图形桌面后再连续通过至少 2 次。</li>
-<li>[ ] SmokeSeg 训练短跑通过。</li>
-<li>[ ] SmokeSeg 完整训练至少通过一个原先容易复现故障的阶段。</li>
-<li>[ ] 12V-2x6 接口没有异常气味、变色或物理松动。</li>
-</ul>
-<p>只有仍依靠 400W 才能稳定，不算根因已经解决。</p>
-<h2 id="15-售后证据包"><a class="markdownIt-Anchor" href="#15-售后证据包"></a> 15. 售后证据包</h2>
-<p>如果最终需要联系技嘉、安钛克或华硕，建议整理：</p>
-<ul>
-<li>完整硬件型号、序列号和购买信息。</li>
-<li>主板 BIOS、GPU VBIOS、驱动、内核版本。</li>
-<li>400W 稳定、600W 失败的重复测试表。</li>
-<li>Xid 79、Xid 154 和 GSP 错误日志。</li>
-<li>nvidia-bug-report.log.gz。</li>
-<li>GPU 遥测 CSV。</li>
-<li>12V-2x6 接口和线材清晰照片。</li>
-<li>Gen4/Gen5 对照结果。</li>
-<li>两台电脑双向换卡结果。</li>
-<li>PSU 或插座对照结果。</li>
-</ul>
-<p>这些证据可以明确区分 GPU、PSU/线材、主板/PCIe 和驱动问题，避免售后只建议“重装系统”或“降低功率”。</p>
-<h2 id="16-推荐执行顺序摘要"><a class="markdownIt-Anchor" href="#16-推荐执行顺序摘要"></a> 16. 推荐执行顺序摘要</h2>
-<ol>
-<li>比较本机和师姐电脑的完整软硬件版本。</li>
-<li>由熟悉装机的人检查并重新插紧 12V-2x6 和显卡。</li>
-<li>使用核显或 SSH，让 RTX 5090 脱离图形桌面。</li>
-<li>建立内核日志与 GPU 遥测。</li>
-<li>使用 GPU-only 工具执行 400→450→500→550→600W 功率阶梯。</li>
-<li>仍失败时，将主板 BIOS 从 0208 更新到稳定版 2306，再重复测试。</li>
-<li>仍失败时，将 NVIDIA 驱动从 590-open 更新到 Ubuntu 推荐的 595-open，再重复测试。</li>
-<li>仍失败时，固定 PCIe Gen4 做对照。</li>
-<li>最后进行双向交叉换卡，必要时更换完整 PSU 与其原装线。</li>
-<li>根据矩阵结果决定联系技嘉、安钛克或华硕售后。</li>
-</ol>
+<p>4.gpt-5.6sol建议之一，更新驱动到最推荐的595-open，我已经更新了，不限制功率的情况下，还真的跑了几分钟，虽然实际上也不需要600W，根据终端监控显示450w/600w，但是好景不长，几分钟后又关机了；</p>
+<p>5.这给了一个提醒，我去看了师姐的驱动版本是580，所以可能真的是驱动版本的bug，接下来打算装回580版本，但显然有个问题是，换驱动版本没那么简单，我刚刚换到595，其实是590还在，两套共存了，有点问题，准备问ai解决</p>
 ]]></content>
       <categories>
         <category>深度学习</category>
@@ -769,6 +229,46 @@
 <p>这又让我发现，Mac桌面app确实好用，我平常携带，使用，写论文按理说都是用mac，只有跑代码才用5090，甚至写代码都可以用mac进行远程连接ssh（但稳定性是个问题），但有个问题，在mac上与codex进行头脑风暴，想要将其实现的时候，最优解当然是直接在对话里让它ssh连接5090，我还没试过，但根据之前的尝试，能连上，那么说明应该能操作，但还是那句话，由于ssh我目前用的是免费的TailScale，不是那么的迅速稳定，然后转到项目文件夹，让它开始实现；第二个办法是，想办法复制/转述给5090这边到codex插件/终端（即使同一个账号，不是同一台电脑是不共享对话的，只是mac桌面app功能比较强大，能看到5090上的任务对话），这就比较麻烦了</p>
 <p>那么，这启发了我，为什么不考虑全部在5090的codex插件/终端里面进行头脑风暴+想法实现呢？这好像更加方便，模型都一样，不用折腾ssh，可以直接本地实现，远程的话可以在mac上用todesk控制。唯一的问题就是，工作流的改变，这样的话，5090其实应该作为主力机了，至少创新/头脑风暴/写代码/跑代码/debug都在这上面，而mac可以做的事是ppt画图/写论文/todesk/看论文（但其实如果在代码本地文件夹直接让ai写是不是更方便，这个暂时保留mac上写），然而5090上也有zotero，同步配置已经完善，只能说后续可以多考虑，现在越来越方便了。</p>
 ]]></content>
+  </entry>
+  <entry>
+    <title>2026版：Hexo + GitHub Pages 个人博客搭建全记录</title>
+    <url>/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/</url>
+    <content><![CDATA[<p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
+<span id="more"></span>
+<h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
+<p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
+🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
+<blockquote>
+<p>💡 <strong>操作记录</strong>：<br />
+虽然这篇文章的整体逻辑很清晰，但因为发布时间较早，很多细节已经发生了变化。例如 Node.js 的版本要求、Hexo 包管理的变动，以及目前 GitHub 默认主分支已经从 <code>master</code> 变成了 <code>main</code>。这些差异很容易导致按照原教程执行时出现报错。</p>
+<p>在实际操作中，如果遇到版本不兼容导致的报错，建议直接将终端报错信息交给大语言模型去分析，通常能很快定位并解决问题，能省下不少查阅旧资料的时间。</p>
+</blockquote>
+<hr />
+<h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
+<p>默认部署到 GitHub Pages 上的域名格式通常是 <code>用户名.github.io</code>。为了方便记忆和后续的扩展，我为博客绑定了一个专属的独立域名。</p>
+<p>🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
+<p><strong>核心操作步骤</strong>：</p>
+<ol>
+<li><strong>域名购买</strong>：我在阿里云购买了一个 <code>.top</code> 后缀的域名，相对来说性价比比较高。</li>
+<li><strong>DNS 解析配置</strong>：进入阿里云控制台，添加一条 <code>CNAME</code> 记录，将其解析指向自己的 GitHub Pages 地址。</li>
+<li><strong>GitHub 仓库配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚购买的域名，并勾选开启 <code>Enforce HTTPS</code> 以保证访问安全。配置完成后，稍微等待 DNS 解析生效，就可以使用独立域名访问博客了。</li>
+</ol>
+<hr />
+<h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
+<p>原生的 Hexo 界面比较基础，为了提升页面的可读性和排版效果，通常需要对主题进行一定的自定义。</p>
+<p>🔗 <strong>参考教程</strong>：<a href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
+<p><strong>我主要进行的配置和调整包括</strong>：</p>
+<ul>
+<li>更换第三方主题（这里我尝试了经典的 NexT 等几款主流主题）。</li>
+<li>配置侧边栏的个人信息、头像以及社交平台链接。</li>
+<li>微调了博客的背景和字体配色，以改善正文内容的阅读体验。</li>
+<li>补充了专属的网站标签页小图标（Favicon）。</li>
+</ul>
+<p>整个流程走下来，算是一次比较完整的前端部署实践。一个功能完善、排版清晰的博客不仅能作为知识库，也是记录学习日常的好工具。</p>
+]]></content>
+      <categories>
+        <category>建站教程</category>
+      </categories>
   </entry>
   <entry>
     <title>在 RTX 5090 上配置 MMSegmentation 并跑通自定义数据集 (OneDL 版)</title>
@@ -866,193 +366,6 @@
       </categories>
   </entry>
   <entry>
-    <title>在VS Code的CC插件以及终端CC中接入DeepSeek-V4-Pro</title>
-    <url>/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/</url>
-    <content><![CDATA[<p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
-参考链接：<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">Deepseek接入CC的官方文档</a><br />
-<a href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
-<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
-<p>另外，CC本身是免费的，如果开通了claude的pro计划，可以在里面使用claude原生模型，最近找到了充值方式，首先你需要一个claude账号，这一步目前来说好像不是那么简单（容易封号），而我是前几年就有了，当年还是从闲鱼找人帮我注册的，花了10块，然后需要一个苹果手机，需要一个美区（或者不限制的区域）苹果账号，此时下载Claude的app，直接在app里点升级pro，自动弹出app付款，此时需要app store里面登陆美区账号付款的，在此之前使用支付宝礼品卡给美区账号充值🔪</p>
-<p>碰到了问题，由于接入这个DeepSeek后，本人开通了付费的Claude，我怀疑正是因为之前手动改了CC的接口地址，导致被他们官方查到了IP，目前我的三年稳定的Claude账号被封了，本人已经转向codex。</p>
-<span id="more"></span>
-<hr />
-<h2 id="前置准备"><a class="markdownIt-Anchor" href="#前置准备"></a> 前置准备</h2>
-<p>开始之前，需要准备好以下内容：</p>
-<ul>
-<li><strong>DeepSeek API Key</strong>：在 <a href="https://platform.deepseek.com/">DeepSeek 开放平台</a> 注册并获取，可以先充值10元试一试，目前是2.5折优惠。</li>
-<li><strong>Claude Code 已安装</strong>：终端CC和VSCode CC插件安装，此处不进行过多介绍。</li>
-</ul>
-<hr />
-<h2 id="一终端-cc-接入"><a class="markdownIt-Anchor" href="#一终端-cc-接入"></a> 一：终端 CC 接入</h2>
-<p>终端 CC 通过读取 shell 环境变量来决定使用哪个模型后端。直接在你的shell配置文件中添加以下环境变量即可。</p>
-<p>对于 macOS / zsh 用户，编辑 <code>~/.zshrc</code>：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">export</span> ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_AUTH_TOKEN=&lt;你的 DeepSeek API Key&gt;</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_OPUS_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_SONNET_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_SUBAGENT_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_EFFORT_LEVEL=max</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>💡 <strong>说明</strong>：CC 内部会根据任务复杂度自动选择 Opus/Sonnet/Haiku 级别的模型。通过 <code>ANTHROPIC_DEFAULT_*</code> 变量可以将这些级别分别映射到 DeepSeek 的不同模型。如果你希望所有任务都走同一个模型，全部填 <code>deepseek-v4-pro</code> 即可。</p>
-</blockquote>
-<p>配置完成后，重新加载 shell 配置：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
-<h2 id="随后在终端中启动-claudecc-便会通过-deepseek-api-运行"><a class="markdownIt-Anchor" href="#随后在终端中启动-claudecc-便会通过-deepseek-api-运行"></a> 随后在终端中启动 <code>claude</code>，CC 便会通过 DeepSeek API 运行。</h2>
-<h2 id="二vscode-cc-插件接入"><a class="markdownIt-Anchor" href="#二vscode-cc-插件接入"></a> 二：VSCode CC 插件接入</h2>
-<p>VSCode 的CC插件同样依赖环境变量，但需要通过VSCode的终端环境变量设置来注入。</p>
-<p>打开 VS Code 设置（<code>Cmd + ,</code>），搜索 <code>terminal.integrated.env.osx</code>（Windows 用户搜索 <code>terminal.integrated.env.windows</code>），点击 <strong>Edit in settings.json</strong>，添加以下内容：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;terminal.integrated.env.osx&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_BASE_URL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://api.deepseek.com/anthropic&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_AUTH_TOKEN&quot;</span><span class="punctuation">:</span> <span class="string">&quot;sk-your-deepseek-api-key&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_OPUS_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_SONNET_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_HAIKU_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-flash&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;CLAUDE_CODE_SUBAGENT_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-<p>配置完成后，<strong>完全退出并重启 VS Code</strong>，再打开集成的 CC 插件，环境变量便会生效。</p>
-<hr />
-<h2 id="推荐的额外配置"><a class="markdownIt-Anchor" href="#推荐的额外配置"></a> 推荐的额外配置</h2>
-<p>为了获得更好的使用体验，建议一并配置以下变量：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 超时时长（ms）：max effort 推理耗时较长，建议设长一些</span></span><br><span class="line"><span class="built_in">export</span> API_TIMEOUT_MS=<span class="string">&quot;600000&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭非必要流量（遥测、成本警告等）</span></span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_COST_WARNINGS=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_TELEMETRY=1</span><br></pre></td></tr></table></figure>
-<hr />
-<h2 id="模型映射关系"><a class="markdownIt-Anchor" href="#模型映射关系"></a> 模型映射关系</h2>
-<p>配置生效后，CC 内部分配的 Claude 模型会被自动映射到 DeepSeek 模型：</p>
-<table>
-<thead>
-<tr>
-<th>Claude 原生模型</th>
-<th>映射到的 DeepSeek 模型</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>claude-opus-*</code></td>
-<td><code>deepseek-v4-pro</code></td>
-</tr>
-<tr>
-<td><code>claude-sonnet-*</code></td>
-<td><code>deepseek-v4-pro</code>（或 <code>deepseek-v4-flash</code>）</td>
-</tr>
-<tr>
-<td><code>claude-haiku-*</code></td>
-<td><code>deepseek-v4-flash</code></td>
-</tr>
-</tbody>
-</table>
-<p>V4-Pro 拥有 <strong>1M token 上下文窗口</strong>，足以塞入整个代码仓库，配合 CC 的代码搜索和多文件编辑能力，体验相当顺畅。</p>
-<hr />
-<h2 id="功能兼容性一览"><a class="markdownIt-Anchor" href="#功能兼容性一览"></a> 功能兼容性一览</h2>
-<p>DeepSeek 的 Anthropic 兼容端点是目前第三方供应商中<strong>支持最完整</strong>的，但仍有几个重要差距需要了解：</p>
-<h3 id="完全支持"><a class="markdownIt-Anchor" href="#完全支持"></a> ✅ 完全支持</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>文本对话与流式输出</td>
-<td>日常编码问答完全正常</td>
-</tr>
-<tr>
-<td>Tool Use / 函数调用</td>
-<td>文件读写、命令执行、工具链调用均稳定</td>
-</tr>
-<tr>
-<td><strong>Subagent（子代理）</strong></td>
-<td>✅ DeepSeek 原生支持，Agent 级任务可正常调度</td>
-</tr>
-<tr>
-<td>System Prompt</td>
-<td>系统指令完全兼容</td>
-</tr>
-<tr>
-<td>128K～1M 上下文</td>
-<td>V4-Pro 支持 1M tokens，远超 Claude 的 200K</td>
-</tr>
-</tbody>
-</table>
-<h3 id="️-部分支持-被忽略"><a class="markdownIt-Anchor" href="#️-部分支持-被忽略"></a> ⚠️ 部分支持 / 被忽略</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>thinking</code>（推理模式）</td>
-<td>V4-Pro 自身具备推理能力，但 Anthropic API 的 <code>budget_tokens</code> 参数会被忽略</td>
-</tr>
-<tr>
-<td><code>disable_parallel_tool_use</code></td>
-<td>被忽略，DeepSeek 的并行工具调用策略与 Claude 不同</td>
-</tr>
-<tr>
-<td><code>cache_control</code></td>
-<td>不支持 Anthropic 的 prompt caching 机制</td>
-</tr>
-</tbody>
-</table>
-<h3 id="不支持"><a class="markdownIt-Anchor" href="#不支持"></a> ❌ 不支持</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>图片 / 多模态</strong></td>
-<td><strong>最大短板</strong>。V4-Pro 当前是纯文本模型，截图、UI 设计稿、终端截图等无法被识别——只会收到占位符 <code>[Image #1]</code></td>
-</tr>
-<tr>
-<td>文档上传</td>
-<td>不支持直接上传 PDF、图片等文件作为输入</td>
-</tr>
-<tr>
-<td>MCP 工具类型</td>
-<td>不支持 <code>server_tool_use</code>、<code>mcp_tool_result</code> 等 MCP 原生工具调用类型</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="实际使用中需要注意的问题"><a class="markdownIt-Anchor" href="#实际使用中需要注意的问题"></a> 实际使用中需要注意的问题</h2>
-<h3 id="1-图片不可用是硬伤"><a class="markdownIt-Anchor" href="#1-图片不可用是硬伤"></a> 1. 图片不可用是硬伤</h3>
-<p>虽然 V4-Pro 有 1M 上下文——&quot;能塞进去整个代码仓库，但塞不进去一张 PNG。&quot;遇到以下场景时需要<strong>临时切回 Anthropic 原生 API</strong>：</p>
-<ul>
-<li>CC 自动截取终端截图进行 debug</li>
-<li>需要基于 UI 设计稿生成前端代码</li>
-<li>分析报错截图或日志截屏</li>
-</ul>
-<p><strong>切换方法</strong>：在终端中取消 <code>ANTHROPIC_BASE_URL</code> 环境变量即可回退：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">unset</span> ANTHROPIC_BASE_URL</span><br><span class="line"><span class="comment"># 或者重新打开一个未配置 ANTHROPIC_BASE_URL 的终端窗口</span></span><br></pre></td></tr></table></figure>
-<h3 id="2-速度与成本的权衡"><a class="markdownIt-Anchor" href="#2-速度与成本的权衡"></a> 2. 速度与成本的权衡</h3>
-<p>DeepSeek V4-Pro 在 max effort 模式下推理时间较长（可能超过 1 分钟），这也是建议将 <code>API_TIMEOUT_MS</code> 设为 600000 的原因。但相比原生 Claude API <strong>约 90%+ 的成本节省</strong>，这点等待完全值得。</p>
-<h3 id="3-不同订阅方案的区别"><a class="markdownIt-Anchor" href="#3-不同订阅方案的区别"></a> 3. 不同订阅方案的区别</h3>
-<p>如果同时持有 Anthropic 的付费订阅（Max 计划），注意环境变量的配置会覆盖订阅的原生模型路由。建议为 DeepSeek 接入专门准备一个终端配置别名，方便在不同后端之间快速切换。</p>
-<hr />
-<h2 id="个人使用体验"><a class="markdownIt-Anchor" href="#个人使用体验"></a> 个人使用体验</h2>
-<h3 id="成本真的便宜"><a class="markdownIt-Anchor" href="#成本真的便宜"></a> 成本：真的便宜</h3>
-<p>最近 DeepSeek 的 Token 价格打 <strong>2.5 折</strong>，我往账户里充了 10 块钱。到目前为止，用它完成了：</p>
-<ul>
-<li><strong>两个深度学习论文的复现工作</strong>（涉及大量代码编写和调试）</li>
-<li><strong>几篇博客文章</strong>（包括本文）的撰写与 Hexo 自动部署脚本调试</li>
-</ul>
-<p>总共花掉了大约 <strong>3.5 元</strong>。也就是说 10 块钱的额度还剩下近三分之二。这个价格放在任何同类工具面前都是降维打击。</p>
-<h3 id="与-cursor-pro-的对比"><a class="markdownIt-Anchor" href="#与-cursor-pro-的对比"></a> 与 Cursor Pro 的对比</h3>
-<p>在此之前，我一直在用 Cursor 的 Pro 订阅，20 美元一个月。说实话，体验算不上差，但有一个致命问题——<strong>Opus 的额度太少</strong>，高强度用不了几天就没了。额度耗尽之后只能降级用 Cursor 自研的 Composer 2.5（底层其实是 Kimi 2.5 套壳），虽然也不至于难用，但模型能力明显掉了一个档次。GPT 的额度同样少得可怜。</p>
-<p>20 美元一个月，大部分时间用的只是一个二线模型——性价比实在太低了。</p>
-<p>相比之下，DeepSeek V4-Pro 按量计费、单价极低，而且<strong>不限制调用频率</strong>，不用担心&quot;额度用完&quot;这件事。花多少钱用多少量，完全在自己掌控范围内。</p>
-<h3 id="实际能力感受"><a class="markdownIt-Anchor" href="#实际能力感受"></a> 实际能力感受</h3>
-<p>讲实话，DeepSeek V4-Pro 的<strong>代码能力和中文能力都不错</strong>。代码方面，在两个复现项目中处理了训练脚本、数据预处理、配置文件的编写和调试，基本没有遇到模型能力不足导致的阻塞性问题。中文方面，写博客、整理技术文档时的语言表达自然流畅，比大多数纯英文训练的模型接地气得多。</p>
-<p>当然，前面提到的图片不支持确实时有碰到——比如想让 CC 看看终端报错截图或者模型输出的可视化结果，这时候只能临时切回原生 API。但纯文本场景下，V4-Pro 完全够用。</p>
-<hr />
-<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
-<p>DeepSeek V4-Pro + Claude Code 的组合在<strong>纯文本编码场景</strong>下体验几乎无差异——Tool Use 和 Subagent 均原生可用，配合极低的 API 成本和 1M 超长上下文，是日常开发中极具性价比的选择。唯一的软肋是图片/多模态不支持，遇到需要视觉理解的场景时需要切回 Anthropic 原生 API。</p>
-<blockquote>
-<p>📌 <strong>适用场景</strong>：后端开发、脚本编写、代码重构、项目搭建、文档生成</p>
-<p>📌 <strong>不适用场景</strong>：前端 UI 开发（需要看图）、截图 Debug、多模态分析</p>
-</blockquote>
-<hr />
-]]></content>
-      <categories>
-        <category>工具教程</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Git 核心操作记录：面向日常开发的实践总结</title>
     <url>/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/</url>
     <content><![CDATA[<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
@@ -1144,57 +457,6 @@
       <categories>
         <category>工具教程</category>
       </categories>
-  </entry>
-  <entry>
-    <title>2026版：Hexo + GitHub Pages 个人博客搭建全记录</title>
-    <url>/2026/03/29/Hexo-GitHub-Pages%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A22026%E7%89%88/</url>
-    <content><![CDATA[<p>最近抽时间把个人博客重新搭建了一遍，依然选择的是 Hexo 配合 GitHub Pages 的经典方案。在搭建过程中，发现很多以前的教程随着软件版本的更迭已经不再适用了。这里将整个流程和遇到的一些报错记录下来，方便以后查阅。</p>
-<span id="more"></span>
-<h2 id="阶段一基础框架搭建-hexo-github-pages"><a class="markdownIt-Anchor" href="#阶段一基础框架搭建-hexo-github-pages"></a> 阶段一：基础框架搭建 (Hexo + GitHub Pages)</h2>
-<p>博客的基础骨架搭建，我主要参考了这篇知乎经验贴：<br />
-🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/102592286">《Hexo + GitHub Pages 搭建个人博客》</a></p>
-<blockquote>
-<p>💡 <strong>操作记录</strong>：<br />
-虽然这篇文章的整体逻辑很清晰，但因为发布时间较早，很多细节已经发生了变化。例如 Node.js 的版本要求、Hexo 包管理的变动，以及目前 GitHub 默认主分支已经从 <code>master</code> 变成了 <code>main</code>。这些差异很容易导致按照原教程执行时出现报错。</p>
-<p>在实际操作中，如果遇到版本不兼容导致的报错，建议直接将终端报错信息交给大语言模型去分析，通常能很快定位并解决问题，能省下不少查阅旧资料的时间。</p>
-</blockquote>
-<hr />
-<h2 id="阶段二配置专属独立域名"><a class="markdownIt-Anchor" href="#阶段二配置专属独立域名"></a> 阶段二：配置专属独立域名</h2>
-<p>默认部署到 GitHub Pages 上的域名格式通常是 <code>用户名.github.io</code>。为了方便记忆和后续的扩展，我为博客绑定了一个专属的独立域名。</p>
-<p>🔗 <strong>参考教程</strong>：<a href="https://zhuanlan.zhihu.com/p/873902706">《GitHub Pages 绑定自定义域名》</a></p>
-<p><strong>核心操作步骤</strong>：</p>
-<ol>
-<li><strong>域名购买</strong>：我在阿里云购买了一个 <code>.top</code> 后缀的域名，相对来说性价比比较高。</li>
-<li><strong>DNS 解析配置</strong>：进入阿里云控制台，添加一条 <code>CNAME</code> 记录，将其解析指向自己的 GitHub Pages 地址。</li>
-<li><strong>GitHub 仓库配置</strong>：在 GitHub 博客仓库的 <code>Settings -&gt; Pages -&gt; Custom domain</code> 中填入刚购买的域名，并勾选开启 <code>Enforce HTTPS</code> 以保证访问安全。配置完成后，稍微等待 DNS 解析生效，就可以使用独立域名访问博客了。</li>
-</ol>
-<hr />
-<h2 id="阶段三博客主题美化与自定义"><a class="markdownIt-Anchor" href="#阶段三博客主题美化与自定义"></a> 阶段三：博客主题美化与自定义</h2>
-<p>原生的 Hexo 界面比较基础，为了提升页面的可读性和排版效果，通常需要对主题进行一定的自定义。</p>
-<p>🔗 <strong>参考教程</strong>：<a href="https://www.cnblogs.com/qianxiaohan/p/19032755">《Hexo 博客主题深度美化指南》</a></p>
-<p><strong>我主要进行的配置和调整包括</strong>：</p>
-<ul>
-<li>更换第三方主题（这里我尝试了经典的 NexT 等几款主流主题）。</li>
-<li>配置侧边栏的个人信息、头像以及社交平台链接。</li>
-<li>微调了博客的背景和字体配色，以改善正文内容的阅读体验。</li>
-<li>补充了专属的网站标签页小图标（Favicon）。</li>
-</ul>
-<p>整个流程走下来，算是一次比较完整的前端部署实践。一个功能完善、排版清晰的博客不仅能作为知识库，也是记录学习日常的好工具。</p>
-]]></content>
-      <categories>
-        <category>建站教程</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>对于大气散射模型的思考</title>
-    <url>/2026/06/29/%E5%AF%B9%E4%BA%8E%E5%A4%A7%E6%B0%94%E6%95%A3%E5%B0%84%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%80%9D%E8%80%83/</url>
-    <content><![CDATA[<p>最近打算基于把大气散射模型作为论文的一个重要的理论基础</p>
-<p>也不乏有本领域的论文用到此模型，比如Trans-BVM和FoSp</p>
-<p>但是目前我仍旧怀疑其公式推导的正确性，以及使用的合理性和正确性</p>
-<p>于是搜集网络资料，找到一些<a href="https://zhuanlan.zhihu.com/p/500242098">原始推导</a>,以及<a href="https://www.cnblogs.com/rust/p/10420789.html">这篇</a></p>
-<p>等博主在研究一段时间后，本博客将主要针对大气散射模型在深度学习中的应用进行补充</p>
-<p>而且据我所知，在图像抠图领域，也有类似的模型。</p>
-]]></content>
   </entry>
   <entry>
     <title>实验管理与评测脚本说明（mmseg 自定义工具链）</title>
@@ -1386,6 +648,204 @@ config 里列出各划分</strong>。</li>
 ]]></content>
       <categories>
         <category>深度学习</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>对于大气散射模型的思考</title>
+    <url>/2026/06/29/%E5%AF%B9%E4%BA%8E%E5%A4%A7%E6%B0%94%E6%95%A3%E5%B0%84%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%80%9D%E8%80%83/</url>
+    <content><![CDATA[<p>最近打算基于把大气散射模型作为论文的一个重要的理论基础</p>
+<p>也不乏有本领域的论文用到此模型，比如Trans-BVM和FoSp</p>
+<p>但是目前我仍旧怀疑其公式推导的正确性，以及使用的合理性和正确性</p>
+<p>于是搜集网络资料，找到一些<a href="https://zhuanlan.zhihu.com/p/500242098">原始推导</a>,以及<a href="https://www.cnblogs.com/rust/p/10420789.html">这篇</a></p>
+<p>等博主在研究一段时间后，本博客将主要针对大气散射模型在深度学习中的应用进行补充</p>
+<p>而且据我所知，在图像抠图领域，也有类似的模型。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>在VS Code的CC插件以及终端CC中接入DeepSeek-V4-Pro</title>
+    <url>/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/</url>
+    <content><![CDATA[<p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
+参考链接：<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">Deepseek接入CC的官方文档</a><br />
+<a href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
+<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
+<p>另外，CC本身是免费的，如果开通了claude的pro计划，可以在里面使用claude原生模型，最近找到了充值方式，首先你需要一个claude账号，这一步目前来说好像不是那么简单（容易封号），而我是前几年就有了，当年还是从闲鱼找人帮我注册的，花了10块，然后需要一个苹果手机，需要一个美区（或者不限制的区域）苹果账号，此时下载Claude的app，直接在app里点升级pro，自动弹出app付款，此时需要app store里面登陆美区账号付款的，在此之前使用支付宝礼品卡给美区账号充值🔪</p>
+<p>碰到了问题，由于接入这个DeepSeek后，本人开通了付费的Claude，我怀疑正是因为之前手动改了CC的接口地址，导致被他们官方查到了IP，目前我的三年稳定的Claude账号被封了，本人已经转向codex。</p>
+<span id="more"></span>
+<hr />
+<h2 id="前置准备"><a class="markdownIt-Anchor" href="#前置准备"></a> 前置准备</h2>
+<p>开始之前，需要准备好以下内容：</p>
+<ul>
+<li><strong>DeepSeek API Key</strong>：在 <a href="https://platform.deepseek.com/">DeepSeek 开放平台</a> 注册并获取，可以先充值10元试一试，目前是2.5折优惠。</li>
+<li><strong>Claude Code 已安装</strong>：终端CC和VSCode CC插件安装，此处不进行过多介绍。</li>
+</ul>
+<hr />
+<h2 id="一终端-cc-接入"><a class="markdownIt-Anchor" href="#一终端-cc-接入"></a> 一：终端 CC 接入</h2>
+<p>终端 CC 通过读取 shell 环境变量来决定使用哪个模型后端。直接在你的shell配置文件中添加以下环境变量即可。</p>
+<p>对于 macOS / zsh 用户，编辑 <code>~/.zshrc</code>：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">export</span> ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_AUTH_TOKEN=&lt;你的 DeepSeek API Key&gt;</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_OPUS_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_SONNET_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_SUBAGENT_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_EFFORT_LEVEL=max</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>💡 <strong>说明</strong>：CC 内部会根据任务复杂度自动选择 Opus/Sonnet/Haiku 级别的模型。通过 <code>ANTHROPIC_DEFAULT_*</code> 变量可以将这些级别分别映射到 DeepSeek 的不同模型。如果你希望所有任务都走同一个模型，全部填 <code>deepseek-v4-pro</code> 即可。</p>
+</blockquote>
+<p>配置完成后，重新加载 shell 配置：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
+<h2 id="随后在终端中启动-claudecc-便会通过-deepseek-api-运行"><a class="markdownIt-Anchor" href="#随后在终端中启动-claudecc-便会通过-deepseek-api-运行"></a> 随后在终端中启动 <code>claude</code>，CC 便会通过 DeepSeek API 运行。</h2>
+<h2 id="二vscode-cc-插件接入"><a class="markdownIt-Anchor" href="#二vscode-cc-插件接入"></a> 二：VSCode CC 插件接入</h2>
+<p>VSCode 的CC插件同样依赖环境变量，但需要通过VSCode的终端环境变量设置来注入。</p>
+<p>打开 VS Code 设置（<code>Cmd + ,</code>），搜索 <code>terminal.integrated.env.osx</code>（Windows 用户搜索 <code>terminal.integrated.env.windows</code>），点击 <strong>Edit in settings.json</strong>，添加以下内容：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;terminal.integrated.env.osx&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_BASE_URL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://api.deepseek.com/anthropic&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_AUTH_TOKEN&quot;</span><span class="punctuation">:</span> <span class="string">&quot;sk-your-deepseek-api-key&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_OPUS_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_SONNET_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_HAIKU_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-flash&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;CLAUDE_CODE_SUBAGENT_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>配置完成后，<strong>完全退出并重启 VS Code</strong>，再打开集成的 CC 插件，环境变量便会生效。</p>
+<hr />
+<h2 id="推荐的额外配置"><a class="markdownIt-Anchor" href="#推荐的额外配置"></a> 推荐的额外配置</h2>
+<p>为了获得更好的使用体验，建议一并配置以下变量：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 超时时长（ms）：max effort 推理耗时较长，建议设长一些</span></span><br><span class="line"><span class="built_in">export</span> API_TIMEOUT_MS=<span class="string">&quot;600000&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭非必要流量（遥测、成本警告等）</span></span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_COST_WARNINGS=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_TELEMETRY=1</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="模型映射关系"><a class="markdownIt-Anchor" href="#模型映射关系"></a> 模型映射关系</h2>
+<p>配置生效后，CC 内部分配的 Claude 模型会被自动映射到 DeepSeek 模型：</p>
+<table>
+<thead>
+<tr>
+<th>Claude 原生模型</th>
+<th>映射到的 DeepSeek 模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>claude-opus-*</code></td>
+<td><code>deepseek-v4-pro</code></td>
+</tr>
+<tr>
+<td><code>claude-sonnet-*</code></td>
+<td><code>deepseek-v4-pro</code>（或 <code>deepseek-v4-flash</code>）</td>
+</tr>
+<tr>
+<td><code>claude-haiku-*</code></td>
+<td><code>deepseek-v4-flash</code></td>
+</tr>
+</tbody>
+</table>
+<p>V4-Pro 拥有 <strong>1M token 上下文窗口</strong>，足以塞入整个代码仓库，配合 CC 的代码搜索和多文件编辑能力，体验相当顺畅。</p>
+<hr />
+<h2 id="功能兼容性一览"><a class="markdownIt-Anchor" href="#功能兼容性一览"></a> 功能兼容性一览</h2>
+<p>DeepSeek 的 Anthropic 兼容端点是目前第三方供应商中<strong>支持最完整</strong>的，但仍有几个重要差距需要了解：</p>
+<h3 id="完全支持"><a class="markdownIt-Anchor" href="#完全支持"></a> ✅ 完全支持</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文本对话与流式输出</td>
+<td>日常编码问答完全正常</td>
+</tr>
+<tr>
+<td>Tool Use / 函数调用</td>
+<td>文件读写、命令执行、工具链调用均稳定</td>
+</tr>
+<tr>
+<td><strong>Subagent（子代理）</strong></td>
+<td>✅ DeepSeek 原生支持，Agent 级任务可正常调度</td>
+</tr>
+<tr>
+<td>System Prompt</td>
+<td>系统指令完全兼容</td>
+</tr>
+<tr>
+<td>128K～1M 上下文</td>
+<td>V4-Pro 支持 1M tokens，远超 Claude 的 200K</td>
+</tr>
+</tbody>
+</table>
+<h3 id="️-部分支持-被忽略"><a class="markdownIt-Anchor" href="#️-部分支持-被忽略"></a> ⚠️ 部分支持 / 被忽略</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>thinking</code>（推理模式）</td>
+<td>V4-Pro 自身具备推理能力，但 Anthropic API 的 <code>budget_tokens</code> 参数会被忽略</td>
+</tr>
+<tr>
+<td><code>disable_parallel_tool_use</code></td>
+<td>被忽略，DeepSeek 的并行工具调用策略与 Claude 不同</td>
+</tr>
+<tr>
+<td><code>cache_control</code></td>
+<td>不支持 Anthropic 的 prompt caching 机制</td>
+</tr>
+</tbody>
+</table>
+<h3 id="不支持"><a class="markdownIt-Anchor" href="#不支持"></a> ❌ 不支持</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>图片 / 多模态</strong></td>
+<td><strong>最大短板</strong>。V4-Pro 当前是纯文本模型，截图、UI 设计稿、终端截图等无法被识别——只会收到占位符 <code>[Image #1]</code></td>
+</tr>
+<tr>
+<td>文档上传</td>
+<td>不支持直接上传 PDF、图片等文件作为输入</td>
+</tr>
+<tr>
+<td>MCP 工具类型</td>
+<td>不支持 <code>server_tool_use</code>、<code>mcp_tool_result</code> 等 MCP 原生工具调用类型</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="实际使用中需要注意的问题"><a class="markdownIt-Anchor" href="#实际使用中需要注意的问题"></a> 实际使用中需要注意的问题</h2>
+<h3 id="1-图片不可用是硬伤"><a class="markdownIt-Anchor" href="#1-图片不可用是硬伤"></a> 1. 图片不可用是硬伤</h3>
+<p>虽然 V4-Pro 有 1M 上下文——&quot;能塞进去整个代码仓库，但塞不进去一张 PNG。&quot;遇到以下场景时需要<strong>临时切回 Anthropic 原生 API</strong>：</p>
+<ul>
+<li>CC 自动截取终端截图进行 debug</li>
+<li>需要基于 UI 设计稿生成前端代码</li>
+<li>分析报错截图或日志截屏</li>
+</ul>
+<p><strong>切换方法</strong>：在终端中取消 <code>ANTHROPIC_BASE_URL</code> 环境变量即可回退：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">unset</span> ANTHROPIC_BASE_URL</span><br><span class="line"><span class="comment"># 或者重新打开一个未配置 ANTHROPIC_BASE_URL 的终端窗口</span></span><br></pre></td></tr></table></figure>
+<h3 id="2-速度与成本的权衡"><a class="markdownIt-Anchor" href="#2-速度与成本的权衡"></a> 2. 速度与成本的权衡</h3>
+<p>DeepSeek V4-Pro 在 max effort 模式下推理时间较长（可能超过 1 分钟），这也是建议将 <code>API_TIMEOUT_MS</code> 设为 600000 的原因。但相比原生 Claude API <strong>约 90%+ 的成本节省</strong>，这点等待完全值得。</p>
+<h3 id="3-不同订阅方案的区别"><a class="markdownIt-Anchor" href="#3-不同订阅方案的区别"></a> 3. 不同订阅方案的区别</h3>
+<p>如果同时持有 Anthropic 的付费订阅（Max 计划），注意环境变量的配置会覆盖订阅的原生模型路由。建议为 DeepSeek 接入专门准备一个终端配置别名，方便在不同后端之间快速切换。</p>
+<hr />
+<h2 id="个人使用体验"><a class="markdownIt-Anchor" href="#个人使用体验"></a> 个人使用体验</h2>
+<h3 id="成本真的便宜"><a class="markdownIt-Anchor" href="#成本真的便宜"></a> 成本：真的便宜</h3>
+<p>最近 DeepSeek 的 Token 价格打 <strong>2.5 折</strong>，我往账户里充了 10 块钱。到目前为止，用它完成了：</p>
+<ul>
+<li><strong>两个深度学习论文的复现工作</strong>（涉及大量代码编写和调试）</li>
+<li><strong>几篇博客文章</strong>（包括本文）的撰写与 Hexo 自动部署脚本调试</li>
+</ul>
+<p>总共花掉了大约 <strong>3.5 元</strong>。也就是说 10 块钱的额度还剩下近三分之二。这个价格放在任何同类工具面前都是降维打击。</p>
+<h3 id="与-cursor-pro-的对比"><a class="markdownIt-Anchor" href="#与-cursor-pro-的对比"></a> 与 Cursor Pro 的对比</h3>
+<p>在此之前，我一直在用 Cursor 的 Pro 订阅，20 美元一个月。说实话，体验算不上差，但有一个致命问题——<strong>Opus 的额度太少</strong>，高强度用不了几天就没了。额度耗尽之后只能降级用 Cursor 自研的 Composer 2.5（底层其实是 Kimi 2.5 套壳），虽然也不至于难用，但模型能力明显掉了一个档次。GPT 的额度同样少得可怜。</p>
+<p>20 美元一个月，大部分时间用的只是一个二线模型——性价比实在太低了。</p>
+<p>相比之下，DeepSeek V4-Pro 按量计费、单价极低，而且<strong>不限制调用频率</strong>，不用担心&quot;额度用完&quot;这件事。花多少钱用多少量，完全在自己掌控范围内。</p>
+<h3 id="实际能力感受"><a class="markdownIt-Anchor" href="#实际能力感受"></a> 实际能力感受</h3>
+<p>讲实话，DeepSeek V4-Pro 的<strong>代码能力和中文能力都不错</strong>。代码方面，在两个复现项目中处理了训练脚本、数据预处理、配置文件的编写和调试，基本没有遇到模型能力不足导致的阻塞性问题。中文方面，写博客、整理技术文档时的语言表达自然流畅，比大多数纯英文训练的模型接地气得多。</p>
+<p>当然，前面提到的图片不支持确实时有碰到——比如想让 CC 看看终端报错截图或者模型输出的可视化结果，这时候只能临时切回原生 API。但纯文本场景下，V4-Pro 完全够用。</p>
+<hr />
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>DeepSeek V4-Pro + Claude Code 的组合在<strong>纯文本编码场景</strong>下体验几乎无差异——Tool Use 和 Subagent 均原生可用，配合极低的 API 成本和 1M 超长上下文，是日常开发中极具性价比的选择。唯一的软肋是图片/多模态不支持，遇到需要视觉理解的场景时需要切回 Anthropic 原生 API。</p>
+<blockquote>
+<p>📌 <strong>适用场景</strong>：后端开发、脚本编写、代码重构、项目搭建、文档生成</p>
+<p>📌 <strong>不适用场景</strong>：前端 UI 开发（需要看图）、截图 Debug、多模态分析</p>
+</blockquote>
+<hr />
+]]></content>
+      <categories>
+        <category>工具教程</category>
       </categories>
   </entry>
   <entry>
