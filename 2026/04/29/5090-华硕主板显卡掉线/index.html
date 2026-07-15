@@ -28,7 +28,7 @@
 <meta property="og:description" content="先交代一下硬件配置：  显卡：技嘉 RTX 5090 纯血版 CPU：AMD 9950X 主板：华硕 X870E-PLUS WIFI7 固态：三星 990 Pro 2TB 机械硬盘：西部数据紫盘 2TB 机箱：安钛克 FLUX SE 电源：安钛克 NE 1300 金牌（1300W，ATX 3.0，原生 12V-2x6） 风冷散热：九州风神 阿萨辛4 内存：美商海盗船 DDR5 5200 32G×2">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-04-29T06:47:49.000Z">
-<meta property="article:modified_time" content="2026-07-15T03:47:27.260Z">
+<meta property="article:modified_time" content="2026-07-15T06:04:08.288Z">
 <meta property="article:author" content="KK">
 <meta property="article:tag" content="工程工具">
 <meta property="article:tag" content="深度学习">
@@ -169,7 +169,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80-%E6%9C%80%E5%88%9D%E9%81%87%E5%88%B0%E7%9A%84%E4%B8%89%E7%B1%BB%E7%8E%B0%E8%B1%A1"><span class="nav-number">1.</span> <span class="nav-text"> 一、最初遇到的三类现象</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%85%E5%86%B5%E4%B8%80%E7%9B%B4%E6%8E%A5%E6%8E%89%E7%9B%98%E6%89%BE%E4%B8%8D%E5%88%B0-gpu-%E8%8A%82%E7%82%B9"><span class="nav-number">1.1.</span> <span class="nav-text"> 情况一：直接掉盘，找不到 GPU 节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%85%E5%86%B5%E4%BA%8C%E8%83%BD%E8%AF%86%E5%88%AB%E6%98%BE%E5%8D%A1%E4%BD%86%E6%97%A0%E4%BF%A1%E5%8F%B7%E8%BE%93%E5%85%A5%E4%B8%94%E6%97%A0%E6%A1%8C%E9%9D%A2"><span class="nav-number">1.2.</span> <span class="nav-text"> 情况二：能识别显卡，但无信号输入且无桌面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%85%E5%86%B5%E4%B8%89%E8%BF%9C%E7%A8%8B%E6%9C%89%E6%A1%8C%E9%9D%A2%E4%BD%86%E6%9C%AC%E5%9C%B0%E6%98%BE%E7%A4%BA%E5%99%A8%E9%BB%91%E5%B1%8F"><span class="nav-number">1.3.</span> <span class="nav-text"> 情况三：远程有桌面，但本地显示器黑屏</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C-%E5%86%8D%E6%AC%A1%E5%A4%8D%E7%8E%B0batch-%E5%A2%9E%E5%A4%A7%E5%90%8E%E9%A2%91%E7%B9%81%E6%8E%89%E7%9B%98"><span class="nav-number">2.</span> <span class="nav-text"> 二、再次复现：batch 增大后频繁掉盘</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89-%E5%86%8D%E6%AC%A1%E5%87%BA%E7%8E%B0%E9%97%AE%E9%A2%98%E5%BC%80%E8%AE%AD-14-%E7%A7%92%E5%B0%B1%E5%B4%A9%E6%BA%83"><span class="nav-number">3.</span> <span class="nav-text"> 三、再次出现问题：开训 14 秒就崩溃</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B-%E6%8E%92%E9%99%A4%E9%A1%B9%E4%B8%8E%E6%A0%B9%E5%9B%A0%E5%88%A4%E6%96%AD"><span class="nav-number">4.</span> <span class="nav-text"> 四、排除项与根因判断</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%8E%92%E9%99%A4%E6%98%BE%E5%AD%98%E4%B8%8D%E8%B6%B3"><span class="nav-number">4.1.</span> <span class="nav-text"> 1. 排除显存不足</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%8E%92%E9%99%A4%E5%8D%95%E7%BA%AF%E8%BF%87%E7%83%AD"><span class="nav-number">4.2.</span> <span class="nav-text"> 2. 排除单纯过热</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%8E%92%E9%99%A4%E7%94%B5%E6%BA%90%E5%AE%B9%E9%87%8F%E4%B8%8D%E8%B6%B3%E4%BD%86%E4%BF%9D%E7%95%99%E7%9E%AC%E6%97%B6%E5%B0%96%E5%B3%B0%E5%88%A4%E6%96%AD"><span class="nav-number">4.3.</span> <span class="nav-text"> 3. 排除电源容量不足，但保留瞬时尖峰判断</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-pcie-gen5-%E9%93%BE%E8%B7%AF%E5%80%BC%E5%BE%97%E6%80%80%E7%96%91%E4%BD%86%E5%8F%AF%E6%8E%92%E9%99%A4"><span class="nav-number">4.4.</span> <span class="nav-text"> 4. PCIe Gen5 链路值得怀疑但可排除</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94-%E5%86%B3%E5%AE%9A%E6%80%A7%E9%AA%8C%E8%AF%81%E9%99%90%E5%88%B6%E5%8A%9F%E8%80%97%E5%88%B0-400w-%E5%90%8E%E7%A8%B3%E5%AE%9A%E8%AE%AD%E7%BB%83"><span class="nav-number">5.</span> <span class="nav-text"> 五、决定性验证：限制功耗到 400W 后稳定训练</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD-%E7%9F%AD%E6%9C%9F%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E5%85%88%E7%A8%B3%E5%AE%9A%E8%AE%AD%E7%BB%83"><span class="nav-number">6.</span> <span class="nav-text"> 六、短期解决方案：先稳定训练</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E4%B8%B4%E6%97%B6%E8%AE%BE%E7%BD%AE"><span class="nav-number">6.1.</span> <span class="nav-text"> 1. 临时设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%BC%80%E6%9C%BA%E8%87%AA%E5%8A%A8%E7%94%9F%E6%95%88"><span class="nav-number">6.2.</span> <span class="nav-text"> 2. 开机自动生效</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83-%E5%8F%AF%E8%83%BD%E7%9A%84%E9%95%BF%E6%9C%9F%E6%B2%BB%E6%9C%AC%E6%96%B9%E6%A1%88"><span class="nav-number">7.</span> <span class="nav-text"> 七、可能的长期治本方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-bios-%E4%B8%AD%E5%B0%86%E6%98%BE%E5%8D%A1%E6%A7%BD%E9%99%8D%E5%88%B0-pcie-gen4"><span class="nav-number">7.1.</span> <span class="nav-text"> 1. BIOS 中将显卡槽降到 PCIe Gen4</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%9B%B4%E6%96%B0%E4%B8%BB%E6%9D%BF-bios"><span class="nav-number">7.2.</span> <span class="nav-text"> 2. 更新主板 BIOS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%85%B3%E9%97%AD-aspm"><span class="nav-number">7.3.</span> <span class="nav-text"> 3. 关闭 ASPM</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E9%80%90%E6%AD%A5%E8%A7%A3%E5%BC%80%E5%8A%9F%E8%80%97%E4%B8%8A%E9%99%90"><span class="nav-number">7.4.</span> <span class="nav-text"> 4. 逐步解开功耗上限</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB-%E6%9C%AA%E6%9D%A5%E5%86%8D%E6%AC%A1%E5%B4%A9%E6%BA%83%E6%97%B6%E7%9A%84%E5%BF%AB%E9%80%9F%E8%87%AA%E6%9F%A5%E5%91%BD%E4%BB%A4"><span class="nav-number">8.</span> <span class="nav-text"> 八、未来再次崩溃时的快速自查命令</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80-%E6%9C%80%E5%88%9D%E9%81%87%E5%88%B0%E7%9A%84%E4%B8%89%E7%B1%BB%E7%8E%B0%E8%B1%A1"><span class="nav-number">1.</span> <span class="nav-text"> 一、最初遇到的三类现象</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%85%E5%86%B5%E4%B8%80%E7%9B%B4%E6%8E%A5%E6%8E%89%E7%9B%98%E6%89%BE%E4%B8%8D%E5%88%B0-gpu-%E8%8A%82%E7%82%B9"><span class="nav-number">1.1.</span> <span class="nav-text"> 情况一：直接掉盘，找不到 GPU 节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%85%E5%86%B5%E4%BA%8C%E8%83%BD%E8%AF%86%E5%88%AB%E6%98%BE%E5%8D%A1%E4%BD%86%E6%97%A0%E4%BF%A1%E5%8F%B7%E8%BE%93%E5%85%A5%E4%B8%94%E6%97%A0%E6%A1%8C%E9%9D%A2"><span class="nav-number">1.2.</span> <span class="nav-text"> 情况二：能识别显卡，但无信号输入且无桌面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%83%85%E5%86%B5%E4%B8%89%E8%BF%9C%E7%A8%8B%E6%9C%89%E6%A1%8C%E9%9D%A2%E4%BD%86%E6%9C%AC%E5%9C%B0%E6%98%BE%E7%A4%BA%E5%99%A8%E9%BB%91%E5%B1%8F"><span class="nav-number">1.3.</span> <span class="nav-text"> 情况三：远程有桌面，但本地显示器黑屏</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C-%E5%86%8D%E6%AC%A1%E5%A4%8D%E7%8E%B0batch-%E5%A2%9E%E5%A4%A7%E5%90%8E%E9%A2%91%E7%B9%81%E6%8E%89%E7%9B%98"><span class="nav-number">2.</span> <span class="nav-text"> 二、再次复现：batch 增大后频繁掉盘</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89-%E5%86%8D%E6%AC%A1%E5%87%BA%E7%8E%B0%E9%97%AE%E9%A2%98%E5%BC%80%E8%AE%AD-14-%E7%A7%92%E5%B0%B1%E5%B4%A9%E6%BA%83"><span class="nav-number">3.</span> <span class="nav-text"> 三、再次出现问题：开训 14 秒就崩溃</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%9B-%E6%8E%92%E9%99%A4%E9%A1%B9%E4%B8%8E%E6%A0%B9%E5%9B%A0%E5%88%A4%E6%96%AD"><span class="nav-number">4.</span> <span class="nav-text"> 四、排除项与根因判断</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%8E%92%E9%99%A4%E6%98%BE%E5%AD%98%E4%B8%8D%E8%B6%B3"><span class="nav-number">4.1.</span> <span class="nav-text"> 1. 排除显存不足</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%8E%92%E9%99%A4%E5%8D%95%E7%BA%AF%E8%BF%87%E7%83%AD"><span class="nav-number">4.2.</span> <span class="nav-text"> 2. 排除单纯过热</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%8E%92%E9%99%A4%E7%94%B5%E6%BA%90%E5%AE%B9%E9%87%8F%E4%B8%8D%E8%B6%B3%E4%BD%86%E4%BF%9D%E7%95%99%E7%9E%AC%E6%97%B6%E5%B0%96%E5%B3%B0%E5%88%A4%E6%96%AD"><span class="nav-number">4.3.</span> <span class="nav-text"> 3. 排除电源容量不足，但保留瞬时尖峰判断</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-pcie-gen5-%E9%93%BE%E8%B7%AF%E5%80%BC%E5%BE%97%E6%80%80%E7%96%91%E4%BD%86%E5%8F%AF%E6%8E%92%E9%99%A4"><span class="nav-number">4.4.</span> <span class="nav-text"> 4. PCIe Gen5 链路值得怀疑但可排除</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%94-%E5%86%B3%E5%AE%9A%E6%80%A7%E9%AA%8C%E8%AF%81%E9%99%90%E5%88%B6%E5%8A%9F%E8%80%97%E5%88%B0-400w-%E5%90%8E%E7%A8%B3%E5%AE%9A%E8%AE%AD%E7%BB%83"><span class="nav-number">5.</span> <span class="nav-text"> 五、决定性验证：限制功耗到 400W 后稳定训练</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AD-%E7%9F%AD%E6%9C%9F%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E5%85%88%E7%A8%B3%E5%AE%9A%E8%AE%AD%E7%BB%83"><span class="nav-number">6.</span> <span class="nav-text"> 六、短期解决方案：先稳定训练</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E4%B8%B4%E6%97%B6%E8%AE%BE%E7%BD%AE"><span class="nav-number">6.1.</span> <span class="nav-text"> 1. 临时设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%BC%80%E6%9C%BA%E8%87%AA%E5%8A%A8%E7%94%9F%E6%95%88"><span class="nav-number">6.2.</span> <span class="nav-text"> 2. 开机自动生效</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%83-%E5%8F%AF%E8%83%BD%E7%9A%84%E9%95%BF%E6%9C%9F%E6%B2%BB%E6%9C%AC%E6%96%B9%E6%A1%88"><span class="nav-number">7.</span> <span class="nav-text"> 七、可能的长期治本方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-bios-%E4%B8%AD%E5%B0%86%E6%98%BE%E5%8D%A1%E6%A7%BD%E9%99%8D%E5%88%B0-pcie-gen4"><span class="nav-number">7.1.</span> <span class="nav-text"> 1. BIOS 中将显卡槽降到 PCIe Gen4</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%9B%B4%E6%96%B0%E4%B8%BB%E6%9D%BF-bios"><span class="nav-number">7.2.</span> <span class="nav-text"> 2. 更新主板 BIOS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%85%B3%E9%97%AD-aspm"><span class="nav-number">7.3.</span> <span class="nav-text"> 3. 关闭 ASPM</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E9%80%90%E6%AD%A5%E8%A7%A3%E5%BC%80%E5%8A%9F%E8%80%97%E4%B8%8A%E9%99%90"><span class="nav-number">7.4.</span> <span class="nav-text"> 4. 逐步解开功耗上限</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%AB-%E6%9C%AA%E6%9D%A5%E5%86%8D%E6%AC%A1%E5%B4%A9%E6%BA%83%E6%97%B6%E7%9A%84%E5%BF%AB%E9%80%9F%E8%87%AA%E6%9F%A5%E5%91%BD%E4%BB%A4"><span class="nav-number">8.</span> <span class="nav-text"> 八、未来再次崩溃时的快速自查命令</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#rtx-5090-%E9%AB%98%E8%B4%9F%E8%BD%BD%E9%BB%91%E5%B1%8F%E4%B8%8E-xid-79-%E7%B3%BB%E7%BB%9F%E6%8E%92%E6%9F%A5%E6%89%8B%E5%86%8C"><span class="nav-number">9.</span> <span class="nav-text"> RTX 5090 高负载黑屏与 Xid 79 系统排查手册</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%BD%93%E5%89%8D%E7%BB%93%E8%AE%BA"><span class="nav-number">9.1.</span> <span class="nav-text"> 1. 当前结论</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#11-%E5%B7%B2%E6%9C%89%E8%AF%81%E6%8D%AE"><span class="nav-number">9.1.1.</span> <span class="nav-text"> 1.1 已有证据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#12-%E5%BD%93%E5%89%8D%E5%B9%B3%E5%8F%B0%E5%BF%AB%E7%85%A7"><span class="nav-number">9.1.2.</span> <span class="nav-text"> 1.2 当前平台快照</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E6%8E%92%E6%9F%A5%E5%8E%9F%E5%88%99"><span class="nav-number">9.2.</span> <span class="nav-text"> 2. 排查原则</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#21-%E6%9C%80%E7%BB%88%E7%9B%AE%E6%A0%87"><span class="nav-number">9.2.1.</span> <span class="nav-text"> 2.1 最终目标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#22-%E6%93%8D%E4%BD%9C%E5%8E%9F%E5%88%99"><span class="nav-number">9.2.2.</span> <span class="nav-text"> 2.2 操作原则</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E5%AE%89%E5%85%A8%E6%A3%80%E6%9F%A5"><span class="nav-number">9.3.</span> <span class="nav-text"> 3. 安全检查</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5%E4%B8%8D%E6%8B%86%E6%9C%BA%E6%AF%94%E8%BE%83%E4%B8%A4%E5%8F%B0%E7%94%B5%E8%84%91"><span class="nav-number">9.4.</span> <span class="nav-text"> 4. 第一阶段：不拆机比较两台电脑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E7%AC%AC%E4%BA%8C%E9%98%B6%E6%AE%B5%E6%A3%80%E6%9F%A5%E4%BE%9B%E7%94%B5%E5%92%8C%E5%AE%89%E8%A3%85"><span class="nav-number">9.5.</span> <span class="nav-text"> 5. 第二阶段：检查供电和安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E7%AC%AC%E4%B8%89%E9%98%B6%E6%AE%B5%E8%AE%A9-rtx-5090-%E8%84%B1%E7%A6%BB%E5%9B%BE%E5%BD%A2%E6%A1%8C%E9%9D%A2"><span class="nav-number">9.6.</span> <span class="nav-text"> 6. 第三阶段：让 RTX 5090 脱离图形桌面</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#61-%E6%8E%A8%E8%8D%90%E6%96%B9%E6%A1%88%E4%BD%BF%E7%94%A8-9950x-%E6%A0%B8%E6%98%BE"><span class="nav-number">9.6.1.</span> <span class="nav-text"> 6.1 推荐方案：使用 9950X 核显</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#62-%E5%A4%87%E9%80%89%E6%96%B9%E6%A1%88%E4%B8%B4%E6%97%B6%E8%BF%9B%E5%85%A5%E7%BA%AF%E5%91%BD%E4%BB%A4%E8%A1%8C%E6%A8%A1%E5%BC%8F"><span class="nav-number">9.6.2.</span> <span class="nav-text"> 6.2 备选方案：临时进入纯命令行模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-%E7%AC%AC%E5%9B%9B%E9%98%B6%E6%AE%B5%E5%BB%BA%E7%AB%8B%E6%8C%81%E4%B9%85%E7%9B%91%E6%8E%A7"><span class="nav-number">9.7.</span> <span class="nav-text"> 7. 第四阶段：建立持久监控</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#71-%E5%86%85%E6%A0%B8%E6%97%A5%E5%BF%97"><span class="nav-number">9.7.1.</span> <span class="nav-text"> 7.1 内核日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#72-gpu-%E9%81%A5%E6%B5%8B"><span class="nav-number">9.7.2.</span> <span class="nav-text"> 7.2 GPU 遥测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#73-%E5%A6%82%E4%BD%95%E8%A7%A3%E9%87%8A%E9%BB%91%E5%B1%8F%E6%97%B6%E7%9A%84%E7%B3%BB%E7%BB%9F%E7%8A%B6%E6%80%81"><span class="nav-number">9.7.3.</span> <span class="nav-text"> 7.3 如何解释黑屏时的系统状态</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-%E7%AC%AC%E4%BA%94%E9%98%B6%E6%AE%B5gpu-only-%E5%8A%9F%E7%8E%87%E9%98%B6%E6%A2%AF%E6%B5%8B%E8%AF%95"><span class="nav-number">9.8.</span> <span class="nav-text"> 8. 第五阶段：GPU-only 功率阶梯测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#81-%E6%97%A0%E5%9B%BE%E5%BD%A2%E7%95%8C%E9%9D%A2%E7%9A%84%E5%88%A4%E5%AE%9A"><span class="nav-number">9.8.1.</span> <span class="nav-text"> 8.1 无图形界面的判定</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9-%E7%AC%AC%E5%85%AD%E9%98%B6%E6%AE%B5%E6%9B%B4%E6%96%B0%E4%B8%BB%E6%9D%BF-bios"><span class="nav-number">9.9.</span> <span class="nav-text"> 9. 第六阶段：更新主板 BIOS</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10-%E7%AC%AC%E4%B8%83%E9%98%B6%E6%AE%B5%E6%9B%B4%E6%96%B0-nvidia-%E9%A9%B1%E5%8A%A8"><span class="nav-number">9.10.</span> <span class="nav-text"> 10. 第七阶段：更新 NVIDIA 驱动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#11-%E7%AC%AC%E5%85%AB%E9%98%B6%E6%AE%B5%E5%9B%BA%E5%AE%9A-pcie-gen4-%E5%AF%B9%E7%85%A7"><span class="nav-number">9.11.</span> <span class="nav-text"> 11. 第八阶段：固定 PCIe Gen4 对照</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#12-%E7%AC%AC%E4%B9%9D%E9%98%B6%E6%AE%B5%E4%BA%A4%E5%8F%89%E6%8D%A2%E5%8D%A1"><span class="nav-number">9.12.</span> <span class="nav-text"> 12. 第九阶段：交叉换卡</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#13-%E6%95%85%E9%9A%9C%E5%88%86%E6%94%AF%E4%B8%8E%E4%B8%8B%E4%B8%80%E6%AD%A5"><span class="nav-number">9.13.</span> <span class="nav-text"> 13. 故障分支与下一步</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#131-%E4%BE%9B%E7%94%B5%E6%88%96%E6%8E%A5%E5%8F%A3%E6%96%B9%E5%90%91"><span class="nav-number">9.13.1.</span> <span class="nav-text"> 13.1 供电或接口方向</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#132-gpu-%E6%9C%AC%E4%BD%93%E6%96%B9%E5%90%91"><span class="nav-number">9.13.2.</span> <span class="nav-text"> 13.2 GPU 本体方向</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#133-%E4%B8%BB%E6%9D%BF%E6%88%96-pcie-%E6%96%B9%E5%90%91"><span class="nav-number">9.13.3.</span> <span class="nav-text"> 13.3 主板或 PCIe 方向</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#134-%E9%A9%B1%E5%8A%A8%E6%88%96%E6%98%BE%E7%A4%BA%E8%B7%AF%E5%BE%84%E6%96%B9%E5%90%91"><span class="nav-number">9.13.4.</span> <span class="nav-text"> 13.4 驱动或显示路径方向</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#14-%E6%81%A2%E5%A4%8D%E7%A8%B3%E5%AE%9A%E7%9A%84%E9%AA%8C%E6%94%B6%E6%A0%87%E5%87%86"><span class="nav-number">9.14.</span> <span class="nav-text"> 14. 恢复稳定的验收标准</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#15-%E5%94%AE%E5%90%8E%E8%AF%81%E6%8D%AE%E5%8C%85"><span class="nav-number">9.15.</span> <span class="nav-text"> 15. 售后证据包</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#16-%E6%8E%A8%E8%8D%90%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F%E6%91%98%E8%A6%81"><span class="nav-number">9.16.</span> <span class="nav-text"> 16. 推荐执行顺序摘要</span></a></li></ol></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -256,7 +256,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-15 11:47:27" itemprop="dateModified" datetime="2026-07-15T11:47:27+08:00">2026-07-15</time>
+      <time title="修改时间：2026-07-15 14:04:08" itemprop="dateModified" datetime="2026-07-15T14:04:08+08:00">2026-07-15</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -419,6 +419,548 @@
 <p>1.做了CPU压力测试，显然CPU风冷在压力测试下，发出一些不好听的动静，问了客服，大概是有东西卡住了风扇，但整体没有什么问题，通过完整测试，温度也正常，跑完后冷却也正常，也没有黑屏，CPU可以排除</p>
 <p>2.接下来师兄建议直接关闭Linux图形界面，用命令行跑代码尝试会发生什么</p>
 <p>3.装机师傅建议，第一补齐32GB内存双通道，并不是不够用，而是AM5平台单通道内存会带来非常多的平台稳定性隐患，第二，他建议我直接把5090显卡换到师姐那边，运行代码尝试，这样可以隔离环境，单独测试GPU,毕竟师姐那边跟我的配置一模一样，而他没有这个功率和黑屏的问题，这确实合理，但麻烦点在于要手动拆两个显卡，还要再装显卡，我怕自己拆装不熟练，先暂时不考虑，放到最后优先级</p>
+<p>4.gpt-5.6sol建议之一，更新驱动到最推荐的595-open，我已经更新了，以下是跟完整的gpt建议</p>
+<p>5.直接京东预约师傅上门维修</p>
+<h1 id="rtx-5090-高负载黑屏与-xid-79-系统排查手册"><a class="markdownIt-Anchor" href="#rtx-5090-高负载黑屏与-xid-79-系统排查手册"></a> RTX 5090 高负载黑屏与 Xid 79 系统排查手册</h1>
+<p>最后更新：2026-07-15</p>
+<p>适用机器：</p>
+<ul>
+<li>GPU：技嘉 RTX 5090</li>
+<li>CPU：AMD Ryzen 9 9950X</li>
+<li>主板：华硕 TUF GAMING X870E-PLUS WIFI7</li>
+<li>电源：安钛克 NE 1300 金牌，ATX 3.0，原生 12V-2x6</li>
+<li>系统：Ubuntu 24.04.4 LTS</li>
+<li>当前驱动：NVIDIA 590.48.01 open kernel module + GSP</li>
+</ul>
+<h2 id="1-当前结论"><a class="markdownIt-Anchor" href="#1-当前结论"></a> 1. 当前结论</h2>
+<p>目前应把排查重点放在以下链路，而不是继续优先怀疑 CPU：</p>
+<ol>
+<li>RTX 5090 本体。</li>
+<li>12V-2x6 插头、线材和 PSU 供电路径。</li>
+<li>PCIe Gen5 链路、显卡插槽和主板 BIOS。</li>
+<li>NVIDIA 驱动与图形显示路径。</li>
+</ol>
+<p>不建议现在直接拆卡，也不建议继续反复以 600W 跑完整 SmokeSeg 训练。应先完成低成本检查和受控测试，最后再做交叉换卡。</p>
+<h3 id="11-已有证据"><a class="markdownIt-Anchor" href="#11-已有证据"></a> 1.1 已有证据</h3>
+<ul>
+<li>32/32 线程 CPU-only 压力测试持续 600 秒，CPU 达到 100% 使用率，所有 worker 正常退出。</li>
+<li>CPU 测试峰值温度为：
+<ul>
+<li>Tctl：85.9°C</li>
+<li>Tccd1：88.1°C</li>
+<li>Tccd2：85.2°C</li>
+</ul>
+</li>
+<li>CPU 测试未复现黑屏、死机或重启。</li>
+<li>CPU 测试日志位于：
+<ul>
+<li>work_dirs/diagnostics/cpu_only_stress_20260715_111025.log</li>
+</ul>
+</li>
+<li>发生训练黑屏的上一启动周期中，内核明确记录：
+<ul>
+<li>Xid 79: GPU has fallen off the bus</li>
+<li>GPU lost from the bus [NV_ERR_GPU_IS_LOST]</li>
+<li>Xid 154: Node Reboot Required</li>
+<li>多个 GSP RPC 清理失败</li>
+</ul>
+</li>
+<li>400W 最大功率下可以稳定训练；恢复 600W 后再次复现。</li>
+</ul>
+<p>因此，CPU 不能在逻辑上被百分之百排除，但已经可以显著降级为低优先级。现有证据更符合 GPU 在高负载下从 PCIe 总线上失联。</p>
+<p>NVIDIA 官方对 Xid 79 的解释是：驱动尝试通过 PCIe 访问 GPU 时，GPU 已不可访问；常见方向包括 PCIe 链路、硬件连接、GPU 故障，也不能完全排除驱动问题：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.nvidia.com/deploy/xid-errors/archive/index.html">https://docs.nvidia.com/deploy/xid-errors/archive/index.html</a></li>
+<li><a target="_blank" rel="noopener" href="https://docs.nvidia.com/deploy/gpu-debug-guidelines/">https://docs.nvidia.com/deploy/gpu-debug-guidelines/</a></li>
+</ul>
+<p>日志中的 pid/name=cursor 只表示 Cursor 恰好是发现 GPU 已经失联的客户端，不能据此认定 Cursor 是故障原因。GPU 失去驱动控制后风扇进入高转速保护状态，也不等于单纯过热。</p>
+<h3 id="12-当前平台快照"><a class="markdownIt-Anchor" href="#12-当前平台快照"></a> 1.2 当前平台快照</h3>
+<ul>
+<li>GPU 当前运行在 PCIe Gen5 x16。</li>
+<li>GPU 默认及最大功率限制为 600W，最小可设功率为 400W。</li>
+<li>GPU VBIOS：98.02.2E.80.39。</li>
+<li>主板 BIOS：0208，日期 2025-04-24。</li>
+<li>当前 Linux 内核：6.17.0-40-generic。</li>
+<li>当前 NVIDIA 驱动：590.48.01-open。</li>
+<li>本机 ubuntu-drivers devices 当前推荐 595-open。</li>
+<li>当前图形桌面的 Xorg、GNOME Shell 和 Cursor 均使用 RTX 5090。</li>
+</ul>
+<p>以上只是 2026-07-15 的诊断快照。以后继续排查前，应重新采集并记录，避免软件升级后混淆结果。</p>
+<h2 id="2-排查原则"><a class="markdownIt-Anchor" href="#2-排查原则"></a> 2. 排查原则</h2>
+<h3 id="21-最终目标"><a class="markdownIt-Anchor" href="#21-最终目标"></a> 2.1 最终目标</h3>
+<p>最终目标是在显卡默认 600W 条件下稳定运行，而不是长期依靠 400W 限功率掩盖故障。</p>
+<p>400W 在排查期间仍然有价值：</p>
+<ul>
+<li>作为已知安全基线。</li>
+<li>用于确认系统和测试工具可以正常运行。</li>
+<li>用于建立故障功率阈值。</li>
+</ul>
+<h3 id="22-操作原则"><a class="markdownIt-Anchor" href="#22-操作原则"></a> 2.2 操作原则</h3>
+<ul>
+<li>除了必要的安全处理，一次只改变一个变量。</li>
+<li>每一步都记录时间、硬件设置、软件版本和结果。</li>
+<li>优先运行短时间、确定性的 GPU-only 测试，不直接启动完整实验队列。</li>
+<li>测试 600W 前必须确保 SSH 可用，最好让显示器由 9950X 核显驱动。</li>
+<li>一次通过不能作为结论；关键条件至少重复 2～3 次。</li>
+<li>一旦出现 Xid 79、烧焦味、接口变色、熔化或异常高温，立即停止继续加压。</li>
+</ul>
+<h2 id="3-安全检查"><a class="markdownIt-Anchor" href="#3-安全检查"></a> 3. 安全检查</h2>
+<p>在重新插拔显卡供电线或显卡前：</p>
+<ol>
+<li>正常关机。</li>
+<li>关闭 PSU 后部开关。</li>
+<li>拔掉交流电源线。</li>
+<li>等待残余电量释放。</li>
+<li>不熟悉拆装时，请师姐、师兄或熟悉装机的人现场协助。</li>
+</ol>
+<p>禁止事项：</p>
+<ul>
+<li>不要带电插拔 12V-2x6。</li>
+<li>不要拆开 PSU 外壳。</li>
+<li>不要把另一台模块化电源的线接到本机 PSU。</li>
+<li>不要因为接口难插而强行扭曲、斜插。</li>
+<li>不要使用来源不明的延长线、转接线或 90 度转接器。</li>
+</ul>
+<p>NVIDIA 官方线材说明：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://docs.nvidia.com/nvidia-cable-management-guidelines-and-faq.pdf">https://docs.nvidia.com/nvidia-cable-management-guidelines-and-faq.pdf</a></li>
+</ul>
+<h2 id="4-第一阶段不拆机比较两台电脑"><a class="markdownIt-Anchor" href="#4-第一阶段不拆机比较两台电脑"></a> 4. 第一阶段：不拆机比较两台电脑</h2>
+<p>目标：确认“配置一样”是否真的包括 BIOS、VBIOS、驱动、内核和功率限制。</p>
+<p>在本机和师姐电脑上分别执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">uname</span> -r</span><br><span class="line"><span class="built_in">sudo</span> dmidecode -s bios-version</span><br><span class="line"><span class="built_in">sudo</span> dmidecode -s bios-release-date</span><br><span class="line"></span><br><span class="line">nvidia-smi --query-gpu=name,pci.bus_id,vbios_version,driver_version,power.default_limit,power.max_limit \</span><br><span class="line">  --format=csv</span><br><span class="line"></span><br><span class="line">ubuntu-drivers devices</span><br></pre></td></tr></table></figure>
+<p>填写对照表：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>本机</th>
+<th>师姐电脑</th>
+<th>是否一致</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RTX 5090 完整型号</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>GPU VBIOS</td>
+<td>98.02.2E.80.39</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>主板 BIOS</td>
+<td>0208</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Linux 内核</td>
+<td>6.17.0-40</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>NVIDIA 驱动</td>
+<td>590.48.01-open</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>默认/最大功率</td>
+<td>600W / 600W</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>PSU 完整型号及批次</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>12V-2x6 线材</td>
+<td>原装</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>插座、排插或 UPS</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>重点检查：</p>
+<ul>
+<li>两张卡是否真的是同一具体子型号。</li>
+<li>VBIOS 是否相同。</li>
+<li>师姐主板 BIOS 是否明显更新。</li>
+<li>师姐使用的是否是另一个 NVIDIA 驱动或内核。</li>
+<li>两台电脑是否使用不同插座、排插或 UPS。</li>
+</ul>
+<h2 id="5-第二阶段检查供电和安装"><a class="markdownIt-Anchor" href="#5-第二阶段检查供电和安装"></a> 5. 第二阶段：检查供电和安装</h2>
+<p>这一阶段比直接交叉换卡工作量小，而且直接针对 Xid 79 和功率相关性。</p>
+<p>由熟悉装机的人协助检查：</p>
+<ul>
+<li>[ ] GPU 侧 12V-2x6 完全插到底。</li>
+<li>[ ] 卡扣已经锁紧，没有肉眼可见的缝隙。</li>
+<li>[ ] 如果 PSU 侧是模块化接口，PSU 侧也完全插紧。</li>
+<li>[ ] 使用该 PSU 自带的原装线材。</li>
+<li>[ ] 没有延长线、转接头或第三方 90 度转接器。</li>
+<li>[ ] 接口附近没有急弯，也没有被机箱侧板强压。</li>
+<li>[ ] 插头和插座没有发黄、变色、熔化、焦味或针脚异常。</li>
+<li>[ ] 显卡 PCIe 金手指完全进入主板插槽。</li>
+<li>[ ] 显卡挡板螺丝没有将显卡拉歪。</li>
+<li>[ ] 显卡支架有效，显卡没有明显下垂。</li>
+<li>[ ] 主板插槽和显卡周围没有异物。</li>
+</ul>
+<p>如果发现变色、熔化或烧焦味，不要再次开机，应直接联系显卡、电源或整机售后。</p>
+<p>还应进行一次低成本交流供电对照：</p>
+<ul>
+<li>使用已知正常、容量合适的墙上插座或高质量排插。</li>
+<li>暂时绕开来源不明的排插或 UPS。</li>
+<li>不要与大功率设备共用明显过载的插座。</li>
+</ul>
+<p>1300W 额定功率在规格上足够，并不能排除电源个体故障、线材问题、接触不良或瞬态响应异常。</p>
+<h2 id="6-第三阶段让-rtx-5090-脱离图形桌面"><a class="markdownIt-Anchor" href="#6-第三阶段让-rtx-5090-脱离图形桌面"></a> 6. 第三阶段：让 RTX 5090 脱离图形桌面</h2>
+<p>关闭 Linux 图形界面有诊断价值，但它不是修复方案。它要回答的问题是：</p>
+<blockquote>
+<p>RTX 5090 只做 CUDA 计算时，是否仍然出现相同的 Xid 79？</p>
+</blockquote>
+<h3 id="61-推荐方案使用-9950x-核显"><a class="markdownIt-Anchor" href="#61-推荐方案使用-9950x-核显"></a> 6.1 推荐方案：使用 9950X 核显</h3>
+<ol>
+<li>将显示器连接到主板 HDMI 或 DP。</li>
+<li>在 BIOS 中启用集成显卡，并将其设置为主要显示设备。</li>
+<li>启动系统。</li>
+<li>执行 nvidia-smi。</li>
+<li>确认进程列表中没有 Xorg、GNOME Shell、Cursor 等图形进程占用 RTX 5090。</li>
+</ol>
+<p>这比单纯关闭图形界面更有价值：即使 5090 再次掉线，核显和 SSH 仍有机会保留系统控制权。</p>
+<h3 id="62-备选方案临时进入纯命令行模式"><a class="markdownIt-Anchor" href="#62-备选方案临时进入纯命令行模式"></a> 6.2 备选方案：临时进入纯命令行模式</h3>
+<p>先从另一台电脑测试 SSH 登录，并在 tmux 中操作。不要直接在即将被关闭的 GNOME Terminal 中启动测试。</p>
+<p>临时关闭图形界面：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl isolate multi-user.target</span><br><span class="line">nvidia-smi</span><br></pre></td></tr></table></figure>
+<p>确认 nvidia-smi 中已经没有 Xorg、GNOME Shell、Cursor 等图形进程。</p>
+<p>测试完成后恢复：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl isolate graphical.target</span><br></pre></td></tr></table></figure>
+<p>此阶段不要永久修改默认启动目标，即暂时不要执行：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl set-default multi-user.target</span><br></pre></td></tr></table></figure>
+<h2 id="7-第四阶段建立持久监控"><a class="markdownIt-Anchor" href="#7-第四阶段建立持久监控"></a> 7. 第四阶段：建立持久监控</h2>
+<p>至少使用两个 SSH/tmux 窗口。</p>
+<h3 id="71-内核日志"><a class="markdownIt-Anchor" href="#71-内核日志"></a> 7.1 内核日志</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> journalctl -kf -o short-precise</span><br></pre></td></tr></table></figure>
+<h3 id="72-gpu-遥测"><a class="markdownIt-Anchor" href="#72-gpu-遥测"></a> 7.2 GPU 遥测</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p work_dirs/diagnostics/rtx5090</span><br><span class="line"></span><br><span class="line">nvidia-smi \</span><br><span class="line">  --query-gpu=timestamp,power.draw,power.limit,temperature.gpu,utilization.gpu,clocks.sm,clocks.mem \</span><br><span class="line">  --format=csv -l 1 \</span><br><span class="line">  | <span class="built_in">tee</span> work_dirs/diagnostics/rtx5090/gpu_telemetry.csv</span><br></pre></td></tr></table></figure>
+<p>如果发生物理重启，重新开机后立即提取上一启动周期：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> journalctl -b -1 -k -o short-precise \</span><br><span class="line">  | rg -i <span class="string">&quot;NVRM|Xid|GPU has fallen|GPU_IS_LOST|AER|PCIe|GSP&quot;</span> \</span><br><span class="line">  | <span class="built_in">tee</span> work_dirs/diagnostics/rtx5090/previous_boot_gpu_errors.log</span><br></pre></td></tr></table></figure>
+<p>如果黑屏后 SSH 仍可用，尽快尝试：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">timeout</span> 120 nvidia-bug-report.sh</span><br></pre></td></tr></table></figure>
+<h3 id="73-如何解释黑屏时的系统状态"><a class="markdownIt-Anchor" href="#73-如何解释黑屏时的系统状态"></a> 7.3 如何解释黑屏时的系统状态</h3>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>解释方向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>显示器黑屏，但 SSH 仍能登录</td>
+<td>GPU 或显示路径掉线，系统主体可能仍存活</td>
+</tr>
+<tr>
+<td>SSH 同时断开，整机死机或重启</td>
+<td>更关注 PSU 保护、主板、PCIe 或整机供电</td>
+</tr>
+<tr>
+<td>出现 Xid 79 和 Xid 154</td>
+<td>GPU 已经从 PCIe 总线失联，需要重启</td>
+</tr>
+<tr>
+<td>只有应用异常退出，没有 Xid</td>
+<td>再检查 CUDA、PyTorch、显存和训练代码</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-第五阶段gpu-only-功率阶梯测试"><a class="markdownIt-Anchor" href="#8-第五阶段gpu-only-功率阶梯测试"></a> 8. 第五阶段：GPU-only 功率阶梯测试</h2>
+<p>不要先跑完整 SmokeSeg/BD 队列。应使用同一个确定性的 GPU-only 负载，排除数据加载、训练代码和 CPU 负载的干扰。</p>
+<p>说明：</p>
+<ul>
+<li>tools/stress_cpu_only.py 不能用于本阶段。</li>
+<li>建议另行准备 tools/stress_gpu_only.py。</li>
+<li>GPU-only 工具应支持固定时长、预热、温度保护、遥测日志和异常退出码。</li>
+<li>在该工具完成之前，不应把完整训练队列当作压力测试工具。</li>
+</ul>
+<p>建议阶梯：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th style="text-align:right">功率限制</th>
+<th style="text-align:right">单次时长</th>
+<th style="text-align:right">建议重复次数</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>基线</td>
+<td style="text-align:right">400W</td>
+<td style="text-align:right">5 分钟</td>
+<td style="text-align:right">2</td>
+<td></td>
+</tr>
+<tr>
+<td>阶梯 1</td>
+<td style="text-align:right">450W</td>
+<td style="text-align:right">5 分钟</td>
+<td style="text-align:right">2</td>
+<td></td>
+</tr>
+<tr>
+<td>阶梯 2</td>
+<td style="text-align:right">500W</td>
+<td style="text-align:right">5 分钟</td>
+<td style="text-align:right">2</td>
+<td></td>
+</tr>
+<tr>
+<td>阶梯 3</td>
+<td style="text-align:right">550W</td>
+<td style="text-align:right">5 分钟</td>
+<td style="text-align:right">2</td>
+<td></td>
+</tr>
+<tr>
+<td>目标</td>
+<td style="text-align:right">600W</td>
+<td style="text-align:right">5 分钟</td>
+<td style="text-align:right">2～3</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>设置功率限制：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 400</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 450</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 500</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 550</span><br><span class="line"><span class="built_in">sudo</span> nvidia-smi -pl 600</span><br></pre></td></tr></table></figure>
+<p>每个功率档位都应记录：</p>
+<ul>
+<li>实际最高 power.draw。</li>
+<li>GPU 最高温度。</li>
+<li>GPU 利用率。</li>
+<li>是否出现 Xid。</li>
+<li>SSH 是否仍可用。</li>
+<li>是否需要物理重启。</li>
+<li>第几秒发生故障。</li>
+</ul>
+<p>一旦某档位出现 Xid 79，不再继续更高档位。</p>
+<h3 id="81-无图形界面的判定"><a class="markdownIt-Anchor" href="#81-无图形界面的判定"></a> 8.1 无图形界面的判定</h3>
+<table>
+<thead>
+<tr>
+<th>测试结果</th>
+<th>结论倾向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无图形界面仍复现相同 Xid 79</td>
+<td>基本排除桌面环境，继续查供电、GPU、PCIe、BIOS</td>
+</tr>
+<tr>
+<td>无图形界面多次通过，开启桌面后稳定复现</td>
+<td>驱动/显示路径或 5090 同时承担显示与计算的问题</td>
+</tr>
+<tr>
+<td>400W 稳定，某个更高档位稳定失败</td>
+<td>存在清晰功率阈值，关注 GPU、线材、PSU 和高负载链路</td>
+</tr>
+<tr>
+<td>各功率档位都通过</td>
+<td>再使用相同环境短跑 SmokeSeg，检查是否为特定训练路径触发</td>
+</tr>
+</tbody>
+</table>
+<p>一次无图形界面通过不能排除图形路径问题，关键档位至少重复 2～3 次。</p>
+<h2 id="9-第六阶段更新主板-bios"><a class="markdownIt-Anchor" href="#9-第六阶段更新主板-bios"></a> 9. 第六阶段：更新主板 BIOS</h2>
+<p>当前 BIOS 0208 较旧。华硕官方页面在 2026-07-15 可见：</p>
+<ul>
+<li>稳定版 2306，发布日期 2026-06-17。</li>
+<li>测试版 2401，发布日期 2026-06-26。</li>
+</ul>
+<p>官方页面：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-x870e-plus-wifi7/helpdesk_bios?model2Name=TUF-GAMING-X870E-PLUS-WIFI7">https://www.asus.com/motherboards-components/motherboards/tuf-gaming/tuf-gaming-x870e-plus-wifi7/helpdesk_bios?model2Name=TUF-GAMING-X870E-PLUS-WIFI7</a></li>
+</ul>
+<p>建议：</p>
+<ol>
+<li>记录或拍照保存当前 BIOS 设置。</li>
+<li>下载稳定版 2306，不使用测试版 2401。</li>
+<li>在供电稳定、系统空闲状态下使用华硕官方方法升级。</li>
+<li>升级后加载默认设置。</li>
+<li>暂时保持 PBO、Curve Optimizer、EXPO/内存超频关闭或 Auto。</li>
+<li>先保持 PCIe Auto/Gen5。</li>
+<li>驱动暂时保持不变，重新运行无图形界面的功率阶梯测试。</li>
+</ol>
+<p>注意：部分新版 BIOS 可能限制回退。升级前必须阅读华硕页面的版本说明。</p>
+<h2 id="10-第七阶段更新-nvidia-驱动"><a class="markdownIt-Anchor" href="#10-第七阶段更新-nvidia-驱动"></a> 10. 第七阶段：更新 NVIDIA 驱动</h2>
+<p>如果更新 BIOS 后仍失败，再单独更新 NVIDIA 驱动。</p>
+<p>先确认软件源提供的版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ubuntu-drivers devices</span><br><span class="line">apt policy nvidia-driver-595-open</span><br></pre></td></tr></table></figure>
+<p>如果仍明确推荐并提供 595-open，可通过 Ubuntu 软件包安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install nvidia-driver-595-open</span><br><span class="line"><span class="built_in">sudo</span> reboot</span><br></pre></td></tr></table></figure>
+<p>重启后确认：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nvidia-smi</span><br><span class="line"><span class="built_in">uname</span> -r</span><br></pre></td></tr></table></figure>
+<p>然后在相同 BIOS、相同 PCIe 模式和相同 GPU-only 负载下重复功率阶梯。</p>
+<p>不要同时更换 BIOS、驱动、内核和多个 BIOS 参数。否则即使恢复正常，也无法定位是哪一项产生影响。</p>
+<h2 id="11-第八阶段固定-pcie-gen4-对照"><a class="markdownIt-Anchor" href="#11-第八阶段固定-pcie-gen4-对照"></a> 11. 第八阶段：固定 PCIe Gen4 对照</h2>
+<p>如果完成供电检查、BIOS 更新和驱动更新后，PCIe Gen5 下仍出现 Xid 79：</p>
+<ol>
+<li>在 BIOS 中把显卡主插槽从 Auto/Gen5 固定为 Gen4 x16。</li>
+<li>其他条件保持不变。</li>
+<li>重复无图形界面 GPU-only 功率阶梯。</li>
+</ol>
+<p>判定：</p>
+<table>
+<thead>
+<tr>
+<th>结果</th>
+<th>结论倾向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gen4 稳定、Gen5 失败</td>
+<td>PCIe Gen5 信号完整性、主板 BIOS/插槽或 GPU PCIe 接口</td>
+</tr>
+<tr>
+<td>Gen4 和 Gen5 都在高功率失败</td>
+<td>更关注 GPU 本体、12V-2x6、PSU</td>
+</tr>
+<tr>
+<td>Gen4 和 Gen5 都稳定</td>
+<td>再检查图形桌面和特定 SmokeSeg 训练路径</td>
+</tr>
+</tbody>
+</table>
+<p>Gen4 是诊断手段，不代表最终必须长期使用 Gen4。</p>
+<p>不要在这一阶段盲目加入 pcie_aspm=off、pci=nommconf 等内核参数；这些参数会同时改变多个行为，并可能掩盖真正的问题。</p>
+<h2 id="12-第九阶段交叉换卡"><a class="markdownIt-Anchor" href="#12-第九阶段交叉换卡"></a> 12. 第九阶段：交叉换卡</h2>
+<p>只有前面的低成本排查仍无法定位时，才进行交叉换卡。由熟悉装机的人协助。</p>
+<p>最有价值的是双向矩阵：</p>
+<ol>
+<li>把本机 RTX 5090 装到师姐电脑，使用师姐电脑自己的 PSU 和原装线。</li>
+<li>把师姐已知正常的 RTX 5090 装到本机，使用本机自己的 PSU 和原装线。</li>
+<li>两边使用相同的功率档位、相同 GPU-only 负载和相同时长。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>结果</th>
+<th>结论倾向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本机显卡在师姐电脑也失败；师姐显卡在本机正常</td>
+<td>本机 RTX 5090 本体，优先联系技嘉售后</td>
+</tr>
+<tr>
+<td>本机显卡在师姐电脑正常；师姐显卡在本机也失败</td>
+<td>本机 PSU、供电线、主板或 PCIe 插槽</td>
+</tr>
+<tr>
+<td>两张卡都只在本机 600W 失败</td>
+<td>本机供电或主板平台</td>
+</tr>
+<tr>
+<td>重新插线或升级 BIOS 后两张卡均正常</td>
+<td>原连接或固件兼容性问题</td>
+</tr>
+</tbody>
+</table>
+<p>只做“本机显卡装到师姐电脑”的单向测试也有价值，但结论不如双向矩阵完整。</p>
+<p>再次强调：任何情况下都不要在两台模块化电源之间混用 PSU 线材。</p>
+<h2 id="13-故障分支与下一步"><a class="markdownIt-Anchor" href="#13-故障分支与下一步"></a> 13. 故障分支与下一步</h2>
+<h3 id="131-供电或接口方向"><a class="markdownIt-Anchor" href="#131-供电或接口方向"></a> 13.1 供电或接口方向</h3>
+<p>满足以下任一条件时，优先检查/替换整套 PSU 与其原装线：</p>
+<ul>
+<li>故障功率阈值非常稳定。</li>
+<li>两张已知正常显卡都只在本机失败。</li>
+<li>更换墙上插座没有改善。</li>
+<li>PCIe Gen4/Gen5 都失败。</li>
+<li>显卡在另一台机器稳定。</li>
+</ul>
+<p>如果要测试另一只 PSU，应更换“完整 PSU + 该 PSU 自己的原装线”，不能只换 PSU 而继续使用旧模块线。</p>
+<h3 id="132-gpu-本体方向"><a class="markdownIt-Anchor" href="#132-gpu-本体方向"></a> 13.2 GPU 本体方向</h3>
+<p>满足以下组合时，应准备显卡 RMA：</p>
+<ul>
+<li>本机显卡在另一台已知正常机器也复现。</li>
+<li>另一张已知正常显卡在本机通过。</li>
+<li>BIOS、驱动、PCIe Gen4/Gen5 和线材检查都不能解决。</li>
+<li>600W 稳定复现 Xid 79，而 400W 稳定。</li>
+</ul>
+<h3 id="133-主板或-pcie-方向"><a class="markdownIt-Anchor" href="#133-主板或-pcie-方向"></a> 13.3 主板或 PCIe 方向</h3>
+<p>满足以下条件时，优先联系主板售后或继续检查插槽：</p>
+<ul>
+<li>Gen4 稳定而 Gen5 稳定失败。</li>
+<li>两张显卡都只在本机 Gen5 失败。</li>
+<li>更新 BIOS 后现象发生明显变化。</li>
+</ul>
+<h3 id="134-驱动或显示路径方向"><a class="markdownIt-Anchor" href="#134-驱动或显示路径方向"></a> 13.4 驱动或显示路径方向</h3>
+<p>满足以下条件时，继续排查驱动/桌面组合：</p>
+<ul>
+<li>5090 作为纯计算卡时多次通过。</li>
+<li>让 Xorg/GNOME 使用 5090 后可以稳定复现。</li>
+<li>切换驱动版本后现象随驱动版本变化。</li>
+</ul>
+<p>此时可以长期让核显负责桌面、5090 专用于 CUDA，作为进一步验证；但仍应确认默认 600W 计算负载本身稳定。</p>
+<h2 id="14-恢复稳定的验收标准"><a class="markdownIt-Anchor" href="#14-恢复稳定的验收标准"></a> 14. 恢复稳定的验收标准</h2>
+<p>不能因为一次 5 分钟测试通过就宣布解决。建议满足：</p>
+<ul>
+<li>[ ] 600W GPU-only 测试连续通过至少 3 次。</li>
+<li>[ ] 每次均达到高 GPU 利用率和足够高的实际功耗。</li>
+<li>[ ] 内核没有 Xid、AER 或 GSP 致命错误。</li>
+<li>[ ] SSH、桌面和系统响应正常。</li>
+<li>[ ] 开启图形桌面后再连续通过至少 2 次。</li>
+<li>[ ] SmokeSeg 训练短跑通过。</li>
+<li>[ ] SmokeSeg 完整训练至少通过一个原先容易复现故障的阶段。</li>
+<li>[ ] 12V-2x6 接口没有异常气味、变色或物理松动。</li>
+</ul>
+<p>只有仍依靠 400W 才能稳定，不算根因已经解决。</p>
+<h2 id="15-售后证据包"><a class="markdownIt-Anchor" href="#15-售后证据包"></a> 15. 售后证据包</h2>
+<p>如果最终需要联系技嘉、安钛克或华硕，建议整理：</p>
+<ul>
+<li>完整硬件型号、序列号和购买信息。</li>
+<li>主板 BIOS、GPU VBIOS、驱动、内核版本。</li>
+<li>400W 稳定、600W 失败的重复测试表。</li>
+<li>Xid 79、Xid 154 和 GSP 错误日志。</li>
+<li>nvidia-bug-report.log.gz。</li>
+<li>GPU 遥测 CSV。</li>
+<li>12V-2x6 接口和线材清晰照片。</li>
+<li>Gen4/Gen5 对照结果。</li>
+<li>两台电脑双向换卡结果。</li>
+<li>PSU 或插座对照结果。</li>
+</ul>
+<p>这些证据可以明确区分 GPU、PSU/线材、主板/PCIe 和驱动问题，避免售后只建议“重装系统”或“降低功率”。</p>
+<h2 id="16-推荐执行顺序摘要"><a class="markdownIt-Anchor" href="#16-推荐执行顺序摘要"></a> 16. 推荐执行顺序摘要</h2>
+<ol>
+<li>比较本机和师姐电脑的完整软硬件版本。</li>
+<li>由熟悉装机的人检查并重新插紧 12V-2x6 和显卡。</li>
+<li>使用核显或 SSH，让 RTX 5090 脱离图形桌面。</li>
+<li>建立内核日志与 GPU 遥测。</li>
+<li>使用 GPU-only 工具执行 400→450→500→550→600W 功率阶梯。</li>
+<li>仍失败时，将主板 BIOS 从 0208 更新到稳定版 2306，再重复测试。</li>
+<li>仍失败时，将 NVIDIA 驱动从 590-open 更新到 Ubuntu 推荐的 595-open，再重复测试。</li>
+<li>仍失败时，固定 PCIe Gen4 做对照。</li>
+<li>最后进行双向交叉换卡，必要时更换完整 PSU 与其原装线。</li>
+<li>根据矩阵结果决定联系技嘉、安钛克或华硕售后。</li>
+</ol>
 
     </div>
 
