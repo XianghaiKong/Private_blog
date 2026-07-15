@@ -234,7 +234,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/07/06/CodeX%E6%AF%8F%E6%AC%A1%E6%89%93%E5%BC%80%E9%A6%96%E6%AC%A1%E5%AF%B9%E8%AF%9D%E9%83%BD%E4%BA%94%E6%AC%A1Reconnecting%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" class="post-title-link" itemprop="url">CodeX每次打开首次对话都五次Reconnecting解决办法/Linux沙箱报错问题</a>
+          <a href="/2026/07/06/CodeX%E6%AF%8F%E6%AC%A1%E6%89%93%E5%BC%80%E9%A6%96%E6%AC%A1%E5%AF%B9%E8%AF%9D%E9%83%BD%E4%BA%94%E6%AC%A1Reconnecting%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95/" class="post-title-link" itemprop="url">CodeX每次打开首次对话都五次Reconnecting解决办法/Linux沙箱报错问题/跨平台使用</a>
         </h2>
 
         <div class="post-meta-container">
@@ -252,7 +252,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-08 09:51:19" itemprop="dateModified" datetime="2026-07-08T09:51:19+08:00">2026-07-08</time>
+      <time title="修改时间：2026-07-15 12:10:10" itemprop="dateModified" datetime="2026-07-15T12:10:10+08:00">2026-07-15</time>
     </span>
 
   
@@ -267,6 +267,11 @@
     <div class="post-body" itemprop="articleBody">
           <p>最近用CodeX发现一个神奇问题，不管是Mac端的桌面app，还是VSCode/Cursor里的CodeX插件（等同于终端版），开始的第一次对话，总会显示五次重新连接，这需要耗费大概一分钟，关键是在这个过程中，等待地很折磨，怀疑是不是账号有问题还是梯子没挂好，但是在五次重新连接尝试后，突然就好了，又能回答了，后续的对话不用再等那么久，上网搜索原因，找到一篇<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/2042568458395726918">帖子</a>给了解决方法，但根据评论看，也会有些问题，所以还没实施，后续再找找别的办法</p>
 <p>另外还有一个<a target="_blank" rel="noopener" href="https://aiot.csdn.net/6a41fe0e10ee7a33f283a04d.html">经验贴</a>，也收藏一下</p>
+<p>另外现在更新后，codex和chatgpt合并，区分性没那么大，基本可以不再使用网页端；但我发现，在同一台电脑上，比如我的Mac和5090，无论是终端，还是插件，还是桌面app（Linux还没有桌面app），在同一台电脑上，都是共享对话的，共享codex设置的，比如Mac上，桌面app中的codex任务对话框，可以在vscode插件里面完整看到，但是插件和终端中功能不如app完整，app甚至还可以看到5090中的codex任务对话框，后面会跟着一个网络小图标，代表不在mac本地，可能因为我之前尝试过在mac的codex任务对话框中让它用ssh连接过5090，确实能连接上，而且能看到5090的文件，但没那么稳定，有时候点开可能会卡住</p>
+<p>mac的桌面app现在改名叫chatgpt，已经没有codex桌面app了，二者融合，现在打开app，默认是codex的任务对话框，在这里面聊天目前，我认为跟网页chatgpt没有区别，都是用的5.6sol模型，回答差不多；而点击app中的聊天，可以看到跟chatgpt的聊天，这里的聊天是可以显示在网页端的，这不属于任务对话，这样的聊天可以在app中导入到codex任务对话中，比较方便，实现了之前我说的，跟网页端chatgpt对话进行头脑风暴，但是还得把这个复制给codex才能实现这个想法，现在可以直接导入，但是现在其实也不用再跟chatgpt在网页端进行对话了，直接在codex任务对话框进行对话，进行头脑风暴，完了之后再同一个对话框内直接让它实现</p>
+<p>桌面app还有一个项目功能，可以选择将普通的任务对话框放进项目中，好处其实是方便管理，可以自己看到哪些对话跟这个项目有关，在插件/终端那边是看不到区分的，都属于历史任务对话</p>
+<p>这又让我发现，Mac桌面app确实好用，我平常携带，使用，写论文按理说都是用mac，只有跑代码才用5090，甚至写代码都可以用mac进行远程连接ssh（但稳定性是个问题），但有个问题，在mac上与codex进行头脑风暴，想要将其实现的时候，最优解当然是直接在对话里让它ssh连接5090，我还没试过，但根据之前的尝试，能连上，那么说明应该能操作，但还是那句话，由于ssh我目前用的是免费的TailScale，不是那么的迅速稳定，然后转到项目文件夹，让它开始实现；第二个办法是，想办法复制/转述给5090这边到codex插件/终端（即使同一个账号，不是同一台电脑是不共享对话的，只是mac桌面app功能比较强大，能看到5090上的任务对话），这就比较麻烦了</p>
+<p>那么，这启发了我，为什么不考虑全部在5090的codex插件/终端里面进行头脑风暴+想法实现呢？这好像更加方便，模型都一样，不用折腾ssh，可以直接本地实现，远程的话可以在mac上用todesk控制。唯一的问题就是，工作流的改变，这样的话，5090其实应该作为主力机了，至少创新/头脑风暴/写代码/跑代码/debug都在这上面，而mac可以做的事是ppt画图/写论文/todesk/看论文（但其实如果在代码本地文件夹直接让ai写是不是更方便，这个暂时保留mac上写），然而5090上也有zotero，同步配置已经完善，只能说后续可以多考虑，现在越来越方便了。</p>
 
       
     </div>
@@ -404,7 +409,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-06-28 11:05:47" itemprop="dateModified" datetime="2026-06-28T11:05:47+08:00">2026-06-28</time>
+      <time title="修改时间：2026-07-15 11:49:02" itemprop="dateModified" datetime="2026-07-15T11:49:02+08:00">2026-07-15</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -431,6 +436,7 @@
 <a target="_blank" rel="noopener" href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
 <a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
 <p>另外，CC本身是免费的，如果开通了claude的pro计划，可以在里面使用claude原生模型，最近找到了充值方式，首先你需要一个claude账号，这一步目前来说好像不是那么简单（容易封号），而我是前几年就有了，当年还是从闲鱼找人帮我注册的，花了10块，然后需要一个苹果手机，需要一个美区（或者不限制的区域）苹果账号，此时下载Claude的app，直接在app里点升级pro，自动弹出app付款，此时需要app store里面登陆美区账号付款的，在此之前使用支付宝礼品卡给美区账号充值🔪</p>
+<p>碰到了问题，由于接入这个DeepSeek后，本人开通了付费的Claude，我怀疑正是因为之前手动改了CC的接口地址，导致被他们官方查到了IP，目前我的三年稳定的Claude账号被封了，本人已经转向codex。</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/#more" rel="contents">
@@ -705,7 +711,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-06-28 10:41:42" itemprop="dateModified" datetime="2026-06-28T10:41:42+08:00">2026-06-28</time>
+      <time title="修改时间：2026-07-15 11:47:27" itemprop="dateModified" datetime="2026-07-15T11:47:27+08:00">2026-07-15</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
