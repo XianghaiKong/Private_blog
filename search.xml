@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>RTX 5090 深度学习环境显卡掉线排查记录</title>
+    <title>技嘉5090遇到Xid79显卡掉线</title>
     <url>/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/</url>
     <content><![CDATA[<p>先交代一下硬件配置：</p>
 <ul>
@@ -147,6 +147,8 @@
 <p>3.装机师傅建议，第一补齐32GB内存双通道，并不是不够用，而是AM5平台单通道内存会带来非常多的平台稳定性隐患，第二，他建议我直接把5090显卡换到师姐那边，运行代码尝试，这样可以隔离环境，单独测试GPU,毕竟师姐那边跟我的配置一模一样，而他没有这个功率和黑屏的问题，这确实合理，但麻烦点在于要手动拆两个显卡，还要再装显卡，我怕自己拆装不熟练，先暂时不考虑，放到最后优先级</p>
 <p>4.gpt-5.6sol建议之一，更新驱动到最推荐的595-open，我已经更新了，不限制功率的情况下，还真的跑了几分钟，虽然实际上也不需要600W，根据终端监控显示450w/600w，但是好景不长，几分钟后又关机了；</p>
 <p>5.这给了一个提醒，我去看了师姐的驱动版本是580，所以可能真的是驱动版本的bug，接下来打算装回580版本，但显然有个问题是，换驱动版本没那么简单，我刚刚换到595，其实是590还在，两套共存了，有点问题，准备问ai解决</p>
+<p>6.驱动已经完整回退到580，只要功率超过400w，还是不行，果然还是595状态下成功运行的那几分钟给了我错觉，看来显然与驱动无关</p>
+<p>7.谷歌搜索5090出现Xid79错误，也能搜到一些<a href="https://www.reddit.com/r/nvidia/comments/1bladxn/xid_79_gpu_has_fallen_off_the_bus/">帖子</a>,<a href="https://discuss.cachyos.org/t/i-rmad-everything-and-still-the-new-gpu-keeps-falling-out-of-the-bus/20119">帖子2</a>,帖子2较为详细，也是技嘉的显卡5090，他甚至返修换了新显卡还是不行，电源他用的是1200w还没有我的高，结合一切信息，我认为找人来也不一定能修好，大概率指向线缆/电源供电链路等等问题。</p>
 ]]></content>
       <categories>
         <category>深度学习</category>
@@ -366,6 +368,193 @@
       </categories>
   </entry>
   <entry>
+    <title>在VS Code的CC插件以及终端CC中接入DeepSeek-V4-Pro</title>
+    <url>/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/</url>
+    <content><![CDATA[<p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
+参考链接：<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">Deepseek接入CC的官方文档</a><br />
+<a href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
+<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
+<p>另外，CC本身是免费的，如果开通了claude的pro计划，可以在里面使用claude原生模型，最近找到了充值方式，首先你需要一个claude账号，这一步目前来说好像不是那么简单（容易封号），而我是前几年就有了，当年还是从闲鱼找人帮我注册的，花了10块，然后需要一个苹果手机，需要一个美区（或者不限制的区域）苹果账号，此时下载Claude的app，直接在app里点升级pro，自动弹出app付款，此时需要app store里面登陆美区账号付款的，在此之前使用支付宝礼品卡给美区账号充值🔪</p>
+<p>碰到了问题，由于接入这个DeepSeek后，本人开通了付费的Claude，我怀疑正是因为之前手动改了CC的接口地址，导致被他们官方查到了IP，目前我的三年稳定的Claude账号被封了，本人已经转向codex。</p>
+<span id="more"></span>
+<hr />
+<h2 id="前置准备"><a class="markdownIt-Anchor" href="#前置准备"></a> 前置准备</h2>
+<p>开始之前，需要准备好以下内容：</p>
+<ul>
+<li><strong>DeepSeek API Key</strong>：在 <a href="https://platform.deepseek.com/">DeepSeek 开放平台</a> 注册并获取，可以先充值10元试一试，目前是2.5折优惠。</li>
+<li><strong>Claude Code 已安装</strong>：终端CC和VSCode CC插件安装，此处不进行过多介绍。</li>
+</ul>
+<hr />
+<h2 id="一终端-cc-接入"><a class="markdownIt-Anchor" href="#一终端-cc-接入"></a> 一：终端 CC 接入</h2>
+<p>终端 CC 通过读取 shell 环境变量来决定使用哪个模型后端。直接在你的shell配置文件中添加以下环境变量即可。</p>
+<p>对于 macOS / zsh 用户，编辑 <code>~/.zshrc</code>：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">export</span> ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_AUTH_TOKEN=&lt;你的 DeepSeek API Key&gt;</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_OPUS_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_SONNET_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_SUBAGENT_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_EFFORT_LEVEL=max</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>💡 <strong>说明</strong>：CC 内部会根据任务复杂度自动选择 Opus/Sonnet/Haiku 级别的模型。通过 <code>ANTHROPIC_DEFAULT_*</code> 变量可以将这些级别分别映射到 DeepSeek 的不同模型。如果你希望所有任务都走同一个模型，全部填 <code>deepseek-v4-pro</code> 即可。</p>
+</blockquote>
+<p>配置完成后，重新加载 shell 配置：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
+<h2 id="随后在终端中启动-claudecc-便会通过-deepseek-api-运行"><a class="markdownIt-Anchor" href="#随后在终端中启动-claudecc-便会通过-deepseek-api-运行"></a> 随后在终端中启动 <code>claude</code>，CC 便会通过 DeepSeek API 运行。</h2>
+<h2 id="二vscode-cc-插件接入"><a class="markdownIt-Anchor" href="#二vscode-cc-插件接入"></a> 二：VSCode CC 插件接入</h2>
+<p>VSCode 的CC插件同样依赖环境变量，但需要通过VSCode的终端环境变量设置来注入。</p>
+<p>打开 VS Code 设置（<code>Cmd + ,</code>），搜索 <code>terminal.integrated.env.osx</code>（Windows 用户搜索 <code>terminal.integrated.env.windows</code>），点击 <strong>Edit in settings.json</strong>，添加以下内容：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;terminal.integrated.env.osx&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_BASE_URL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://api.deepseek.com/anthropic&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_AUTH_TOKEN&quot;</span><span class="punctuation">:</span> <span class="string">&quot;sk-your-deepseek-api-key&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_OPUS_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_SONNET_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_HAIKU_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-flash&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;CLAUDE_CODE_SUBAGENT_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>配置完成后，<strong>完全退出并重启 VS Code</strong>，再打开集成的 CC 插件，环境变量便会生效。</p>
+<hr />
+<h2 id="推荐的额外配置"><a class="markdownIt-Anchor" href="#推荐的额外配置"></a> 推荐的额外配置</h2>
+<p>为了获得更好的使用体验，建议一并配置以下变量：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 超时时长（ms）：max effort 推理耗时较长，建议设长一些</span></span><br><span class="line"><span class="built_in">export</span> API_TIMEOUT_MS=<span class="string">&quot;600000&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭非必要流量（遥测、成本警告等）</span></span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_COST_WARNINGS=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_TELEMETRY=1</span><br></pre></td></tr></table></figure>
+<hr />
+<h2 id="模型映射关系"><a class="markdownIt-Anchor" href="#模型映射关系"></a> 模型映射关系</h2>
+<p>配置生效后，CC 内部分配的 Claude 模型会被自动映射到 DeepSeek 模型：</p>
+<table>
+<thead>
+<tr>
+<th>Claude 原生模型</th>
+<th>映射到的 DeepSeek 模型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>claude-opus-*</code></td>
+<td><code>deepseek-v4-pro</code></td>
+</tr>
+<tr>
+<td><code>claude-sonnet-*</code></td>
+<td><code>deepseek-v4-pro</code>（或 <code>deepseek-v4-flash</code>）</td>
+</tr>
+<tr>
+<td><code>claude-haiku-*</code></td>
+<td><code>deepseek-v4-flash</code></td>
+</tr>
+</tbody>
+</table>
+<p>V4-Pro 拥有 <strong>1M token 上下文窗口</strong>，足以塞入整个代码仓库，配合 CC 的代码搜索和多文件编辑能力，体验相当顺畅。</p>
+<hr />
+<h2 id="功能兼容性一览"><a class="markdownIt-Anchor" href="#功能兼容性一览"></a> 功能兼容性一览</h2>
+<p>DeepSeek 的 Anthropic 兼容端点是目前第三方供应商中<strong>支持最完整</strong>的，但仍有几个重要差距需要了解：</p>
+<h3 id="完全支持"><a class="markdownIt-Anchor" href="#完全支持"></a> ✅ 完全支持</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文本对话与流式输出</td>
+<td>日常编码问答完全正常</td>
+</tr>
+<tr>
+<td>Tool Use / 函数调用</td>
+<td>文件读写、命令执行、工具链调用均稳定</td>
+</tr>
+<tr>
+<td><strong>Subagent（子代理）</strong></td>
+<td>✅ DeepSeek 原生支持，Agent 级任务可正常调度</td>
+</tr>
+<tr>
+<td>System Prompt</td>
+<td>系统指令完全兼容</td>
+</tr>
+<tr>
+<td>128K～1M 上下文</td>
+<td>V4-Pro 支持 1M tokens，远超 Claude 的 200K</td>
+</tr>
+</tbody>
+</table>
+<h3 id="️-部分支持-被忽略"><a class="markdownIt-Anchor" href="#️-部分支持-被忽略"></a> ⚠️ 部分支持 / 被忽略</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>thinking</code>（推理模式）</td>
+<td>V4-Pro 自身具备推理能力，但 Anthropic API 的 <code>budget_tokens</code> 参数会被忽略</td>
+</tr>
+<tr>
+<td><code>disable_parallel_tool_use</code></td>
+<td>被忽略，DeepSeek 的并行工具调用策略与 Claude 不同</td>
+</tr>
+<tr>
+<td><code>cache_control</code></td>
+<td>不支持 Anthropic 的 prompt caching 机制</td>
+</tr>
+</tbody>
+</table>
+<h3 id="不支持"><a class="markdownIt-Anchor" href="#不支持"></a> ❌ 不支持</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>图片 / 多模态</strong></td>
+<td><strong>最大短板</strong>。V4-Pro 当前是纯文本模型，截图、UI 设计稿、终端截图等无法被识别——只会收到占位符 <code>[Image #1]</code></td>
+</tr>
+<tr>
+<td>文档上传</td>
+<td>不支持直接上传 PDF、图片等文件作为输入</td>
+</tr>
+<tr>
+<td>MCP 工具类型</td>
+<td>不支持 <code>server_tool_use</code>、<code>mcp_tool_result</code> 等 MCP 原生工具调用类型</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="实际使用中需要注意的问题"><a class="markdownIt-Anchor" href="#实际使用中需要注意的问题"></a> 实际使用中需要注意的问题</h2>
+<h3 id="1-图片不可用是硬伤"><a class="markdownIt-Anchor" href="#1-图片不可用是硬伤"></a> 1. 图片不可用是硬伤</h3>
+<p>虽然 V4-Pro 有 1M 上下文——&quot;能塞进去整个代码仓库，但塞不进去一张 PNG。&quot;遇到以下场景时需要<strong>临时切回 Anthropic 原生 API</strong>：</p>
+<ul>
+<li>CC 自动截取终端截图进行 debug</li>
+<li>需要基于 UI 设计稿生成前端代码</li>
+<li>分析报错截图或日志截屏</li>
+</ul>
+<p><strong>切换方法</strong>：在终端中取消 <code>ANTHROPIC_BASE_URL</code> 环境变量即可回退：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">unset</span> ANTHROPIC_BASE_URL</span><br><span class="line"><span class="comment"># 或者重新打开一个未配置 ANTHROPIC_BASE_URL 的终端窗口</span></span><br></pre></td></tr></table></figure>
+<h3 id="2-速度与成本的权衡"><a class="markdownIt-Anchor" href="#2-速度与成本的权衡"></a> 2. 速度与成本的权衡</h3>
+<p>DeepSeek V4-Pro 在 max effort 模式下推理时间较长（可能超过 1 分钟），这也是建议将 <code>API_TIMEOUT_MS</code> 设为 600000 的原因。但相比原生 Claude API <strong>约 90%+ 的成本节省</strong>，这点等待完全值得。</p>
+<h3 id="3-不同订阅方案的区别"><a class="markdownIt-Anchor" href="#3-不同订阅方案的区别"></a> 3. 不同订阅方案的区别</h3>
+<p>如果同时持有 Anthropic 的付费订阅（Max 计划），注意环境变量的配置会覆盖订阅的原生模型路由。建议为 DeepSeek 接入专门准备一个终端配置别名，方便在不同后端之间快速切换。</p>
+<hr />
+<h2 id="个人使用体验"><a class="markdownIt-Anchor" href="#个人使用体验"></a> 个人使用体验</h2>
+<h3 id="成本真的便宜"><a class="markdownIt-Anchor" href="#成本真的便宜"></a> 成本：真的便宜</h3>
+<p>最近 DeepSeek 的 Token 价格打 <strong>2.5 折</strong>，我往账户里充了 10 块钱。到目前为止，用它完成了：</p>
+<ul>
+<li><strong>两个深度学习论文的复现工作</strong>（涉及大量代码编写和调试）</li>
+<li><strong>几篇博客文章</strong>（包括本文）的撰写与 Hexo 自动部署脚本调试</li>
+</ul>
+<p>总共花掉了大约 <strong>3.5 元</strong>。也就是说 10 块钱的额度还剩下近三分之二。这个价格放在任何同类工具面前都是降维打击。</p>
+<h3 id="与-cursor-pro-的对比"><a class="markdownIt-Anchor" href="#与-cursor-pro-的对比"></a> 与 Cursor Pro 的对比</h3>
+<p>在此之前，我一直在用 Cursor 的 Pro 订阅，20 美元一个月。说实话，体验算不上差，但有一个致命问题——<strong>Opus 的额度太少</strong>，高强度用不了几天就没了。额度耗尽之后只能降级用 Cursor 自研的 Composer 2.5（底层其实是 Kimi 2.5 套壳），虽然也不至于难用，但模型能力明显掉了一个档次。GPT 的额度同样少得可怜。</p>
+<p>20 美元一个月，大部分时间用的只是一个二线模型——性价比实在太低了。</p>
+<p>相比之下，DeepSeek V4-Pro 按量计费、单价极低，而且<strong>不限制调用频率</strong>，不用担心&quot;额度用完&quot;这件事。花多少钱用多少量，完全在自己掌控范围内。</p>
+<h3 id="实际能力感受"><a class="markdownIt-Anchor" href="#实际能力感受"></a> 实际能力感受</h3>
+<p>讲实话，DeepSeek V4-Pro 的<strong>代码能力和中文能力都不错</strong>。代码方面，在两个复现项目中处理了训练脚本、数据预处理、配置文件的编写和调试，基本没有遇到模型能力不足导致的阻塞性问题。中文方面，写博客、整理技术文档时的语言表达自然流畅，比大多数纯英文训练的模型接地气得多。</p>
+<p>当然，前面提到的图片不支持确实时有碰到——比如想让 CC 看看终端报错截图或者模型输出的可视化结果，这时候只能临时切回原生 API。但纯文本场景下，V4-Pro 完全够用。</p>
+<hr />
+<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
+<p>DeepSeek V4-Pro + Claude Code 的组合在<strong>纯文本编码场景</strong>下体验几乎无差异——Tool Use 和 Subagent 均原生可用，配合极低的 API 成本和 1M 超长上下文，是日常开发中极具性价比的选择。唯一的软肋是图片/多模态不支持，遇到需要视觉理解的场景时需要切回 Anthropic 原生 API。</p>
+<blockquote>
+<p>📌 <strong>适用场景</strong>：后端开发、脚本编写、代码重构、项目搭建、文档生成</p>
+<p>📌 <strong>不适用场景</strong>：前端 UI 开发（需要看图）、截图 Debug、多模态分析</p>
+</blockquote>
+<hr />
+]]></content>
+      <categories>
+        <category>工具教程</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Git 核心操作记录：面向日常开发的实践总结</title>
     <url>/2026/04/14/git%E4%BD%BF%E7%94%A8%E5%AD%A6%E4%B9%A0/</url>
     <content><![CDATA[<h2 id="前言"><a class="markdownIt-Anchor" href="#前言"></a> 前言</h2>
@@ -457,6 +646,17 @@
       <categories>
         <category>工具教程</category>
       </categories>
+  </entry>
+  <entry>
+    <title>对于大气散射模型的思考</title>
+    <url>/2026/06/29/%E5%AF%B9%E4%BA%8E%E5%A4%A7%E6%B0%94%E6%95%A3%E5%B0%84%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%80%9D%E8%80%83/</url>
+    <content><![CDATA[<p>最近打算基于把大气散射模型作为论文的一个重要的理论基础</p>
+<p>也不乏有本领域的论文用到此模型，比如Trans-BVM和FoSp</p>
+<p>但是目前我仍旧怀疑其公式推导的正确性，以及使用的合理性和正确性</p>
+<p>于是搜集网络资料，找到一些<a href="https://zhuanlan.zhihu.com/p/500242098">原始推导</a>,以及<a href="https://www.cnblogs.com/rust/p/10420789.html">这篇</a></p>
+<p>等博主在研究一段时间后，本博客将主要针对大气散射模型在深度学习中的应用进行补充</p>
+<p>而且据我所知，在图像抠图领域，也有类似的模型。</p>
+]]></content>
   </entry>
   <entry>
     <title>实验管理与评测脚本说明（mmseg 自定义工具链）</title>
@@ -648,204 +848,6 @@ config 里列出各划分</strong>。</li>
 ]]></content>
       <categories>
         <category>深度学习</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>对于大气散射模型的思考</title>
-    <url>/2026/06/29/%E5%AF%B9%E4%BA%8E%E5%A4%A7%E6%B0%94%E6%95%A3%E5%B0%84%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%80%9D%E8%80%83/</url>
-    <content><![CDATA[<p>最近打算基于把大气散射模型作为论文的一个重要的理论基础</p>
-<p>也不乏有本领域的论文用到此模型，比如Trans-BVM和FoSp</p>
-<p>但是目前我仍旧怀疑其公式推导的正确性，以及使用的合理性和正确性</p>
-<p>于是搜集网络资料，找到一些<a href="https://zhuanlan.zhihu.com/p/500242098">原始推导</a>,以及<a href="https://www.cnblogs.com/rust/p/10420789.html">这篇</a></p>
-<p>等博主在研究一段时间后，本博客将主要针对大气散射模型在深度学习中的应用进行补充</p>
-<p>而且据我所知，在图像抠图领域，也有类似的模型。</p>
-]]></content>
-  </entry>
-  <entry>
-    <title>在VS Code的CC插件以及终端CC中接入DeepSeek-V4-Pro</title>
-    <url>/2026/06/05/%E5%9C%A8VsCode%E7%9A%84CC%E6%8F%92%E4%BB%B6%E4%BB%A5%E5%8F%8A%E7%BB%88%E7%AB%AFCC%E4%B8%AD%E6%8E%A5%E5%85%A5Deepseek-V4-pro/</url>
-    <content><![CDATA[<p>Claude Code（以下简称CC）是Anthropic推出的命令行AI编程助手，原生使用Claude系列模型。但Anthropic官方API的价格较贵，而DeepSeek提供了官方的Anthropic兼容API端点，可以以极低的成本将DeepSeek模型接入CC。本文将记录在终端CC和VSCode CC插件中接入DeepSeek-V4-Pro的完整配置过程。<br />
-参考链接：<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">Deepseek接入CC的官方文档</a><br />
-<a href="https://code.claude.com/docs/en/vs-code#using-third-party-providers">VsCode中的CC插件使用教程</a><br />
-<a href="https://www.bilibili.com/video/BV1kPoBBHEXS/?spm_id_from=333.1007.top_right_bar_window_history.content.click&amp;vd_source=e04276c072534e15fa77578b0eca1a0d">B站视频教程：在VsCode-Claude-Code插件中接入DeepSeek教程</a></p>
-<p>另外，CC本身是免费的，如果开通了claude的pro计划，可以在里面使用claude原生模型，最近找到了充值方式，首先你需要一个claude账号，这一步目前来说好像不是那么简单（容易封号），而我是前几年就有了，当年还是从闲鱼找人帮我注册的，花了10块，然后需要一个苹果手机，需要一个美区（或者不限制的区域）苹果账号，此时下载Claude的app，直接在app里点升级pro，自动弹出app付款，此时需要app store里面登陆美区账号付款的，在此之前使用支付宝礼品卡给美区账号充值🔪</p>
-<p>碰到了问题，由于接入这个DeepSeek后，本人开通了付费的Claude，我怀疑正是因为之前手动改了CC的接口地址，导致被他们官方查到了IP，目前我的三年稳定的Claude账号被封了，本人已经转向codex。</p>
-<span id="more"></span>
-<hr />
-<h2 id="前置准备"><a class="markdownIt-Anchor" href="#前置准备"></a> 前置准备</h2>
-<p>开始之前，需要准备好以下内容：</p>
-<ul>
-<li><strong>DeepSeek API Key</strong>：在 <a href="https://platform.deepseek.com/">DeepSeek 开放平台</a> 注册并获取，可以先充值10元试一试，目前是2.5折优惠。</li>
-<li><strong>Claude Code 已安装</strong>：终端CC和VSCode CC插件安装，此处不进行过多介绍。</li>
-</ul>
-<hr />
-<h2 id="一终端-cc-接入"><a class="markdownIt-Anchor" href="#一终端-cc-接入"></a> 一：终端 CC 接入</h2>
-<p>终端 CC 通过读取 shell 环境变量来决定使用哪个模型后端。直接在你的shell配置文件中添加以下环境变量即可。</p>
-<p>对于 macOS / zsh 用户，编辑 <code>~/.zshrc</code>：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">export</span> ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_AUTH_TOKEN=&lt;你的 DeepSeek API Key&gt;</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_OPUS_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_SONNET_MODEL=deepseek-v4-pro[1m]</span><br><span class="line"><span class="built_in">export</span> ANTHROPIC_DEFAULT_HAIKU_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_SUBAGENT_MODEL=deepseek-v4-flash</span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_EFFORT_LEVEL=max</span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>💡 <strong>说明</strong>：CC 内部会根据任务复杂度自动选择 Opus/Sonnet/Haiku 级别的模型。通过 <code>ANTHROPIC_DEFAULT_*</code> 变量可以将这些级别分别映射到 DeepSeek 的不同模型。如果你希望所有任务都走同一个模型，全部填 <code>deepseek-v4-pro</code> 即可。</p>
-</blockquote>
-<p>配置完成后，重新加载 shell 配置：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">source</span> ~/.zshrc</span><br></pre></td></tr></table></figure>
-<h2 id="随后在终端中启动-claudecc-便会通过-deepseek-api-运行"><a class="markdownIt-Anchor" href="#随后在终端中启动-claudecc-便会通过-deepseek-api-运行"></a> 随后在终端中启动 <code>claude</code>，CC 便会通过 DeepSeek API 运行。</h2>
-<h2 id="二vscode-cc-插件接入"><a class="markdownIt-Anchor" href="#二vscode-cc-插件接入"></a> 二：VSCode CC 插件接入</h2>
-<p>VSCode 的CC插件同样依赖环境变量，但需要通过VSCode的终端环境变量设置来注入。</p>
-<p>打开 VS Code 设置（<code>Cmd + ,</code>），搜索 <code>terminal.integrated.env.osx</code>（Windows 用户搜索 <code>terminal.integrated.env.windows</code>），点击 <strong>Edit in settings.json</strong>，添加以下内容：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;terminal.integrated.env.osx&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_BASE_URL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://api.deepseek.com/anthropic&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_AUTH_TOKEN&quot;</span><span class="punctuation">:</span> <span class="string">&quot;sk-your-deepseek-api-key&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_OPUS_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_SONNET_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;ANTHROPIC_DEFAULT_HAIKU_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-flash&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;CLAUDE_CODE_SUBAGENT_MODEL&quot;</span><span class="punctuation">:</span> <span class="string">&quot;deepseek-v4-pro&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-<p>配置完成后，<strong>完全退出并重启 VS Code</strong>，再打开集成的 CC 插件，环境变量便会生效。</p>
-<hr />
-<h2 id="推荐的额外配置"><a class="markdownIt-Anchor" href="#推荐的额外配置"></a> 推荐的额外配置</h2>
-<p>为了获得更好的使用体验，建议一并配置以下变量：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 超时时长（ms）：max effort 推理耗时较长，建议设长一些</span></span><br><span class="line"><span class="built_in">export</span> API_TIMEOUT_MS=<span class="string">&quot;600000&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 关闭非必要流量（遥测、成本警告等）</span></span><br><span class="line"><span class="built_in">export</span> CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_COST_WARNINGS=1</span><br><span class="line"><span class="built_in">export</span> DISABLE_TELEMETRY=1</span><br></pre></td></tr></table></figure>
-<hr />
-<h2 id="模型映射关系"><a class="markdownIt-Anchor" href="#模型映射关系"></a> 模型映射关系</h2>
-<p>配置生效后，CC 内部分配的 Claude 模型会被自动映射到 DeepSeek 模型：</p>
-<table>
-<thead>
-<tr>
-<th>Claude 原生模型</th>
-<th>映射到的 DeepSeek 模型</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>claude-opus-*</code></td>
-<td><code>deepseek-v4-pro</code></td>
-</tr>
-<tr>
-<td><code>claude-sonnet-*</code></td>
-<td><code>deepseek-v4-pro</code>（或 <code>deepseek-v4-flash</code>）</td>
-</tr>
-<tr>
-<td><code>claude-haiku-*</code></td>
-<td><code>deepseek-v4-flash</code></td>
-</tr>
-</tbody>
-</table>
-<p>V4-Pro 拥有 <strong>1M token 上下文窗口</strong>，足以塞入整个代码仓库，配合 CC 的代码搜索和多文件编辑能力，体验相当顺畅。</p>
-<hr />
-<h2 id="功能兼容性一览"><a class="markdownIt-Anchor" href="#功能兼容性一览"></a> 功能兼容性一览</h2>
-<p>DeepSeek 的 Anthropic 兼容端点是目前第三方供应商中<strong>支持最完整</strong>的，但仍有几个重要差距需要了解：</p>
-<h3 id="完全支持"><a class="markdownIt-Anchor" href="#完全支持"></a> ✅ 完全支持</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>文本对话与流式输出</td>
-<td>日常编码问答完全正常</td>
-</tr>
-<tr>
-<td>Tool Use / 函数调用</td>
-<td>文件读写、命令执行、工具链调用均稳定</td>
-</tr>
-<tr>
-<td><strong>Subagent（子代理）</strong></td>
-<td>✅ DeepSeek 原生支持，Agent 级任务可正常调度</td>
-</tr>
-<tr>
-<td>System Prompt</td>
-<td>系统指令完全兼容</td>
-</tr>
-<tr>
-<td>128K～1M 上下文</td>
-<td>V4-Pro 支持 1M tokens，远超 Claude 的 200K</td>
-</tr>
-</tbody>
-</table>
-<h3 id="️-部分支持-被忽略"><a class="markdownIt-Anchor" href="#️-部分支持-被忽略"></a> ⚠️ 部分支持 / 被忽略</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>thinking</code>（推理模式）</td>
-<td>V4-Pro 自身具备推理能力，但 Anthropic API 的 <code>budget_tokens</code> 参数会被忽略</td>
-</tr>
-<tr>
-<td><code>disable_parallel_tool_use</code></td>
-<td>被忽略，DeepSeek 的并行工具调用策略与 Claude 不同</td>
-</tr>
-<tr>
-<td><code>cache_control</code></td>
-<td>不支持 Anthropic 的 prompt caching 机制</td>
-</tr>
-</tbody>
-</table>
-<h3 id="不支持"><a class="markdownIt-Anchor" href="#不支持"></a> ❌ 不支持</h3>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>图片 / 多模态</strong></td>
-<td><strong>最大短板</strong>。V4-Pro 当前是纯文本模型，截图、UI 设计稿、终端截图等无法被识别——只会收到占位符 <code>[Image #1]</code></td>
-</tr>
-<tr>
-<td>文档上传</td>
-<td>不支持直接上传 PDF、图片等文件作为输入</td>
-</tr>
-<tr>
-<td>MCP 工具类型</td>
-<td>不支持 <code>server_tool_use</code>、<code>mcp_tool_result</code> 等 MCP 原生工具调用类型</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="实际使用中需要注意的问题"><a class="markdownIt-Anchor" href="#实际使用中需要注意的问题"></a> 实际使用中需要注意的问题</h2>
-<h3 id="1-图片不可用是硬伤"><a class="markdownIt-Anchor" href="#1-图片不可用是硬伤"></a> 1. 图片不可用是硬伤</h3>
-<p>虽然 V4-Pro 有 1M 上下文——&quot;能塞进去整个代码仓库，但塞不进去一张 PNG。&quot;遇到以下场景时需要<strong>临时切回 Anthropic 原生 API</strong>：</p>
-<ul>
-<li>CC 自动截取终端截图进行 debug</li>
-<li>需要基于 UI 设计稿生成前端代码</li>
-<li>分析报错截图或日志截屏</li>
-</ul>
-<p><strong>切换方法</strong>：在终端中取消 <code>ANTHROPIC_BASE_URL</code> 环境变量即可回退：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">unset</span> ANTHROPIC_BASE_URL</span><br><span class="line"><span class="comment"># 或者重新打开一个未配置 ANTHROPIC_BASE_URL 的终端窗口</span></span><br></pre></td></tr></table></figure>
-<h3 id="2-速度与成本的权衡"><a class="markdownIt-Anchor" href="#2-速度与成本的权衡"></a> 2. 速度与成本的权衡</h3>
-<p>DeepSeek V4-Pro 在 max effort 模式下推理时间较长（可能超过 1 分钟），这也是建议将 <code>API_TIMEOUT_MS</code> 设为 600000 的原因。但相比原生 Claude API <strong>约 90%+ 的成本节省</strong>，这点等待完全值得。</p>
-<h3 id="3-不同订阅方案的区别"><a class="markdownIt-Anchor" href="#3-不同订阅方案的区别"></a> 3. 不同订阅方案的区别</h3>
-<p>如果同时持有 Anthropic 的付费订阅（Max 计划），注意环境变量的配置会覆盖订阅的原生模型路由。建议为 DeepSeek 接入专门准备一个终端配置别名，方便在不同后端之间快速切换。</p>
-<hr />
-<h2 id="个人使用体验"><a class="markdownIt-Anchor" href="#个人使用体验"></a> 个人使用体验</h2>
-<h3 id="成本真的便宜"><a class="markdownIt-Anchor" href="#成本真的便宜"></a> 成本：真的便宜</h3>
-<p>最近 DeepSeek 的 Token 价格打 <strong>2.5 折</strong>，我往账户里充了 10 块钱。到目前为止，用它完成了：</p>
-<ul>
-<li><strong>两个深度学习论文的复现工作</strong>（涉及大量代码编写和调试）</li>
-<li><strong>几篇博客文章</strong>（包括本文）的撰写与 Hexo 自动部署脚本调试</li>
-</ul>
-<p>总共花掉了大约 <strong>3.5 元</strong>。也就是说 10 块钱的额度还剩下近三分之二。这个价格放在任何同类工具面前都是降维打击。</p>
-<h3 id="与-cursor-pro-的对比"><a class="markdownIt-Anchor" href="#与-cursor-pro-的对比"></a> 与 Cursor Pro 的对比</h3>
-<p>在此之前，我一直在用 Cursor 的 Pro 订阅，20 美元一个月。说实话，体验算不上差，但有一个致命问题——<strong>Opus 的额度太少</strong>，高强度用不了几天就没了。额度耗尽之后只能降级用 Cursor 自研的 Composer 2.5（底层其实是 Kimi 2.5 套壳），虽然也不至于难用，但模型能力明显掉了一个档次。GPT 的额度同样少得可怜。</p>
-<p>20 美元一个月，大部分时间用的只是一个二线模型——性价比实在太低了。</p>
-<p>相比之下，DeepSeek V4-Pro 按量计费、单价极低，而且<strong>不限制调用频率</strong>，不用担心&quot;额度用完&quot;这件事。花多少钱用多少量，完全在自己掌控范围内。</p>
-<h3 id="实际能力感受"><a class="markdownIt-Anchor" href="#实际能力感受"></a> 实际能力感受</h3>
-<p>讲实话，DeepSeek V4-Pro 的<strong>代码能力和中文能力都不错</strong>。代码方面，在两个复现项目中处理了训练脚本、数据预处理、配置文件的编写和调试，基本没有遇到模型能力不足导致的阻塞性问题。中文方面，写博客、整理技术文档时的语言表达自然流畅，比大多数纯英文训练的模型接地气得多。</p>
-<p>当然，前面提到的图片不支持确实时有碰到——比如想让 CC 看看终端报错截图或者模型输出的可视化结果，这时候只能临时切回原生 API。但纯文本场景下，V4-Pro 完全够用。</p>
-<hr />
-<h2 id="总结"><a class="markdownIt-Anchor" href="#总结"></a> 总结</h2>
-<p>DeepSeek V4-Pro + Claude Code 的组合在<strong>纯文本编码场景</strong>下体验几乎无差异——Tool Use 和 Subagent 均原生可用，配合极低的 API 成本和 1M 超长上下文，是日常开发中极具性价比的选择。唯一的软肋是图片/多模态不支持，遇到需要视觉理解的场景时需要切回 Anthropic 原生 API。</p>
-<blockquote>
-<p>📌 <strong>适用场景</strong>：后端开发、脚本编写、代码重构、项目搭建、文档生成</p>
-<p>📌 <strong>不适用场景</strong>：前端 UI 开发（需要看图）、截图 Debug、多模态分析</p>
-</blockquote>
-<hr />
-]]></content>
-      <categories>
-        <category>工具教程</category>
       </categories>
   </entry>
   <entry>

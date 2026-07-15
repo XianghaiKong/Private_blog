@@ -22,13 +22,13 @@
 
     <meta name="description" content="先交代一下硬件配置：  显卡：技嘉 RTX 5090 纯血版 CPU：AMD 9950X 主板：华硕 X870E-PLUS WIFI7 固态：三星 990 Pro 2TB 机械硬盘：西部数据紫盘 2TB 机箱：安钛克 FLUX SE 电源：安钛克 NE 1300 金牌（1300W，ATX 3.0，原生 12V-2x6） 风冷散热：九州风神 阿萨辛4 内存：美商海盗船 DDR5 5200 32G×2">
 <meta property="og:type" content="article">
-<meta property="og:title" content="RTX 5090 深度学习环境显卡掉线排查记录">
+<meta property="og:title" content="技嘉5090遇到Xid79显卡掉线">
 <meta property="og:url" content="https://3hree5ive.top/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/index.html">
 <meta property="og:site_name" content="3hree5ive - 个人树洞，欢迎探访">
 <meta property="og:description" content="先交代一下硬件配置：  显卡：技嘉 RTX 5090 纯血版 CPU：AMD 9950X 主板：华硕 X870E-PLUS WIFI7 固态：三星 990 Pro 2TB 机械硬盘：西部数据紫盘 2TB 机箱：安钛克 FLUX SE 电源：安钛克 NE 1300 金牌（1300W，ATX 3.0，原生 12V-2x6） 风冷散热：九州风神 阿萨辛4 内存：美商海盗船 DDR5 5200 32G×2">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-04-29T06:47:49.000Z">
-<meta property="article:modified_time" content="2026-07-15T06:48:08.884Z">
+<meta property="article:modified_time" content="2026-07-15T09:02:52.782Z">
 <meta property="article:author" content="KK">
 <meta property="article:tag" content="工程工具">
 <meta property="article:tag" content="深度学习">
@@ -41,10 +41,10 @@
 <link rel="canonical" href="https://3hree5ive.top/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://3hree5ive.top/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/","path":"2026/04/29/5090-华硕主板显卡掉线/","title":"RTX 5090 深度学习环境显卡掉线排查记录"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://3hree5ive.top/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/","path":"2026/04/29/5090-华硕主板显卡掉线/","title":"技嘉5090遇到Xid79显卡掉线"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>RTX 5090 深度学习环境显卡掉线排查记录 | 3hree5ive - 个人树洞，欢迎探访</title>
+<title>技嘉5090遇到Xid79显卡掉线 | 3hree5ive - 个人树洞，欢迎探访</title>
   
 
 
@@ -233,12 +233,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="RTX 5090 深度学习环境显卡掉线排查记录 | 3hree5ive - 个人树洞，欢迎探访">
+      <meta itemprop="name" content="技嘉5090遇到Xid79显卡掉线 | 3hree5ive - 个人树洞，欢迎探访">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          RTX 5090 深度学习环境显卡掉线排查记录
+          技嘉5090遇到Xid79显卡掉线
         </h1>
 
         <div class="post-meta-container">
@@ -256,7 +256,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-15 14:48:08" itemprop="dateModified" datetime="2026-07-15T14:48:08+08:00">2026-07-15</time>
+      <time title="修改时间：2026-07-15 17:02:52" itemprop="dateModified" datetime="2026-07-15T17:02:52+08:00">2026-07-15</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -421,6 +421,8 @@
 <p>3.装机师傅建议，第一补齐32GB内存双通道，并不是不够用，而是AM5平台单通道内存会带来非常多的平台稳定性隐患，第二，他建议我直接把5090显卡换到师姐那边，运行代码尝试，这样可以隔离环境，单独测试GPU,毕竟师姐那边跟我的配置一模一样，而他没有这个功率和黑屏的问题，这确实合理，但麻烦点在于要手动拆两个显卡，还要再装显卡，我怕自己拆装不熟练，先暂时不考虑，放到最后优先级</p>
 <p>4.gpt-5.6sol建议之一，更新驱动到最推荐的595-open，我已经更新了，不限制功率的情况下，还真的跑了几分钟，虽然实际上也不需要600W，根据终端监控显示450w/600w，但是好景不长，几分钟后又关机了；</p>
 <p>5.这给了一个提醒，我去看了师姐的驱动版本是580，所以可能真的是驱动版本的bug，接下来打算装回580版本，但显然有个问题是，换驱动版本没那么简单，我刚刚换到595，其实是590还在，两套共存了，有点问题，准备问ai解决</p>
+<p>6.驱动已经完整回退到580，只要功率超过400w，还是不行，果然还是595状态下成功运行的那几分钟给了我错觉，看来显然与驱动无关</p>
+<p>7.谷歌搜索5090出现Xid79错误，也能搜到一些<a target="_blank" rel="noopener" href="https://www.reddit.com/r/nvidia/comments/1bladxn/xid_79_gpu_has_fallen_off_the_bus/">帖子</a>,<a target="_blank" rel="noopener" href="https://discuss.cachyos.org/t/i-rmad-everything-and-still-the-new-gpu-keeps-falling-out-of-the-bus/20119">帖子2</a>,帖子2较为详细，也是技嘉的显卡5090，他甚至返修换了新显卡还是不行，电源他用的是1200w还没有我的高，结合一切信息，我认为找人来也不一定能修好，大概率指向线缆/电源供电链路等等问题。</p>
 
     </div>
 
@@ -438,7 +440,7 @@
   </li>
   <li class="post-copyright-link">
       <strong>本文链接：</strong>
-      <a href="https://3hree5ive.top/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/" title="RTX 5090 深度学习环境显卡掉线排查记录">https://3hree5ive.top/2026/04/29/5090-华硕主板显卡掉线/</a>
+      <a href="https://3hree5ive.top/2026/04/29/5090-%E5%8D%8E%E7%A1%95%E4%B8%BB%E6%9D%BF%E6%98%BE%E5%8D%A1%E6%8E%89%E7%BA%BF/" title="技嘉5090遇到Xid79显卡掉线">https://3hree5ive.top/2026/04/29/5090-华硕主板显卡掉线/</a>
   </li>
   <li class="post-copyright-license">
       <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
